@@ -1,0 +1,16 @@
+{
+    "files": [],
+    "references": [
+      { "path": "packages/logger" },
+      { "path": "packages/middleware" },
+      { "path": "packages/types" },
+      { "path": "apps/admin_dashboard" },
+      { "path": "apps/app_orch" },
+      { "path": "apps/iam" },
+      { "path": "apps/lms" },
+      { "path": "apps/pas" },
+      { "path": "apps/ruleenginebe" },
+      { "path": "apps/ruleenginefe" },
+    ]
+  }
+  
