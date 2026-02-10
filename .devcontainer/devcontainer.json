@@ -1,0 +1,19 @@
+{
+  "name": "Finverse Monorepo",
+  "dockerComposeFile": "../infra/docker/devcontainer/docker-compose.yml",
+  "service": "dev",
+  "workspaceFolder": "/workspace",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "security.workspace.trust.enabled": true,
+        "remote.containers.workspaceMountConsistency": "cached",
+        "files.exclude": {
+          "**/.git": true
+        },
+        "explorer.excludeGitIgnore": true
+      }
+    }
+  },
+  "postCreateCommand": "pnpm install --verbose"
+}
