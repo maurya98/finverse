@@ -1,5 +1,10 @@
 packages:
   - apps/*
+  - apps/backend/*
+  - apps/frontend/*
   - packages/*
   - tooling/*
   - infra/*
+  - libs/*
+  # jdm-editor inner packages (consumable by frontend)
+  - libs/jdm-editor/packages/*

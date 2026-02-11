@@ -4,12 +4,34 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "engines": {
+    "node": ">=22.10.0",
+    "pnpm": ">=10.28.2",
+    "runtime": {
+      "name": "node",
+      "version": "^22.10.0",
+      "onFail": "download"
+    }
+  },
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": "^22.10.0",
+      "onFail": "download"
+    }
+  },
   "keywords": [],
   "author": "Saurabh Kumar Maurya",
   "license": "ISC",
   "packageManager": "pnpm@10.28.2",
+  "pnpm": {
+    "overrides": {
+      "axios@<0.30.0": ">=0.30.0"
+    }
+  },
   "devDependencies": {
     "@types/node": "^22.10.0",
     "turbo": "^2.8.3"
-  }
+  },
+  "dependencies": {}
 }

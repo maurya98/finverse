@@ -1,16 +1,38 @@
 {
-    "files": [],
-    "references": [
-      { "path": "packages/logger" },
-      { "path": "packages/middleware" },
-      { "path": "packages/types" },
-      { "path": "apps/admin_dashboard" },
-      { "path": "apps/app_orch" },
-      { "path": "apps/iam" },
-      { "path": "apps/lms" },
-      { "path": "apps/pas" },
-      { "path": "apps/ruleenginebe" },
-      { "path": "apps/ruleenginefe" },
-    ]
-  }
-  
+  "files": [],
+  "references": [
+    {
+      "path": "packages/types"
+    },
+    {
+      "path": "apps/frontend/admin_dashboard"
+    },
+    {
+      "path": "apps/backend/app_orch"
+    },
+    {
+      "path": "apps/backend/iam"
+    },
+    {
+      "path": "apps/backend/lms"
+    },
+    {
+      "path": "apps/backend/pas"
+    },
+    {
+      "path": "apps/backend/ruleenginebe"
+    },
+    {
+      "path": "apps/frontend/ruleenginefe"
+    },
+    {
+      "path": "libs/jdm-editor"
+    },
+    {
+      "path": "libs/logger"
+    },
+    {
+      "path": "libs/middlewares"
+    }
+  ]
+}
