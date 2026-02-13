@@ -36,5 +36,10 @@
     "prettier": "^3.5.3",
     "typescript": "^5.8.3"
   },
-  "version": "0.1.0"
+  "version": "0.1.0",
+  "pnpm": {
+    "overrides": {
+      "axios@<0.30.0": ">=0.30.0"
+    }
+  }
 }

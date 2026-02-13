@@ -4,9 +4,10 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 
+import { DictionaryProvider } from '../../theme';
 import { DecisionTableDialogProvider } from './context/dt-dialog.context';
 import type { DecisionTableContextProps } from './context/dt-store.context';
-import { DecisionTableProvider } from './context/dt-store.context';
+import { DecisionTableProvider, useDecisionTableState } from './context/dt-store.context';
 import { DecisionTableDialogs } from './dialog/dt-dialogs';
 import { DecisionTableCommandBar } from './dt-command-bar';
 import type { DecisionTableEmptyType } from './dt-empty';
@@ -32,6 +33,7 @@ export const DecisionTable: React.FC<DecisionTableProps> = ({
   const { token } = theme.useToken();
 
   const [_, setMounted] = useState(false);
+  const [globalFilter, setGlobalFilter] = useState('');
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -61,8 +63,10 @@ export const DecisionTable: React.FC<DecisionTableProps> = ({
         <DndProvider {...dndProps}>
           <DecisionTableProvider>
             <DecisionTableDialogProvider getContainer={mountDialogsOnBody ? undefined : getContainer}>
-              <DecisionTableCommandBar />
-              <Table id={id} maxHeight={tableHeight} />
+              <DecisionTableCommandBar globalFilter={globalFilter} setGlobalFilter={setGlobalFilter} />
+              <DictionaryBridge>
+              <Table id={id} maxHeight={tableHeight} globalFilter={globalFilter} setGlobalFilter={setGlobalFilter} />
+              </DictionaryBridge>
               <DecisionTableDialogs />
               <DecisionTableEmpty {...props} />
             </DecisionTableDialogProvider>
@@ -71,4 +75,9 @@ export const DecisionTable: React.FC<DecisionTableProps> = ({
       )}
     </div>
   );
+};
+
+const DictionaryBridge: React.FC<React.PropsWithChildren> = ({ children }) => {
+  const dictionaries = useDecisionTableState((s) => s.dictionaries) ?? {};
+  return <DictionaryProvider value={dictionaries}>{children}</DictionaryProvider>;
 };

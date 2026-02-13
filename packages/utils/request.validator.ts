@@ -6,9 +6,7 @@ import type { ZodSchema, ZodError } from "zod";
  * - On success: `ok: true` and typed `data`.
  * - On failure: `ok: false` and list of `errors` with path and message.
  */
-export type ValidationResult<T> =
-  | { ok: true; data: T }
-  | { ok: false; errors: ValidationError[] };
+export type ValidationResult<T> = | { ok: true; data: T } | { ok: false; errors: ValidationError[] };
 
 export type ValidationError = {
   path: string;
@@ -31,10 +29,7 @@ export type ValidationError = {
  *   res.status(400).json({ errors: result.errors });
  * }
  */
-export function validatePayload<T>(
-  schema: ZodSchema<T>,
-  payload: unknown
-): ValidationResult<T> {
+export function validatePayload<T>(schema: ZodSchema<T>,payload: unknown): ValidationResult<T> {
   const parsed = schema.safeParse(payload);
 
   if (parsed.success) {
