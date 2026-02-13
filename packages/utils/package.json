@@ -1,0 +1,26 @@
+{
+  "name": "@finverse/utils",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./request.validator.ts",
+  "types": "./request.validator.ts",
+  "exports": {
+    ".": "./request.validator.ts"
+  },
+  "dependencies": {
+    "zod": "^3.24.2"
+  },
+  "peerDependencies": {
+    "express": ">=5.0.0"
+  },
+  "peerDependenciesMeta": {
+    "express": { "optional": true }
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@finverse/eslint-config": "workspace:*",
+    "@types/node": "^22.10.0",
+    "typescript": "^5.9.3"
+  }
+}
