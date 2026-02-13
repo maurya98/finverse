@@ -10,12 +10,19 @@
     "@finverse/middlewares": "workspace:*",
     "@types/express": "^5.0.6",
     "@types/node": "^22.19.10",
+    "dotenv": "^17.2.4",
     "eslint": "^9.17.0",
     "express": "^5.2.1",
+    "prisma": "^7.3.0",
     "typescript": "^5.9.3"
   },
   "dependencies": {
     "@finverse/logger": "workspace:*",
-    "@finverse/middlewares": "workspace:*"
+    "@finverse/middlewares": "workspace:*",
+    "@finverse/utils": "workspace:*",
+    "@prisma/adapter-pg": "^7.3.0",
+    "@prisma/client": "^7.3.0",
+    "pg": "^8.18.0",
+    "zod": "^3.25.76"
   }
 }

@@ -1,0 +1,257 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  ADMIN
+  MAINTAINER
+  DEVELOPER
+  VIEWER
+}
+
+enum RepositoryMemberRole {
+  ADMIN
+  MAINTAINER
+  CONTRIBUTOR
+  VIEWER
+}
+
+enum EntryType {
+  BLOB
+  TREE
+}
+
+enum MergeRequestStatus {
+  OPEN
+  MERGED
+  CLOSED
+}
+
+/* =========================
+   USERS
+========================= */
+
+model User {
+  id            String                 @id @default(uuid())
+  email         String                 @unique
+  passwordHash  String
+  name          String?
+  role          UserRole               @default(DEVELOPER)
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+
+  workspaces    Workspace[]            @relation("WorkspaceOwner")
+  repositories  Repository[]           @relation("RepositoryCreator")
+  repoMembers   RepositoryMember[]
+  commits       Commit[]               @relation("CommitAuthor")
+  branches      Branch[]               @relation("BranchCreator")
+  mergeRequests MergeRequest[]         @relation("MergeRequestCreator")
+  mergedMRs     MergeRequest[]         @relation("MergeRequestMerger")
+  mrComments    MergeRequestComment[]
+}
+
+/* =========================
+   WORKSPACES
+========================= */
+
+model Workspace {
+  id        String       @id @default(uuid())
+  name      String
+  ownerId   String
+  createdAt DateTime     @default(now())
+
+  owner     User         @relation("WorkspaceOwner", fields: [ownerId], references: [id])
+  repositories Repository[]
+}
+
+/* =========================
+   REPOSITORIES
+========================= */
+
+model Repository {
+  id             String               @id @default(uuid())
+  name           String
+  workspaceId    String
+  isPrivate      Boolean              @default(true)
+  defaultBranch  String               @default("main")
+  createdBy      String
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  workspace      Workspace            @relation(fields: [workspaceId], references: [id])
+  creator        User                 @relation("RepositoryCreator", fields: [createdBy], references: [id])
+
+  members        RepositoryMember[]
+  branches       Branch[]
+  commits        Commit[]
+  trees          Tree[]
+  blobs          Blob[]
+  mergeRequests  MergeRequest[]
+
+  @@unique([workspaceId, name])
+}
+
+/* =========================
+   REPOSITORY MEMBERS
+========================= */
+
+model RepositoryMember {
+  id            String               @id @default(uuid())
+  repositoryId  String
+  userId        String
+  role          RepositoryMemberRole
+
+  repository    Repository           @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  user          User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([repositoryId, userId])
+}
+
+/* =========================
+   BRANCHES
+========================= */
+
+model Branch {
+  id             String        @id @default(uuid())
+  repositoryId   String
+  name           String
+  headCommitId   String?
+  createdBy      String
+  createdAt      DateTime      @default(now())
+
+  repository     Repository    @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  creator        User          @relation("BranchCreator", fields: [createdBy], references: [id])
+  headCommit     Commit?       @relation("BranchHead", fields: [headCommitId], references: [id])
+
+  sourceMRs      MergeRequest[] @relation("SourceBranch")
+  targetMRs      MergeRequest[] @relation("TargetBranch")
+
+  @@unique([repositoryId, name])
+}
+
+/* =========================
+   COMMITS
+========================= */
+
+model Commit {
+  id                    String     @id @default(uuid())
+  repositoryId          String
+  treeId                String     @unique
+  parentCommitId        String?
+  mergeParentCommitId   String?
+  message               String?
+  authorId              String
+  createdAt             DateTime   @default(now())
+
+  repository            Repository @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  tree                  Tree       @relation(fields: [treeId], references: [id])
+  author                User       @relation("CommitAuthor", fields: [authorId], references: [id])
+
+  parent                Commit?    @relation("CommitParent", fields: [parentCommitId], references: [id])
+  mergeParent           Commit?    @relation("CommitMergeParent", fields: [mergeParentCommitId], references: [id])
+
+  children              Commit[]   @relation("CommitParent")
+  mergeChildren         Commit[]   @relation("CommitMergeParent")
+
+  branchHeads           Branch[]   @relation("BranchHead")
+  mergedInMR            MergeRequest[] @relation("MergedCommit")
+}
+
+/* =========================
+   TREES
+========================= */
+
+model Tree {
+  id            String       @id @default(uuid())
+  repositoryId  String
+  createdAt     DateTime     @default(now())
+
+  repository    Repository   @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  commit        Commit?
+  entries       TreeEntry[]
+
+  treeEntries TreeEntry[] @relation("ChildTree")
+}
+
+/* =========================
+   TREE ENTRIES
+========================= */
+
+model TreeEntry {
+  id            String    @id @default(uuid())
+  treeId        String
+  name          String
+  type          EntryType
+  blobId        String?
+  childTreeId   String?
+
+  tree          Tree      @relation(fields: [treeId], references: [id], onDelete: Cascade)
+  blob          Blob?     @relation(fields: [blobId], references: [id])
+  childTree     Tree?     @relation("ChildTree", fields: [childTreeId], references: [id])
+
+  @@unique([treeId, name])
+}
+
+/* =========================
+   BLOBS
+========================= */
+
+model Blob {
+  id            String       @id @default(uuid())
+  repositoryId  String
+  contentHash   String
+  content       String
+  createdAt     DateTime     @default(now())
+
+  repository    Repository   @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  treeEntries   TreeEntry[]
+
+  @@unique([repositoryId, contentHash])
+}
+
+/* =========================
+   MERGE REQUESTS
+========================= */
+
+model MergeRequest {
+  id                String               @id @default(uuid())
+  repositoryId      String
+  sourceBranchId    String
+  targetBranchId    String
+  title             String
+  description       String?
+  status            MergeRequestStatus   @default(OPEN)
+  createdBy         String
+  mergedBy          String?
+  mergedCommitId    String?
+  createdAt         DateTime             @default(now())
+  updatedAt         DateTime             @updatedAt
+
+  repository        Repository           @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  sourceBranch      Branch               @relation("SourceBranch", fields: [sourceBranchId], references: [id])
+  targetBranch      Branch               @relation("TargetBranch", fields: [targetBranchId], references: [id])
+  creator           User                 @relation("MergeRequestCreator", fields: [createdBy], references: [id])
+  merger            User?                @relation("MergeRequestMerger", fields: [mergedBy], references: [id])
+  mergedCommit      Commit?              @relation("MergedCommit", fields: [mergedCommitId], references: [id])
+
+  comments          MergeRequestComment[]
+}
+
+/* =========================
+   MERGE REQUEST COMMENTS
+========================= */
+
+model MergeRequestComment {
+  id              String        @id @default(uuid())
+  mergeRequestId  String
+  userId          String
+  comment         String
+  createdAt       DateTime      @default(now())
+
+  mergeRequest    MergeRequest  @relation(fields: [mergeRequestId], references: [id], onDelete: Cascade)
+  user            User          @relation(fields: [userId], references: [id])
+}

@@ -1,7 +1,7 @@
 import express from "express";
 import { logger } from "@finverse/logger";
 import { securityMiddleware } from "@finverse/middlewares";
-import apiRouter from "./routes/api";
+import apiRouter from "./api/routes/api";
 
 const app = express();
 
