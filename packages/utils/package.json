@@ -2,11 +2,24 @@
   "name": "@finverse/utils",
   "version": "1.0.0",
   "private": true,
-  "type": "module",
-  "main": "./request.validator.ts",
-  "types": "./request.validator.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -b"
+  },
   "exports": {
-    ".": "./request.validator.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./response": {
+      "types": "./dist/response.handler.d.ts",
+      "import": "./dist/response.handler.js",
+      "require": "./dist/response.handler.js",
+      "default": "./dist/response.handler.js"
+    }
   },
   "dependencies": {
     "zod": "^3.24.2"
@@ -15,7 +28,9 @@
     "express": ">=5.0.0"
   },
   "peerDependenciesMeta": {
-    "express": { "optional": true }
+    "express": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@types/express": "^5.0.6",

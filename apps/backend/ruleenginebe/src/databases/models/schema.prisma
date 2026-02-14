@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  output   = "../../generated/prisma"
 }
 
 datasource db {
@@ -204,7 +205,7 @@ model Blob {
   id            String       @id @default(uuid())
   repositoryId  String
   contentHash   String
-  content       String
+  content       Json?
   createdAt     DateTime     @default(now())
 
   repository    Repository   @relation(fields: [repositoryId], references: [id], onDelete: Cascade)

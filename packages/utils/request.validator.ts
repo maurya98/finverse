@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import type { ZodSchema, ZodError } from "zod";
+import { sendError } from "./response.handler";
 
 /**
  * Result of validating a request payload.
@@ -68,9 +69,6 @@ export function validateBody<T>(schema: ZodSchema<T>) {
       return;
     }
 
-    res.status(400).json({
-      message: "Validation failed",
-      errors: result.errors,
-    });
+    sendError(res, "Validation failed", 400, result.errors);
   };
 }

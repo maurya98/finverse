@@ -1,7 +1,7 @@
 import compression from 'compression';
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction, RequestHandler } from 'express';
 
-export const compressionMiddleware = compression({
+export const compressionMiddleware: RequestHandler = compression({
   // Only compress responses that are larger than 1kb
   threshold: 1024,
   

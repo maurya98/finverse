@@ -3,7 +3,7 @@ import cors from "cors";
 import helmet from "helmet";
 
 const corsOptions: cors.CorsOptions = {
-  origin: (origin, callback) => {
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
     if(process.env.NODE_ENV === "development") {
       return callback(null, true);
     }
@@ -244,8 +244,8 @@ export const securityMiddleware = [
   contentTypeProtection,
   requestSizeLimit,
   parameterPollutionProtection,
-  sqlInjectionProtection,
-  xssProtection,
+  // sqlInjectionProtection,
+  // xssProtection,
 ];
 
 export default securityMiddleware;

@@ -1,0 +1,66 @@
+import { Request, Response, Router } from "express";
+import { validateBody } from "@finverse/utils";
+import { sendSuccess, sendError } from "@finverse/utils";
+import { RepositoryService } from "../../modules/repositories/repository.service.js";
+import { createRepositorySchema, listRepositoriesQuerySchema } from "../validations/repository.validator.js";
+
+export class RepositoriesController {
+  public router: Router;
+  private repositoryService: RepositoryService;
+
+  constructor() {
+    this.router = Router();
+    this.repositoryService = new RepositoryService();
+    this.initRoutes();
+  }
+
+  private initRoutes(): void {
+    this.router.post("/", validateBody(createRepositorySchema), this.create.bind(this));
+    this.router.get("/list", this.list.bind(this));
+    this.router.get("/:id", this.getById.bind(this));
+  }
+
+  private async create(req: Request, res: Response): Promise<Response> {
+    try {
+      const body = req.body as { name: string; workspaceId: string; createdBy: string; defaultBranch?: string };
+      const repo = await this.repositoryService.create(
+        body.name,
+        body.workspaceId,
+        body.createdBy,
+        body.defaultBranch ?? "main"
+      );
+      return sendSuccess(res, repo, 201, "Repository created");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to create repository";
+      if (message.includes("Unique constraint") || message.includes("unique")) {
+        return sendError(res, "Repository with this name already exists in the workspace", 409);
+      }
+      return sendError(res, message, 500);
+    }
+  }
+
+  private async getById(req: Request, res: Response): Promise<Response> {
+    try {
+      const id = typeof req.params.id === "string" ? req.params.id : req.params.id?.[0] ?? "";
+      const repo = await this.repositoryService.findById(id);
+      if (!repo) return sendError(res, "Repository not found", 404);
+      return sendSuccess(res, repo);
+    } catch {
+      return sendError(res, "Failed to get repository", 500);
+    }
+  }
+
+  private async list(req: Request, res: Response): Promise<Response> {
+    try {
+      const parsed = listRepositoriesQuerySchema.safeParse(req.query);
+      if (!parsed.success) {
+        return sendError(res, "Invalid query", 400, parsed.error.errors.map((e) => ({ path: e.path.join("."), message: e.message })));
+      }
+      const { workspaceId, skip, take } = parsed.data;
+      const list = await this.repositoryService.listByWorkspace(workspaceId, skip ?? 0, take ?? 50);
+      return sendSuccess(res, list);
+    } catch {
+      return sendError(res, "Failed to list repositories", 500);
+    }
+  }
+}
