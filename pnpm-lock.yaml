@@ -535,6 +535,9 @@ importers:
 
   libs/middlewares:
     dependencies:
+      '@finverse/logger':
+        specifier: workspace:*
+        version: link:../logger
       '@types/compression':
         specifier: ^1.7.5
         version: 1.8.1
