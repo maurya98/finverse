@@ -79,6 +79,9 @@ export type DecisionGraphStoreType = {
     dictionaries?: DictionaryMap;
     mode?: JdmUiMode;
 
+    /** Optional list of decision keys (e.g. JSON file paths) to show in Decision node key dropdown */
+    decisionKeyOptions?: string[];
+
     nodeTypes: Record<string, Partial<Record<NodeTypeKind, VariableType>>>;
     globalType: Record<string, VariableType>;
   };
@@ -170,6 +173,7 @@ export const DecisionGraphProvider: React.FC<React.PropsWithChildren<DecisionGra
         activePanel: undefined,
         panels: [],
         compactMode: localStorage.getItem('jdm-compact-mode') === 'true',
+        decisionKeyOptions: undefined,
         nodeTypes: {},
         globalType: {},
       })),

@@ -3,6 +3,7 @@ import { P, match } from 'ts-pattern';
 
 import type { DecisionEdge, DecisionGraphType, DecisionNode, DiffMetadata } from '../dg-types';
 import type { CustomNodeSpecification } from '../nodes/custom-node';
+import { decisionSpecification } from '../nodes/specifications/decision.specification';
 import { decisionTableSpecification } from '../nodes/specifications/decision-table.specification';
 import { expressionSpecification } from '../nodes/specifications/expression.specification';
 import { functionSpecification } from '../nodes/specifications/function.specification';
@@ -98,6 +99,9 @@ export const processNodes = (
         })
         .with([NodeKind.Switch, NodeKind.Switch], () =>
           switchSpecification?.getDiffContent?.(newNode?.content, oldNode?.content),
+        )
+        .with([NodeKind.Decision, NodeKind.Decision], () =>
+          decisionSpecification?.getDiffContent?.(newNode?.content, oldNode?.content),
         )
         .otherwise(() => {
           const component = components.find((cmp) => cmp.type === newNode.type);

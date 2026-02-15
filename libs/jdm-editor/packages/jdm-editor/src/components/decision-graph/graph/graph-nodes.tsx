@@ -44,6 +44,7 @@ export const GraphNodes: React.FC<GraphComponentsProps> = React.memo(({ classNam
             .with(NodeKind.Function, () => false)
             .with(NodeKind.DecisionTable, () => false)
             .with(NodeKind.Expression, () => false)
+            .with(NodeKind.Decision, () => false)
             .otherwise(() => true),
           position: node.position,
           icon: specification?.icon,

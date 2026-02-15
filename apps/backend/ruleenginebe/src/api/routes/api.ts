@@ -1,13 +1,15 @@
 import { Router } from "express";
-import { AuthController } from "../controllers/auth.controllers.js";
-import { BlobsController } from "../controllers/blobs.controller.js";
-import { BranchesController } from "../controllers/branches.controller.js";
-import { CommitsController } from "../controllers/commits.controller.js";
-import { MergeRequestsController } from "../controllers/merge-requests.controller.js";
-import { RepositoriesController } from "../controllers/repositories.controller.js";
-import { TreesController } from "../controllers/trees.controller.js";
-import { UsersController } from "../controllers/users.controller.js";
-import { WorkspacesController } from "../controllers/workspaces.controller.js";
+import { AuthController } from "../controllers/auth.controllers";
+import { BlobsController } from "../controllers/blobs.controller";
+import { BranchesController } from "../controllers/branches.controller";
+import { CommitsController } from "../controllers/commits.controller";
+import { MergeRequestsController } from "../controllers/merge-requests.controller";
+import { RepositoriesController } from "../controllers/repositories.controller";
+import { ExecuteController } from "../controllers/execute.controller";
+import { SimulateController } from "../controllers/simulate.controller";
+import { TreesController } from "../controllers/trees.controller";
+import { UsersController } from "../controllers/users.controller";
+import { WorkspacesController } from "../controllers/workspaces.controller";
 
 const router: Router = Router();
 
@@ -24,6 +26,8 @@ router.get("/", (_req, res) => {
       "/branches",
       "/commits",
       "/merge-requests",
+      "/execute",
+      "/simulate",
       "/trees",
     ],
   });
@@ -35,6 +39,8 @@ router.use("/branches/", new BranchesController().router);
 router.use("/commits/", new CommitsController().router);
 router.use("/merge-requests/", new MergeRequestsController().router);
 router.use("/repositories/", new RepositoriesController().router);
+router.use("/execute/", new ExecuteController().router);
+router.use("/simulate/", new SimulateController().router);
 router.use("/trees/", new TreesController().router);
 router.use("/users/", new UsersController().router);
 router.use("/workspaces/", new WorkspacesController().router);

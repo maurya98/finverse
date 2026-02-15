@@ -1,4 +1,4 @@
-import { prisma } from "../../databases/client.js";
+import { prisma } from "../../databases/client";
 
 export type WorkspaceOut = {
   id: string;
@@ -28,5 +28,20 @@ export class WorkspaceService {
       orderBy: { createdAt: "desc" },
     });
     return list.map((ws) => ({ id: ws.id, name: ws.name, ownerId: ws.ownerId, createdAt: ws.createdAt }));
+  }
+
+  /** Delete a workspace and all its repositories (and their branches, commits, files, etc.). */
+  async delete(id: string): Promise<boolean> {
+    const ws = await prisma.workspace.findUnique({ where: { id } });
+    if (!ws) return false;
+
+    const repos = await prisma.repository.findMany({ where: { workspaceId: id }, select: { id: true } });
+    const { RepositoryService } = await import("../repositories/repository.service.js");
+    const repoService = new RepositoryService();
+    for (const r of repos) {
+      await repoService.delete(r.id);
+    }
+    await prisma.workspace.delete({ where: { id } });
+    return true;
   }
 }

@@ -1,8 +1,8 @@
 import { Request, Response, Router } from "express";
 import { validateBody } from "@finverse/utils";
 import { sendSuccess, sendError } from "@finverse/utils";
-import { BlobService } from "../../modules/vcs-engine/blob.service.js";
-import { createBlobSchema, listBlobsQuerySchema } from "../validations/blob.validator.js";
+import { BlobService } from "../../modules/vcs-engine/blob.service";
+import { createBlobSchema, listBlobsQuerySchema } from "../validations/blob.validator";
 
 export class BlobsController {
   public router: Router;

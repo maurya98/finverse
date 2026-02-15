@@ -1,12 +1,12 @@
 import { Request, Response, Router } from "express";
 import { validateBody } from "@finverse/utils";
 import { sendSuccess, sendError } from "@finverse/utils";
-import { BranchService } from "../../modules/vcs-engine/branch.service.js";
+import { BranchService } from "../../modules/vcs-engine/branch.service";
 import {
   createBranchSchema,
   updateBranchHeadSchema,
   listBranchesQuerySchema,
-} from "../validations/branch.validator.js";
+} from "../validations/branch.validator";
 
 export class BranchesController {
   public router: Router;

@@ -2,7 +2,7 @@ import { Request, Response, Router } from "express";
 import { loginSchema } from "../validations/auth.validator";
 import { validateBody } from "@finverse/utils";
 import { sendSuccess, sendError } from "@finverse/utils";
-import { AuthService } from "../../modules/auth/auth.service.js";
+import { AuthService } from "../../modules/auth/auth.service";
 
 export class AuthController {
   public router: Router;

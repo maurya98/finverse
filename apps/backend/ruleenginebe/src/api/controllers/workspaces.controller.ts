@@ -1,8 +1,8 @@
 import { Request, Response, Router } from "express";
 import { validateBody } from "@finverse/utils";
 import { sendSuccess, sendError } from "@finverse/utils";
-import { WorkspaceService } from "../../modules/workspaces/workspace.service.js";
-import { createWorkspaceSchema, listWorkspacesQuerySchema } from "../validations/workspace.validator.js";
+import { WorkspaceService } from "../../modules/workspaces/workspace.service";
+import { createWorkspaceSchema, listWorkspacesQuerySchema } from "../validations/workspace.validator";
 
 export class WorkspacesController {
   public router: Router;
@@ -18,6 +18,7 @@ export class WorkspacesController {
     this.router.post("/", validateBody(createWorkspaceSchema), this.create.bind(this));
     this.router.get("/list", this.list.bind(this));
     this.router.get("/:id", this.getById.bind(this));
+    this.router.delete("/:id", this.delete.bind(this));
   }
 
   private async create(req: Request, res: Response): Promise<Response> {
@@ -53,6 +54,18 @@ export class WorkspacesController {
       return sendSuccess(res, list);
     } catch {
       return sendError(res, "Failed to list workspaces", 500);
+    }
+  }
+
+  private async delete(req: Request, res: Response): Promise<Response> {
+    try {
+      const id = typeof req.params.id === "string" ? req.params.id : req.params.id?.[0] ?? "";
+      const deleted = await this.workspaceService.delete(id);
+      if (!deleted) return sendError(res, "Workspace not found", 404);
+      return sendSuccess(res, undefined, 200, "Workspace deleted");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to delete workspace";
+      return sendError(res, message, 500);
     }
   }
 }

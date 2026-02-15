@@ -3,7 +3,7 @@
  * Base URL: VITE_API_URL or http://localhost:3000
  */
 
-import { getToken } from "./auth";
+import { getToken } from "../../auth/services/auth";
 
 const getBaseUrl = (): string => {
   const url = import.meta.env.VITE_API_URL;
@@ -50,23 +50,6 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<ApiR
   return json;
 }
 
-// --- Auth ---
-export type LoginBody = { email: string; password: string };
-export type LoginData = {
-  token: string;
-  user: { id: string; email: string; name: string | null; role: string };
-};
-export async function login(body: LoginBody): Promise<ApiResponse<LoginData>> {
-  const base = getBaseUrl();
-  const res = await fetch(`${base}/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  const json = (await res.json()) as ApiResponse<LoginData>;
-  if (!res.ok && !isApiError(json)) return { success: false, message: "Login failed" };
-  return json;
-}
 
 // --- Workspaces ---
 export type Workspace = { id: string; name: string; ownerId: string; createdAt: string };
@@ -78,6 +61,9 @@ export async function createWorkspace(name: string, ownerId: string): Promise<Ap
 }
 export async function getWorkspace(id: string): Promise<ApiResponse<Workspace>> {
   return request(`/workspaces/${id}`);
+}
+export async function deleteWorkspace(id: string): Promise<ApiResponse<unknown>> {
+  return request(`/workspaces/${id}`, { method: "DELETE" });
 }
 
 // --- Repositories ---
@@ -107,6 +93,9 @@ export async function createRepository(
 }
 export async function getRepository(id: string): Promise<ApiResponse<Repository>> {
   return request(`/repositories/${id}`);
+}
+export async function deleteRepository(id: string): Promise<ApiResponse<unknown>> {
+  return request(`/repositories/${id}`, { method: "DELETE" });
 }
 
 // --- Blobs ---
@@ -138,6 +127,15 @@ export async function createTree(
 }
 export async function getTree(id: string): Promise<ApiResponse<Tree>> {
   return request(`/trees/${id}`);
+}
+export async function listTrees(
+  repositoryId: string,
+  skip = 0,
+  take = 50
+): Promise<ApiResponse<Tree[]>> {
+  return request(
+    `/trees/list?repositoryId=${encodeURIComponent(repositoryId)}&skip=${skip}&take=${take}`
+  );
 }
 export async function addTreeEntry(
   treeId: string,
@@ -284,4 +282,21 @@ export async function diffBranches(
   return request(
     `/merge-requests/diff?repositoryId=${encodeURIComponent(repositoryId)}&baseBranch=${encodeURIComponent(baseBranch)}&targetBranch=${encodeURIComponent(targetBranch)}`
   );
+}
+
+// --- Simulate ---
+export type SimulateResponse = {
+  result: unknown;
+  trace: Record<string, { id: string; name: string; input: unknown; output: unknown; performance: string | null; traceData: unknown; order?: number }>;
+  performance: string;
+};
+
+export async function simulate(params: {
+  content: unknown;
+  context: unknown;
+  repositoryId?: string;
+  branch?: string;
+  decisions?: Record<string, unknown>;
+}): Promise<ApiResponse<SimulateResponse>> {
+  return request("/simulate/", { method: "POST", body: JSON.stringify(params) });
 }

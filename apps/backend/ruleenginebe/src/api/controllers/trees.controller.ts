@@ -1,12 +1,12 @@
 import { Request, Response, Router } from "express";
 import { validateBody } from "@finverse/utils";
 import { sendSuccess, sendError } from "@finverse/utils";
-import { TreeService } from "../../modules/vcs-engine/tree.service.js";
+import { TreeService } from "../../modules/vcs-engine/tree.service";
 import {
   createTreeSchema,
   addTreeEntrySchema,
   listTreesQuerySchema,
-} from "../validations/tree.validator.js";
+} from "../validations/tree.validator";
 
 export class TreesController {
   public router: Router;

@@ -1,8 +1,8 @@
 import { Request, Response, Router } from "express";
 import { validateBody } from "@finverse/utils";
 import { sendSuccess, sendError } from "@finverse/utils";
-import { RepositoryService } from "../../modules/repositories/repository.service.js";
-import { createRepositorySchema, listRepositoriesQuerySchema } from "../validations/repository.validator.js";
+import { RepositoryService } from "../../modules/repositories/repository.service";
+import { createRepositorySchema, listRepositoriesQuerySchema } from "../validations/repository.validator";
 
 export class RepositoriesController {
   public router: Router;
@@ -18,6 +18,7 @@ export class RepositoriesController {
     this.router.post("/", validateBody(createRepositorySchema), this.create.bind(this));
     this.router.get("/list", this.list.bind(this));
     this.router.get("/:id", this.getById.bind(this));
+    this.router.delete("/:id", this.delete.bind(this));
   }
 
   private async create(req: Request, res: Response): Promise<Response> {
@@ -61,6 +62,18 @@ export class RepositoriesController {
       return sendSuccess(res, list);
     } catch {
       return sendError(res, "Failed to list repositories", 500);
+    }
+  }
+
+  private async delete(req: Request, res: Response): Promise<Response> {
+    try {
+      const id = typeof req.params.id === "string" ? req.params.id : req.params.id?.[0] ?? "";
+      const deleted = await this.repositoryService.delete(id);
+      if (!deleted) return sendError(res, "Repository not found", 404);
+      return sendSuccess(res, undefined, 200, "Repository deleted");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to delete repository";
+      return sendError(res, message, 500);
     }
   }
 }

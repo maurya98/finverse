@@ -1,0 +1,288 @@
+.dashboard-page {
+  --dash-bg: #1a1b20;
+  --dash-header-border: rgba(148, 163, 184, 0.12);
+  --dash-card-bg: rgba(30, 41, 59, 0.5);
+  --dash-card-hover: rgba(51, 65, 85, 0.6);
+  --dash-accent: #0d9488;
+  --dash-text: #f1f5f9;
+  --dash-text-muted: #94a3b8;
+  --dash-error: #f87171;
+
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--dash-bg);
+  color: var(--dash-text);
+  box-sizing: border-box;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--dash-header-border);
+}
+
+.dashboard-header h1 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.dashboard-user {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.dashboard-user span {
+  font-size: 0.9rem;
+  color: var(--dash-text-muted);
+}
+
+.dashboard-user button {
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: 1px solid var(--dash-header-border);
+  color: var(--dash-text);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.dashboard-user button:hover {
+  border-color: var(--dash-accent);
+  color: var(--dash-accent);
+}
+
+.dashboard-main {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  align-items: start;
+}
+
+.workspaces-section h2,
+.repos-section h2 {
+  margin: 0 0 1rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--dash-text-muted);
+}
+
+.create-form {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.create-form input {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--dash-header-border);
+  border-radius: 6px;
+  background: rgba(15, 23, 42, 0.6);
+  color: var(--dash-text);
+  font-size: 0.9rem;
+}
+
+.create-form input::placeholder {
+  color: var(--dash-text-muted);
+}
+
+.create-form button {
+  padding: 0.5rem 1rem;
+  background: var(--dash-accent);
+  border: none;
+  color: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.create-form button:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.create-form button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.workspace-list,
+.repo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.workspace-card,
+.repo-card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0;
+  padding: 0;
+  border: 1px solid var(--dash-header-border);
+  border-radius: 8px;
+  background: var(--dash-card-bg);
+  color: var(--dash-text);
+  text-align: left;
+  transition: background 0.15s, border-color 0.15s;
+  overflow: hidden;
+}
+
+.workspace-card:hover,
+.repo-card:hover {
+  background: var(--dash-card-hover);
+}
+
+.workspace-card.selected {
+  border-color: var(--dash-accent);
+  background: rgba(13, 148, 136, 0.12);
+}
+
+.workspace-card-main,
+.repo-card-main {
+  flex: 1;
+  padding: 0.75rem 1rem;
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+}
+
+.workspace-card-delete,
+.repo-card-delete {
+  flex-shrink: 0;
+  padding: 0.5rem 0.6rem;
+  border: none;
+  border-left: 1px solid var(--dash-header-border);
+  background: transparent;
+  color: var(--dash-text-muted);
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.workspace-card-delete:hover,
+.repo-card-delete:hover {
+  color: var(--dash-error);
+  background: rgba(248, 113, 113, 0.1);
+}
+
+.workspace-name,
+.repo-name {
+  font-weight: 500;
+}
+
+.repo-meta {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--dash-text-muted);
+  margin-top: 0.25rem;
+}
+
+.dashboard-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.dashboard-modal {
+  background: var(--dash-card-bg);
+  border: 1px solid var(--dash-header-border);
+  border-radius: 10px;
+  padding: 1.25rem 1.5rem;
+  min-width: 360px;
+  max-width: 90vw;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.dashboard-modal-title {
+  margin: 0 0 0.75rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.dashboard-modal-text {
+  margin: 0 0 1.25rem;
+  font-size: 0.9rem;
+  color: var(--dash-text-muted);
+  line-height: 1.5;
+}
+
+.dashboard-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.dashboard-modal-btn {
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  border: none;
+}
+
+.dashboard-modal-btn.secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--dash-text);
+}
+
+.dashboard-modal-btn.secondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.dashboard-modal-btn.danger {
+  background: var(--dash-error);
+  color: #fff;
+}
+
+.dashboard-modal-btn.danger:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.dashboard-modal-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.dashboard-error {
+  position: fixed;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.75rem 1.25rem;
+  background: var(--dash-error);
+  color: #fff;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  z-index: 100;
+}
+
+.dashboard-loading {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.4);
+  color: var(--dash-text);
+}
+
+@media (max-width: 768px) {
+  .dashboard-main {
+    grid-template-columns: 1fr;
+  }
+}

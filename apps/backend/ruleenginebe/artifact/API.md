@@ -48,6 +48,8 @@ REST API reference for the Rule Engine Backend. All endpoints return JSON.
 | `commits/` | VCS commits |
 | `branches/` | VCS branches |
 | `merge-requests/` | Merge requests and diff |
+| `execute/` | Execute index.json decision |
+| `simulate/` | Simulate a decision graph |
 
 Example: `POST http://localhost:3000/blobs/` creates a blob.
 
@@ -766,6 +768,69 @@ All diff endpoints return the same structure:
 - **removed** — Paths present only in the base (removed blobs).
 - **modified** — Paths in both with different `contentHash` (changed content).
 - Paths use `/` for nesting (e.g. `rules/main.json`).
+
+---
+
+## Execute
+
+Execute the **index.json** decision graph from a repository branch (default `main`). The engine loads `index.json` from the branch’s root tree, resolves any Decision nodes (sub-decisions) from the same repository and branch, and evaluates with the provided context.
+
+### POST `execute/`
+
+Execute index.json in a repository with the given context.
+
+**Request body**
+
+| Field         | Type   | Required | Description                                      |
+|---------------|--------|----------|--------------------------------------------------|
+| repositoryId  | string | Yes      | Repository UUID                                  |
+| context       | any    | Yes      | Input context for the decision (JSON object)      |
+| branch        | string | No       | Branch name; default `main`                      |
+
+**Success (200)** — `data`: `{ result, performance }`
+
+- **result** — Output of the decision evaluation (depends on the JDM graph).
+- **performance** — Engine-reported or measured execution time (e.g. `"2ms"`).
+
+**Errors**
+
+- `400` — Validation failed (e.g. missing `repositoryId` or `context`).
+- `404` — `index.json` not found in the repository on the given branch.
+- `500` — Evaluation error (e.g. invalid graph, runtime error in a node).
+
+**Example**
+
+```json
+// Request
+{
+  "repositoryId": "550e8400-e29b-41d4-a716-446655440000",
+  "context": {
+    "customer": { "tier": "gold", "yearsActive": 3 },
+    "order": { "subtotal": 250, "items": 5 }
+  }
+}
+
+// Optional: use a different branch
+{
+  "repositoryId": "550e8400-e29b-41d4-a716-446655440000",
+  "context": { "input": 42 },
+  "branch": "develop"
+}
+
+// Response
+{
+  "success": true,
+  "data": {
+    "result": { "discount": 0.15, "freeShipping": true },
+    "performance": "3ms"
+  }
+}
+```
+
+**Notes**
+
+- `index.json` must exist at the **root** of the branch’s tree (a blob entry named `index.json`).
+- Decision nodes in the graph that reference other JSON files (e.g. `pricing/discount.json`) are loaded from the same repository and branch.
 
 ---
 

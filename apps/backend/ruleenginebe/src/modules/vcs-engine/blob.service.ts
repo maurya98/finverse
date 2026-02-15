@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { prisma } from "../../databases/client.js";
+import { prisma } from "../../databases/client";
 
 /** Stable JSON stringify for hashing (object keys sorted). */
 function stableStringify(value: unknown): string {

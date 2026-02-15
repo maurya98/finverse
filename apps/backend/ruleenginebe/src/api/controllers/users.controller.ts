@@ -1,8 +1,8 @@
 import { Request, Response, Router } from "express";
 import { validateBody } from "@finverse/utils";
 import { sendSuccess, sendError } from "@finverse/utils";
-import { UserService } from "../../modules/users/user.service.js";
-import { createUserSchema, updateUserSchema } from "../validations/user.validator.js";
+import { UserService } from "../../modules/users/user.service";
+import { createUserSchema, updateUserSchema } from "../validations/user.validator";
 
 export class UsersController {
   public router: Router;

@@ -5,7 +5,7 @@
     "lint": "eslint .",
     "build": "prisma generate && tsc -b && cp -r src/generated dist/",
     "start": "node dist/app.js",
-    "dev": "prisma generate && tsc -b && cp -r src/generated dist/ && node dist/app.js",
+    "dev": "prisma generate && tsc -b && cp -r src/generated dist/ && nodemon",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
@@ -34,8 +34,10 @@
     "@finverse/logger": "workspace:*",
     "@finverse/middlewares": "workspace:*",
     "@finverse/utils": "workspace:*",
+    "@gorules/zen-engine": "^0.52.0",
     "@prisma/adapter-pg": "^7.3.0",
     "@prisma/client": "^7.3.0",
+    "nodemon": "^3.1.11",
     "pg": "^8.18.0",
     "zod": "^3.25.76"
   }

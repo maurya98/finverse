@@ -1,4 +1,4 @@
-import { prisma } from "../../databases/client.js";
+import { prisma } from "../../databases/client";
 
 export type CommitWithRelations = {
   id: string;

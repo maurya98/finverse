@@ -1,15 +1,15 @@
 import { Request, Response, Router } from "express";
 import { validateBody } from "@finverse/utils";
 import { sendSuccess, sendError } from "@finverse/utils";
-import { MergeRequestService } from "../../modules/vcs-engine/merge.service.js";
-import { DiffService } from "../../modules/vcs-engine/diff.service.js";
+import { MergeRequestService } from "../../modules/vcs-engine/merge.service";
+import { DiffService } from "../../modules/vcs-engine/diff.service";
 import {
   createMergeRequestSchema,
   updateMergeRequestStatusSchema,
   mergeMergeRequestSchema,
   addMergeRequestCommentSchema,
   listMergeRequestsQuerySchema,
-} from "../validations/merge-request.validator.js";
+} from "../validations/merge-request.validator";
 
 export class MergeRequestsController {
   public router: Router;

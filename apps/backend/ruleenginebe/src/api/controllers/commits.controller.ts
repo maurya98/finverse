@@ -1,8 +1,8 @@
 import { Request, Response, Router } from "express";
 import { validateBody } from "@finverse/utils";
 import { sendSuccess, sendError } from "@finverse/utils";
-import { CommitService } from "../../modules/vcs-engine/commit.service.js";
-import { createCommitSchema, listCommitsQuerySchema } from "../validations/commit.validator.js";
+import { CommitService } from "../../modules/vcs-engine/commit.service";
+import { createCommitSchema, listCommitsQuerySchema } from "../validations/commit.validator";
 
 export class CommitsController {
   public router: Router;

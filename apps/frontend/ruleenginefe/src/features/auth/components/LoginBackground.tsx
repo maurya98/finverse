@@ -1,0 +1,76 @@
+import { useEffect, useRef } from "react";
+
+const WAVE_PERIOD = 280; // one wave segment in viewBox units
+const SECONDS_PER_CYCLE = 10; // medium pace
+const UNITS_PER_SECOND = WAVE_PERIOD / SECONDS_PER_CYCLE;
+
+function WaveTile() {
+  return (
+    <g fill="none" strokeWidth="2">
+      <path stroke="rgb(84, 101, 203)" strokeOpacity="0" d="M 0 505.414 C 280 505.414 560 626.586 840 626.586 C 1120 626.586 1400 505.414 1680 505.414" transform="matrix(1,0,0,1,-151.2,0)" />
+      <path stroke="rgb(80, 106, 205)" strokeOpacity="0" d="M 0 507.335 C 280 507.335 560 624.665 840 624.665 C 1120 624.665 1400 507.335 1680 507.335" transform="matrix(1,0,0,1,-169.12,0)" />
+      <path stroke="rgb(76, 112, 207)" strokeOpacity="0" d="M 0 509.538 C 280 509.538 560 622.462 840 622.462 C 1120 622.462 1400 509.538 1680 509.538" transform="matrix(1,0,0,1,-187.04,0)" />
+      <path stroke="rgb(69, 122, 210)" strokeOpacity="0" d="M 0 513.402 C 280 513.402 560 618.598 840 618.598 C 1120 618.598 1400 513.402 1680 513.402" transform="matrix(1,0,0,1,-213.92,0)" />
+      <path stroke="rgb(64, 128, 212)" strokeOpacity="0" d="M 0 516.372 C 280 516.372 560 615.628 840 615.628 C 1120 615.628 1400 516.372 1680 516.372" transform="matrix(1,0,0,1,-231.84,0)" />
+      <path stroke="rgb(56, 140, 216)" strokeOpacity="0" d="M 0 523.3 C 280 523.3 560 608.7 840 608.7 C 1120 608.7 1400 523.3 1680 523.3" transform="matrix(1,0,0,1,-267.68,0)" />
+      <path stroke="rgb(48, 150, 219)" strokeOpacity="0" d="M 0 533.853 C 280 533.853 560 598.147 840 598.147 C 1120 598.147 1400 533.853 1680 533.853" transform="matrix(1,0,0,1,-303.52,0)" />
+      <path stroke="rgb(45, 155, 221)" strokeOpacity="0" d="M 0 541.144 C 280 541.144 560 590.856 840 590.856 C 1120 590.856 1400 541.144 1680 541.144" transform="matrix(1,0,0,1,-339.36,0)" />
+      <path stroke="rgb(42, 159, 222)" strokeOpacity="0.15" d="M 0 551.79 C 280 551.79 560 580.21 840 580.21 C 1120 580.21 1400 551.79 1680 551.79" transform="matrix(1,0,0,1,-375.2,0)" />
+      <path stroke="rgb(42, 159, 222)" strokeOpacity="0.35" d="M 0 566 C 280 566 560 566 840 566 C 1120 566 1400 566 1680 566" transform="matrix(1,0,0,1,-420,0)" />
+      <path stroke="rgb(42, 159, 222)" strokeOpacity="0.15" d="M 0 580.21 C 280 580.21 560 551.79 840 551.79 C 1120 551.79 1400 580.21 1680 580.21" transform="matrix(1,0,0,1,-464.8,0)" />
+      <path stroke="rgb(42, 162, 219)" strokeOpacity="0" d="M 0 588.283 C 280 588.283 560 543.717 840 543.717 C 1120 543.717 1400 588.283 1680 588.283" transform="matrix(1,0,0,1,-491.68,0)" />
+      <path stroke="rgb(39, 181, 200)" strokeOpacity="0.09" d="M 0 612.332 C 280 612.332 560 519.668 840 519.668 C 1120 519.668 1400 612.332 1680 612.332" transform="matrix(1,0,0,1,-590.24,0)" />
+      <path stroke="rgb(36, 206, 175)" strokeOpacity="0.3" d="M 0 624.665 C 280 624.665 560 507.335 840 507.335 C 1120 507.335 1400 624.665 1680 624.665" transform="matrix(1,0,0,1,-670.88,0)" />
+      <path stroke="rgb(34, 223, 158)" strokeOpacity="0.5" d="M 0 631.299 C 280 631.299 560 500.701 840 500.701 C 1120 500.701 1400 631.299 1680 631.299" transform="matrix(1,0,0,1,-751.52,0)" />
+      <path stroke="rgb(33, 228, 153)" strokeOpacity="0.66" d="M 0 633.326 C 280 633.326 560 498.674 840 498.674 C 1120 498.674 1400 633.326 1680 633.326" transform="matrix(1,0,0,1,-814.24,0)" />
+    </g>
+  );
+}
+
+export function LoginBackground() {
+  const wrapperRef = useRef<SVGGElement>(null);
+  const startTimeRef = useRef<number>(null);
+  const rafRef = useRef<number>(0);
+
+  useEffect(() => {
+    const wrapper = wrapperRef.current;
+    if (!wrapper) return;
+
+    const tick = (now: number) => {
+      if (startTimeRef.current === null) startTimeRef.current = now;
+      const elapsed = (now - startTimeRef.current) / 1000; // seconds
+      // Continuous offset in [0, WAVE_PERIOD); seamless loop
+      const offset = ((elapsed * UNITS_PER_SECOND) % WAVE_PERIOD) - (WAVE_PERIOD/2);
+      wrapper.setAttribute("transform", `translate(${-offset}, 0)`);
+      rafRef.current = requestAnimationFrame(tick);
+    };
+
+    rafRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, []);
+
+  return (
+    <div className="login-bg" aria-hidden>
+      <div className="login-bg-svg">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 1680 898"
+          preserveAspectRatio="xMidYMid slice"
+          width="100%"
+          height="100%"
+          className="login-bg-svg-element"
+        >
+          <rect width="100%" height="100%" fill="rgb(26, 27, 32)" />
+          <g ref={wrapperRef} className="login-bg-waves">
+            <g transform="translate(0, 0)">
+              <WaveTile />
+            </g>
+            <g transform={`translate(${WAVE_PERIOD}, 0)`}>
+              <WaveTile />
+            </g>
+          </g>
+        </svg>
+      </div>
+    </div>
+  );
+}

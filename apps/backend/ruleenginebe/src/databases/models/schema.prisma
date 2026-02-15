@@ -141,7 +141,7 @@ model Branch {
 model Commit {
   id                    String     @id @default(uuid())
   repositoryId          String
-  treeId                String     @unique
+  treeId                String
   parentCommitId        String?
   mergeParentCommitId   String?
   message               String?
@@ -172,7 +172,7 @@ model Tree {
   createdAt     DateTime     @default(now())
 
   repository    Repository   @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
-  commit        Commit?
+  commits       Commit[]
   entries       TreeEntry[]
 
   treeEntries TreeEntry[] @relation("ChildTree")

@@ -1,5 +1,5 @@
 import bcrypt from "bcrypt";
-import { prisma } from "../../databases/client.js";
+import { prisma } from "../../databases/client";
 
 export const USER_ROLES = ["ADMIN", "MAINTAINER", "DEVELOPER", "VIEWER"] as const;
 export type UserRole = (typeof USER_ROLES)[number];

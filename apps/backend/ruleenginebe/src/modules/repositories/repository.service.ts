@@ -1,4 +1,4 @@
-import { prisma } from "../../databases/client.js";
+import { prisma } from "../../databases/client";
 
 export type RepositoryOut = {
   id: string;
@@ -50,6 +50,25 @@ export class RepositoryService {
       orderBy: { updatedAt: "desc" },
     });
     return list.map((r) => this.toOut(r));
+  }
+
+  /** Delete a repository and all its VCS data (branches, commits, trees, blobs, merge requests). */
+  async delete(id: string): Promise<boolean> {
+    const repo = await prisma.repository.findUnique({ where: { id } });
+    if (!repo) return false;
+
+    await prisma.$transaction(async (tx) => {
+      await tx.branch.updateMany({ where: { repositoryId: id }, data: { headCommitId: null } });
+      await tx.mergeRequest.deleteMany({ where: { repositoryId: id } });
+      await tx.branch.deleteMany({ where: { repositoryId: id } });
+      await tx.commit.deleteMany({ where: { repositoryId: id } });
+      await tx.treeEntry.deleteMany({ where: { tree: { repositoryId: id } } });
+      await tx.tree.deleteMany({ where: { repositoryId: id } });
+      await tx.blob.deleteMany({ where: { repositoryId: id } });
+      await tx.repositoryMember.deleteMany({ where: { repositoryId: id } });
+      await tx.repository.delete({ where: { id } });
+    });
+    return true;
   }
 
   private toOut(r: {
