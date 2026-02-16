@@ -2,6 +2,7 @@ import { Request, Response, Router } from "express";
 import { validateBody } from "@finverse/utils";
 import { sendSuccess, sendError } from "@finverse/utils";
 import { SimulateService } from "../../modules/simulate/simulate.service";
+import { RepositoryService } from "../../modules/repositories/repository.service";
 import { BlobService, BranchService, CommitService, TreeService } from "../../modules/vcs-engine/index";
 import { executeBodySchema } from "../validations/execute.validator";
 
@@ -15,7 +16,8 @@ export class ExecuteController {
       new BlobService(),
       new BranchService(),
       new CommitService(),
-      new TreeService()
+      new TreeService(),
+      new RepositoryService()
     );
     this.initRoutes();
   }
@@ -39,7 +41,10 @@ export class ExecuteController {
       return sendSuccess(res, output);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Execute failed";
-      if (message.includes("not found")) {
+      if (
+        message.includes("not found") ||
+        message.includes("has no commits")
+      ) {
         return sendError(res, message, 404);
       }
       return sendError(res, message, 500);

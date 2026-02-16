@@ -3,6 +3,7 @@ import { BlobService } from "../vcs-engine/blob.service.js";
 import { BranchService } from "../vcs-engine/branch.service.js";
 import { CommitService } from "../vcs-engine/commit.service.js";
 import { TreeService } from "../vcs-engine/tree.service.js";
+import type { RepositoryService } from "../repositories/repository.service.js";
 
 export type SimulateInput = {
   /** Main JDM graph (nodes + edges) */
@@ -37,7 +38,8 @@ export class SimulateService {
     private blobService: BlobService,
     private branchService: BranchService,
     private commitService: CommitService,
-    private treeService: TreeService
+    private treeService: TreeService,
+    private repositoryService?: RepositoryService
   ) {}
 
   /**
@@ -83,6 +85,7 @@ export class SimulateService {
   async simulate(input: SimulateInput): Promise<SimulateOutput> {
     const { content, context, repositoryId, branch, decisions = {} } = input;
 
+    // Loader for Decision nodes: content.key (per GoRules JDM) references a sub-decision path in the repo (e.g. "pricing/discount.json").
     const loader =
       repositoryId && branch
         ? async (key: string): Promise<Buffer> => {
@@ -146,17 +149,88 @@ export class SimulateService {
   }
 
   /**
+   * Find index.json by walking Tree via TreeEntry: for the given treeId, load entries from TreeEntry;
+   * if an entry is BLOB with name "index.json" return its blobId; if entry is TREE, recurse into childTreeId.
+   */
+  private async findIndexJsonBlobIdInTree(treeId: string): Promise<string | null> {
+    const tree = await this.treeService.findById(treeId);
+    if (!tree) return null;
+
+    for (const entry of tree.entries) {
+      if (entry.name === "index.json" && entry.type === "BLOB" && entry.blobId != null) {
+        return entry.blobId;
+      }
+      if (entry.type === "TREE" && entry.childTreeId != null) {
+        const found = await this.findIndexJsonBlobIdInTree(entry.childTreeId);
+        if (found != null) return found;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Resolve index.json blob using: Repository → Branch → Commit → Tree (treeId) → TreeEntry (track children) → Blob.
+   * Uses treeId to load Tree, then TreeEntry rows for that tree; follows childTreeId for TREE entries until index.json BLOB is found.
+   */
+  private async getIndexJsonContent(
+    repositoryId: string,
+    branchName: string
+  ): Promise<unknown> {
+    if (this.repositoryService) {
+      const repo = await this.repositoryService.findById(repositoryId);
+      if (!repo) {
+        throw new Error(`Repository not found: ${repositoryId}`);
+      }
+    }
+
+    const branch = await this.branchService.findByName(repositoryId, branchName);
+    if (!branch) {
+      throw new Error(`Branch not found: ${branchName} in repository ${repositoryId}`);
+    }
+    if (!branch.headCommitId) {
+      throw new Error(`Branch ${branchName} has no commits in repository ${repositoryId}`);
+    }
+
+    const commit = await this.commitService.findById(branch.headCommitId);
+    if (!commit) {
+      throw new Error(`Commit not found: ${branch.headCommitId}`);
+    }
+
+    const tree = await this.treeService.findById(commit.treeId);
+    if (!tree) {
+      throw new Error(`Tree not found: ${commit.treeId} for branch ${branchName}`);
+    }
+
+    const blobId = await this.findIndexJsonBlobIdInTree(commit.treeId);
+    if (blobId == null) {
+      throw new Error(
+        `index.json not found in repository ${repositoryId} on branch ${branchName}`
+      );
+    }
+
+    const blob = await this.blobService.findById(blobId);
+    if (!blob) {
+      throw new Error(`Blob not found: ${blobId} for index.json`);
+    }
+
+    return blob.content ?? null;
+  }
+
+  /**
    * Execute index.json from a repository branch (default main). Loads the decision graph from index.json,
-   * resolves sub-decisions (Decision nodes) from the same repo/branch, and evaluates with the given context.
+   * resolves sub-decisions (Decision nodes with content.key) from the same repo/branch via the loader,
+   * and evaluates with the given context. See GoRules JDM: decisionNode content.key references another decision.
    */
   async executeIndex(
     repositoryId: string,
     context: unknown,
     branch: string = "main"
   ): Promise<{ result: unknown; performance: string }> {
-    const content = await this.getContentByPath(repositoryId, branch, "index.json");
+    const content = await this.getIndexJsonContent(repositoryId, branch);
     if (content == null) {
-      throw new Error(`index.json not found in repository ${repositoryId} on branch ${branch}`);
+      throw new Error(
+        `index.json not found in repository ${repositoryId} on branch ${branch}`
+      );
     }
     const output = await this.simulate({
       content,
