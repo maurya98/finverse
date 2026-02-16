@@ -21,6 +21,43 @@ export type TreeWithEntries = {
 };
 
 export class TreeService {
+  /**
+   * Build a tree from path -> blobId map (e.g. "rules/main.json" -> blobId).
+   * Source paths overwrite base when merging. Returns root tree id.
+   */
+  async createFromPathMap(
+    repositoryId: string,
+    pathToBlobId: Map<string, string>
+  ): Promise<string> {
+    if (pathToBlobId.size === 0) {
+      const t = await this.create(repositoryId, []);
+      return t.id;
+    }
+    const rootFiles: string[] = [];
+    const rootDirs = new Set<string>();
+    for (const path of pathToBlobId.keys()) {
+      const i = path.indexOf("/");
+      if (i === -1) rootFiles.push(path);
+      else rootDirs.add(path.slice(0, i));
+    }
+    const entries: TreeEntryInput[] = [];
+    for (const name of rootFiles) {
+      const blobId = pathToBlobId.get(name);
+      if (blobId) entries.push({ name, type: "BLOB", blobId });
+    }
+    for (const dirName of rootDirs) {
+      const prefix = dirName + "/";
+      const childMap = new Map<string, string>();
+      for (const [path, blobId] of pathToBlobId) {
+        if (path.startsWith(prefix)) childMap.set(path.slice(prefix.length), blobId);
+      }
+      const childTree = await this.createFromPathMap(repositoryId, childMap);
+      entries.push({ name: dirName, type: "TREE", childTreeId: childTree });
+    }
+    const tree = await this.create(repositoryId, entries);
+    return tree.id;
+  }
+
   async create(repositoryId: string, entries: TreeEntryInput[] = []): Promise<TreeWithEntries> {
     const tree = await prisma.tree.create({
       data: {

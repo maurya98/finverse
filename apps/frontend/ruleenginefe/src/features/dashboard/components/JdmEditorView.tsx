@@ -57,9 +57,21 @@ type JdmEditorViewProps = {
   /** When editing in a repo, pass so simulate can resolve Decision node keys (sub-decisions) */
   repositoryId?: string;
   branch?: string;
+  /**
+   * When set, simulation uses this map for all sub-decisions instead of loading from backend.
+   * Use this so simulation runs against current UI state (including uncommitted changes), not repo state.
+   */
+  getDecisionsForSimulation?: () => Promise<Record<string, unknown>>;
 };
 
-export function JdmEditorView({ content, onChange, decisionKeyOptions, repositoryId, branch }: JdmEditorViewProps) {
+export function JdmEditorView({
+  content,
+  onChange,
+  decisionKeyOptions,
+  repositoryId,
+  branch,
+  getDecisionsForSimulation,
+}: JdmEditorViewProps) {
   const themeMode = usePrefersColorScheme();
   const graphRef = useRef<DecisionGraphRef>(null);
   const [simulate, setSimulate] = useState<Simulation | undefined>();
@@ -107,10 +119,19 @@ export function JdmEditorView({ content, onChange, decisionKeyOptions, repositor
             defaultRequest={JSON.stringify({}, null, 2)}
             onRun={async ({ graph, context }) => {
               try {
+                const decisions =
+                  getDecisionsForSimulation != null
+                    ? await getDecisionsForSimulation()
+                    : undefined;
+                const ctx = context ?? {};
                 const res = await simulateApi({
                   content: graph,
-                  context: context ?? {},
-                  ...(repositoryId && branch ? { repositoryId, branch } : {}),
+                  context: ctx,
+                  ...(decisions != null
+                    ? { decisions }
+                    : repositoryId && branch
+                      ? { repositoryId, branch }
+                      : {}),
                 });
                 if (isApiError(res)) {
                   setSimulate({
@@ -151,12 +172,8 @@ export function JdmEditorView({ content, onChange, decisionKeyOptions, repositor
         ),
       },
     ],
-    [repositoryId, branch]
+    [repositoryId, branch, getDecisionsForSimulation]
   );
-
-  const openSimulator = useCallback(() => {
-    graphRef.current?.setActivePanel("simulator");
-  }, []);
 
   const handleReactFlowInit = useCallback((instance: { fitView?: (opts?: { padding?: number; duration?: number }) => void }) => {
     requestAnimationFrame(() => {

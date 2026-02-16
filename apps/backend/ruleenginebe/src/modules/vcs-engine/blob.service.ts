@@ -1,11 +1,14 @@
 import crypto from "node:crypto";
 import { prisma } from "../../databases/client";
 
-/** Stable JSON stringify for hashing (object keys sorted). */
+/** Recursively stable JSON stringify for hashing (all object keys sorted at every level). */
 function stableStringify(value: unknown): string {
   if (value === null || typeof value !== "object") return JSON.stringify(value);
-  if (Array.isArray(value)) return JSON.stringify(value);
-  return JSON.stringify(value, Object.keys(value).sort());
+  if (Array.isArray(value)) return "[" + value.map((v) => stableStringify(v)).join(",") + "]";
+  const obj = value as Record<string, unknown>;
+  const keys = Object.keys(obj).sort();
+  const pairs = keys.map((k) => JSON.stringify(k) + ":" + stableStringify(obj[k]));
+  return "{" + pairs.join(",") + "}";
 }
 
 /** Compute SHA-256 content hash for JSON content. */

@@ -163,6 +163,7 @@ export type Commit = {
   mergeParentCommitId: string | null;
   message: string | null;
   authorId: string;
+  authorName: string | null;
   createdAt: string;
 };
 export async function createCommit(params: {
@@ -177,6 +178,13 @@ export async function createCommit(params: {
 }
 export async function getCommit(id: string): Promise<ApiResponse<Commit>> {
   return request(`/commits/${id}`);
+}
+export async function getCommitDiff(
+  commitId: string,
+  opts?: { includeContent?: boolean }
+): Promise<ApiResponse<DiffResult>> {
+  const q = opts?.includeContent ? "?includeContent=true" : "";
+  return request(`/commits/${commitId}/diff${q}`);
 }
 export async function listCommits(
   repositoryId: string,
@@ -241,9 +249,13 @@ export type MergeRequest = {
   updatedAt: string;
 };
 export type DiffResult = {
-  added: Array<{ path: string; blobId: string; contentHash: string }>;
-  removed: Array<{ path: string; blobId: string; contentHash: string }>;
-  modified: Array<{ path: string; base: { blobId: string; contentHash: string }; target: { blobId: string; contentHash: string } }>;
+  added: Array<{ path: string; blobId: string; contentHash: string; content?: unknown }>;
+  removed: Array<{ path: string; blobId: string; contentHash: string; content?: unknown }>;
+  modified: Array<{
+    path: string;
+    base: { blobId: string; contentHash: string; content?: unknown };
+    target: { blobId: string; contentHash: string; content?: unknown };
+  }>;
 };
 export async function listMergeRequests(
   repositoryId: string,
@@ -258,8 +270,12 @@ export async function listMergeRequests(
 export async function getMergeRequest(id: string): Promise<ApiResponse<MergeRequest>> {
   return request(`/merge-requests/${id}`);
 }
-export async function getMergeRequestDiff(id: string): Promise<ApiResponse<DiffResult>> {
-  return request(`/merge-requests/${id}/diff`);
+export async function getMergeRequestDiff(
+  id: string,
+  opts?: { includeContent?: boolean }
+): Promise<ApiResponse<DiffResult>> {
+  const q = opts?.includeContent ? "?includeContent=true" : "";
+  return request(`/merge-requests/${id}/diff${q}`);
 }
 export async function createMergeRequest(params: {
   repositoryId: string;
@@ -273,6 +289,11 @@ export async function createMergeRequest(params: {
 }
 export async function mergeMergeRequest(id: string, mergedBy: string, mergedCommitId: string): Promise<ApiResponse<MergeRequest>> {
   return request(`/merge-requests/${id}/merge`, { method: "POST", body: JSON.stringify({ mergedBy, mergedCommitId }) });
+}
+
+/** Perform full merge (create merge commit, update branch, mark MR merged). Requires admin/maintainer. */
+export async function performMergeRequest(id: string): Promise<ApiResponse<MergeRequest>> {
+  return request(`/merge-requests/${id}/perform-merge`, { method: "POST" });
 }
 export async function diffBranches(
   repositoryId: string,

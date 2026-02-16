@@ -16,8 +16,8 @@ export const nodeSpecification = makeNodeSpecification({
   [NodeKind.Input]: inputSpecification,
   [NodeKind.Output]: outputSpecification,
   [NodeKind.DecisionTable]: decisionTableSpecification,
+  [NodeKind.Decision]: decisionSpecification,
   [NodeKind.Expression]: expressionSpecification,
   [NodeKind.Function]: functionSpecification,
   [NodeKind.Switch]: switchSpecification,
-  [NodeKind.Decision]: decisionSpecification,
 });

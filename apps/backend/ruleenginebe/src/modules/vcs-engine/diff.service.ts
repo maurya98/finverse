@@ -108,6 +108,34 @@ export class DiffService {
   }
 
   /**
+   * Diff a commit against its parent. Returns added/removed/modified files.
+   * For the root commit (no parent), returns all files as added.
+   */
+  async diffCommitWithParent(commitId: string): Promise<DiffResult | null> {
+    const commit = await prisma.commit.findUnique({
+      where: { id: commitId },
+      select: { treeId: true, parentCommitId: true },
+    });
+    if (!commit) return null;
+    if (!commit.parentCommitId) {
+      const targetPaths = await getTreeBlobPaths(commit.treeId, "");
+      const added: DiffResult["added"] = Array.from(targetPaths.entries()).map(([path, ref]) => ({ path, ...ref }));
+      return { added, removed: [], modified: [] };
+    }
+    return this.diffCommits(commit.parentCommitId, commitId);
+  }
+
+  /**
+   * Get path -> blobId for all blobs in a tree (for building merged tree).
+   */
+  async getPathToBlobIdMap(treeId: string): Promise<Map<string, string>> {
+    const refs = await getTreeBlobPaths(treeId, "");
+    const out = new Map<string, string>();
+    for (const [path, ref] of refs) out.set(path, ref.blobId);
+    return out;
+  }
+
+  /**
    * Diff two branches by comparing their head commits' trees.
    */
   async diffBranches(

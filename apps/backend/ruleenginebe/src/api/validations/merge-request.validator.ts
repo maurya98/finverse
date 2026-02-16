@@ -16,7 +16,7 @@ export const updateMergeRequestStatusSchema = z.object({
 });
 
 export const mergeMergeRequestSchema = z.object({
-  mergedBy: z.string().uuid(),
+  mergedBy: z.string().uuid().optional(),
   mergedCommitId: z.string().uuid(),
 });
 

@@ -155,7 +155,7 @@
 
 .branch-mgmt-commit-item {
   display: grid;
-  grid-template-columns: 80px 1fr auto;
+  grid-template-columns: 80px 1fr 120px auto;
   gap: 12px;
   align-items: center;
   padding: 8px 12px;
@@ -167,13 +167,35 @@
   background: rgba(255, 255, 255, 0.04);
 }
 
-.branch-mgmt-commit-id {
+.branch-mgmt-commit-id-btn {
   font-family: ui-monospace, monospace;
   font-size: 12px;
   color: #0d9488;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.branch-mgmt-commit-id-btn:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+.branch-mgmt-commit-id-btn:disabled {
+  cursor: wait;
+  opacity: 0.8;
 }
 
 .branch-mgmt-commit-message {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.branch-mgmt-commit-author {
+  font-size: 12px;
+  color: #aaa;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -290,4 +312,160 @@
 .branch-mgmt-modal-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.branch-mgmt-modal-diff {
+  max-width: 90vw;
+  width: 720px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.branch-mgmt-modal-diff .branch-mgmt-modal-title {
+  margin-bottom: 4px;
+}
+
+.branch-mgmt-commit-meta {
+  margin-bottom: 12px;
+  font-size: 12px;
+  color: #888;
+}
+
+.branch-mgmt-diff-list {
+  overflow-y: auto;
+  margin-bottom: 8px;
+}
+
+.branch-mgmt-diff-section {
+  margin-bottom: 12px;
+}
+
+.branch-mgmt-diff-section strong {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.branch-mgmt-diff-added {
+  color: #22c55e;
+}
+
+.branch-mgmt-diff-removed {
+  color: #f87171;
+}
+
+.branch-mgmt-diff-modified {
+  color: #eab308;
+}
+
+.branch-mgmt-diff-section ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  color: #ccc;
+}
+
+.branch-mgmt-diff-section li {
+  padding: 2px 0;
+}
+
+.branch-mgmt-diff-empty {
+  margin: 0;
+  font-size: 13px;
+  color: #888;
+}
+
+/* Merge requests section */
+.branch-mgmt-mrs {
+  padding: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.branch-mgmt-mr-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.branch-mgmt-mr-item {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 13px;
+}
+
+.branch-mgmt-mr-title-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: inherit;
+  color: #0d9488;
+  cursor: pointer;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.branch-mgmt-mr-title-btn:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+.branch-mgmt-mr-title-btn:disabled {
+  cursor: wait;
+  opacity: 0.8;
+}
+
+.branch-mgmt-mr-row-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.branch-mgmt-mr-item:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.branch-mgmt-mr-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.branch-mgmt-mr-branches {
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  color: #888;
+}
+
+.branch-mgmt-mr-date {
+  font-size: 12px;
+  color: #888;
+}
+
+.branch-mgmt-mr-view-btn,
+.branch-mgmt-mr-merge-btn {
+  min-width: 64px;
+}
+
+.branch-mgmt-modal-loading {
+  pointer-events: none;
+}
+
+.branch-mgmt-modal-loading .branch-mgmt-modal-text {
+  margin: 0;
+  color: #888;
+}
+
+.branch-mgmt-modal-textarea {
+  min-height: 60px;
+  resize: vertical;
 }

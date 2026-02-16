@@ -3,6 +3,8 @@ import { validateBody } from "@finverse/utils";
 import { sendSuccess, sendError } from "@finverse/utils";
 import { MergeRequestService } from "../../modules/vcs-engine/merge.service";
 import { DiffService } from "../../modules/vcs-engine/diff.service";
+import { BlobService } from "../../modules/vcs-engine/blob.service";
+import { requireAuth, requireMergePermission } from "../middlewares/auth.middleware";
 import {
   createMergeRequestSchema,
   updateMergeRequestStatusSchema,
@@ -15,11 +17,13 @@ export class MergeRequestsController {
   public router: Router;
   private mergeRequestService: MergeRequestService;
   private diffService: DiffService;
+  private blobService: BlobService;
 
   constructor() {
     this.router = Router();
     this.mergeRequestService = new MergeRequestService();
     this.diffService = new DiffService();
+    this.blobService = new BlobService();
     this.initRoutes();
   }
 
@@ -31,7 +35,19 @@ export class MergeRequestsController {
     this.router.get("/:id", this.getById.bind(this));
     this.router.get("/:id/diff", this.getMrDiff.bind(this));
     this.router.patch("/:id/status", validateBody(updateMergeRequestStatusSchema), this.updateStatus.bind(this));
-    this.router.post("/:id/merge", validateBody(mergeMergeRequestSchema), this.merge.bind(this));
+    this.router.post(
+      "/:id/perform-merge",
+      requireAuth,
+      requireMergePermission,
+      this.performMerge.bind(this)
+    );
+    this.router.post(
+      "/:id/merge",
+      requireAuth,
+      requireMergePermission,
+      validateBody(mergeMergeRequestSchema),
+      this.merge.bind(this)
+    );
     this.router.get("/:id/comments", this.listComments.bind(this));
     this.router.post("/:id/comments", validateBody(addMergeRequestCommentSchema), this.addComment.bind(this));
   }
@@ -127,10 +143,12 @@ export class MergeRequestsController {
   /**
    * GET /merge-requests/:id/diff
    * Returns diff for this MR (target branch -> source branch).
+   * Query: includeContent=true to include blob content for line-by-line diff view.
    */
   private async getMrDiff(req: Request, res: Response): Promise<Response> {
     try {
       const id = typeof req.params.id === "string" ? req.params.id : req.params.id?.[0] ?? "";
+      const includeContent = req.query.includeContent === "true";
       const branchNames = await this.mergeRequestService.getBranchNamesForDiff(id);
       if (!branchNames) return sendError(res, "Merge request or branches not found", 404);
       const diff = await this.diffService.diffBranches(
@@ -141,6 +159,36 @@ export class MergeRequestsController {
       if (diff === null) {
         return sendError(res, "One or both branches have no head commit", 404);
       }
+
+      if (includeContent) {
+        const added = await Promise.all(
+          diff.added.map(async (a) => {
+            const blob = await this.blobService.findById(a.blobId);
+            return { ...a, content: blob?.content ?? null };
+          })
+        );
+        const removed = await Promise.all(
+          diff.removed.map(async (r) => {
+            const blob = await this.blobService.findById(r.blobId);
+            return { ...r, content: blob?.content ?? null };
+          })
+        );
+        const modified = await Promise.all(
+          diff.modified.map(async (m) => {
+            const [baseBlob, targetBlob] = await Promise.all([
+              this.blobService.findById(m.base.blobId),
+              this.blobService.findById(m.target.blobId),
+            ]);
+            return {
+              ...m,
+              base: { ...m.base, content: baseBlob?.content ?? null },
+              target: { ...m.target, content: targetBlob?.content ?? null },
+            };
+          })
+        );
+        return sendSuccess(res, { added, removed, modified });
+      }
+
       return sendSuccess(res, diff);
     } catch {
       return sendError(res, "Failed to compute diff", 500);
@@ -159,10 +207,33 @@ export class MergeRequestsController {
     }
   }
 
+  /**
+   * POST /merge-requests/:id/perform-merge — Create merge commit, update target branch, mark MR merged.
+   * Requires auth; only ADMIN or MAINTAINER can call.
+   */
+  private async performMerge(req: Request, res: Response): Promise<Response> {
+    try {
+      const id = typeof req.params.id === "string" ? req.params.id : req.params.id?.[0] ?? "";
+      const userId = req.user!.id;
+      const mr = await this.mergeRequestService.performMerge(id, userId);
+      if (!mr) {
+        return sendError(
+          res,
+          "Merge request not found, not open, or branches have no head commit",
+          400
+        );
+      }
+      return sendSuccess(res, mr, 200, "Merge request merged");
+    } catch {
+      return sendError(res, "Failed to perform merge", 500);
+    }
+  }
+
   private async merge(req: Request, res: Response): Promise<Response> {
     try {
       const id = typeof req.params.id === "string" ? req.params.id : req.params.id?.[0] ?? "";
-      const { mergedBy, mergedCommitId } = req.body as { mergedBy: string; mergedCommitId: string };
+      const { mergedCommitId } = req.body as { mergedBy?: string; mergedCommitId: string };
+      const mergedBy = req.user!.id;
       const mr = await this.mergeRequestService.merge(id, mergedBy, mergedCommitId);
       if (!mr) {
         return sendError(

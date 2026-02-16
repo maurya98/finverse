@@ -3,13 +3,7 @@ import React, { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, 
 import { P, match } from 'ts-pattern';
 
 import { columnIdSelector } from '../../../helpers/components';
-import { isWasmAvailable, useWasmReady } from '../../../helpers/wasm';
-import {
-  type BuilderRef,
-  ExpressionBuilder,
-  StandardExpressionBuilder,
-  focusBuilderRoot,
-} from '../../code-editor/business';
+import { isWasmAvailable } from '../../../helpers/wasm';
 import type { DiffMetadata } from '../../decision-graph';
 import { DiffAutosizeTextArea } from '../../shared';
 import { DiffCodeEditor } from '../../shared/diff-ce';
@@ -96,28 +90,19 @@ enum LocalVariableKind {
 const TableInputCell: React.FC<TableCellProps> = ({ column, value, onChange, disabled, diff, index }) => {
   const id = useMemo(() => crypto.randomUUID(), []);
   const textareaRef = useRef<HTMLTextAreaElement | HTMLDivElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const builderRef = useRef<BuilderRef>(null);
   const raw = useDecisionTableRaw();
-  const wasmReady = useWasmReady();
 
-  const {
-    inputVariableType,
-    localVariableType,
-    mode: rawMode,
-  } = useDecisionTableState(({ inputVariableType, derivedVariableTypes, mode }) => ({
-    inputVariableType,
-    mode,
-    localVariableType: match(column)
-      .with({ colType: 'input', field: P.string }, (c) => ({
-        type: LocalVariableKind.Derived,
-        value: derivedVariableTypes[c.field] ?? null,
-      }))
-      .otherwise(() => ({ type: LocalVariableKind.Root, value: inputVariableType })),
-  }));
-
-  // Business mode requires WASM; fall back to dev mode until it's ready
-  const mode = wasmReady ? rawMode : 'dev';
+  const { inputVariableType, localVariableType } = useDecisionTableState(
+    ({ inputVariableType, derivedVariableTypes }) => ({
+      inputVariableType,
+      localVariableType: match(column)
+        .with({ colType: 'input', field: P.string }, (c) => ({
+          type: LocalVariableKind.Derived,
+          value: derivedVariableTypes[c.field] ?? null,
+        }))
+        .otherwise(() => ({ type: LocalVariableKind.Root, value: inputVariableType })),
+    }),
+  );
 
   useEffect(() => {
     if (!inputVariableType) {
@@ -143,18 +128,21 @@ const TableInputCell: React.FC<TableCellProps> = ({ column, value, onChange, dis
   }, [inputVariableType, column]);
 
   useEffect(() => {
-    const anchor = containerRef.current ?? textareaRef.current;
-    if (!anchor) return;
+    if (!textareaRef.current) {
+      return;
+    }
 
-    const parentContainer = anchor.closest('div.cell-wrapper')! as HTMLElement;
+    const parentContainer = textareaRef.current.closest('div.cell-wrapper')! as HTMLElement;
     const eventListener = (e: Event) => {
-      const target = e.target as HTMLElement;
-      if (target.closest('.cm-editor, input, textarea, select, button, .ant-select')) return;
+      if (e.target === textareaRef.current || !textareaRef.current) {
+        return;
+      }
 
-      if (builderRef.current) {
-        builderRef.current.focus();
+      if ('selectionStart' in textareaRef.current) {
+        textareaRef.current.focus();
+        textareaRef.current.selectionStart = textareaRef.current.value.length;
       } else {
-        focusBuilderRoot(anchor);
+        textareaRef.current.querySelector<HTMLDivElement>('.cm-editor')!.focus();
       }
     };
 
@@ -184,40 +172,8 @@ const TableInputCell: React.FC<TableCellProps> = ({ column, value, onChange, dis
     );
   }
 
-  const isInputColumn = column.colType === 'input' && column.field;
-  const isOutputColumn = column.colType === 'output';
-
-  if (mode === 'business' && isInputColumn) {
-    return (
-      <div ref={containerRef} className='grl-dt__cell__input__container'>
-        <TableInputCellStatus index={index} columnId={column.id} />
-        <ExpressionBuilder
-          ref={builderRef}
-          value={value ?? ''}
-          onChange={onChange}
-          disabled={disabled}
-          fieldType={column.fieldType}
-        />
-      </div>
-    );
-  }
-
-  if (mode === 'business' && isOutputColumn) {
-    return (
-      <div ref={containerRef} className='grl-dt__cell__input__container'>
-        <StandardExpressionBuilder
-          ref={builderRef}
-          value={value ?? ''}
-          onChange={onChange}
-          disabled={disabled}
-          fieldType={column.outputFieldType}
-        />
-      </div>
-    );
-  }
-
   return (
-    <div ref={containerRef} className='grl-dt__cell__input__container'>
+    <div className='grl-dt__cell__input__container'>
       {column.colType === 'input' && <TableInputCellStatus index={index} columnId={column.id} />}
       <DiffCodeEditor
         lazy

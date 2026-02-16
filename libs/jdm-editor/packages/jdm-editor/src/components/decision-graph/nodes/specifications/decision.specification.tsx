@@ -1,35 +1,37 @@
-import { BookOutlined, DeleteOutlined } from '@ant-design/icons';
-import { Button, Modal, Typography } from 'antd';
-import { produce } from 'immer';
-import _ from 'lodash';
-import { GitBranch } from 'lucide-react';
+import type { VariableType } from '@gorules/zen-engine-wasm';
+import { Button } from 'antd';
+import clsx from 'clsx';
+import { GitBranchIcon } from 'lucide-react';
 import React from 'react';
-import type { z } from 'zod';
 
-import { platform } from '../../../../helpers/platform';
-import type { decisionNodeSchema } from '../../../../helpers/schema';
-import { SpacedText } from '../../../spaced-text';
 import { useDecisionGraphActions, useDecisionGraphState } from '../../context/dg-store.context';
-import type { Diff, DiffMetadata } from '../../dg-types';
-import { TabDecision } from '../../graph/tab-decision';
 import { GraphNode } from '../graph-node';
 import { NodeColor } from './colors';
-import type { NodeSpecification } from './specification-types';
+import type { MinimalNodeProps, NodeSpecification } from './specification-types';
 import { NodeKind } from './specification-types';
+import { TabDecision } from '../../graph/tab-decision';
 
-type InferredContent = z.infer<typeof decisionNodeSchema>['content'];
-
-export type NodeDecisionData = InferredContent & Diff;
+export type NodeDecisionData = {
+  key: string;
+  passThrough?: boolean;
+  inputField?: string | null;
+  outputPath?: string | null;
+  executionMode?: 'single' | 'loop';
+};
 
 export const decisionSpecification: NodeSpecification<NodeDecisionData> = {
   type: NodeKind.Decision,
-  icon: <GitBranch size={16} style={{ verticalAlign: 'middle' }} />,
+  icon: <GitBranchIcon size='1em' />,
   displayName: 'Decision',
-  color: NodeColor.Purple,
   documentationUrl: 'https://docs.gorules.io/developers/jdm/node-types#decision-node',
-  shortDescription: 'Reference another decision (sub-decision / JSON file)',
+  shortDescription: 'Sub-decision reference',
+  color: NodeColor.Blue,
+  inferTypes: {
+    needsUpdate: () => false,
+    determineOutputType: (state) => state.input,
+  },
   generateNode: ({ index }) => ({
-    name: `Decision ${index + 1}`,
+    name: `decision${index}`,
     content: {
       key: '',
       passThrough: true,
@@ -38,76 +40,48 @@ export const decisionSpecification: NodeSpecification<NodeDecisionData> = {
       executionMode: 'single',
     },
   }),
+  renderNode: ({ specification, ...props }) => <DecisionNode specification={specification} {...props} />,
   renderTab: ({ id, manager }) => <TabDecision id={id} manager={manager} />,
-  renderNode: ({ id, data, selected, specification }) => {
-    const graphActions = useDecisionGraphActions();
-    const { disabled } = useDecisionGraphState(({ disabled }) => ({
-      disabled,
-    }));
+};
 
-    return (
-      <GraphNode
-        id={id}
-        specification={specification}
-        name={data.name}
-        isSelected={selected}
-        actions={[
-          <Button key="configure" type="text" onClick={() => graphActions.openTab(id)}>
-            Configure
-          </Button>,
-        ]}
-        menuItems={[
-          {
-            key: 'documentation',
-            icon: <BookOutlined />,
-            label: 'Documentation',
-            onClick: () => window.open(specification.documentationUrl, '_blank'),
-          },
-          {
-            key: 'delete',
-            icon: <DeleteOutlined />,
-            danger: true,
-            label: <SpacedText left="Delete" right={platform.shortcut('Backspace')} />,
-            disabled,
-            onClick: () =>
-              Modal.confirm({
-                icon: null,
-                title: 'Delete node',
-                content: (
-                  <Typography.Text>
-                    Are you sure you want to delete <Typography.Text strong>{data.name}</Typography.Text> node?
-                  </Typography.Text>
-                ),
-                okButtonProps: { danger: true },
-                onOk: () => graphActions.removeNodes([id]),
-              }),
-          },
-        ]}
-      />
-    );
-  },
-  getDiffContent: (current, previous) => {
-    const fields: DiffMetadata['fields'] = {};
-    return produce(current || {}, (draft) => {
-      if ((current?.key || '') !== (previous?.key || '')) {
-        _.set(fields, 'key', { previousValue: previous?.key ?? '', status: 'modified' });
-      }
-      if ((current?.passThrough ?? true) !== (previous?.passThrough ?? true)) {
-        _.set(fields, 'passThrough', { previousValue: previous?.passThrough ?? true, status: 'modified' });
-      }
-      if ((current?.executionMode ?? 'single') !== (previous?.executionMode ?? 'single')) {
-        _.set(fields, 'executionMode', { previousValue: previous?.executionMode ?? 'single', status: 'modified' });
-      }
-      if ((current?.inputField ?? null) !== (previous?.inputField ?? null)) {
-        _.set(fields, 'inputField', { previousValue: previous?.inputField ?? null, status: 'modified' });
-      }
-      if ((current?.outputPath ?? null) !== (previous?.outputPath ?? null)) {
-        _.set(fields, 'outputPath', { previousValue: previous?.outputPath ?? null, status: 'modified' });
-      }
-      if (Object.keys(fields).length > 0) {
-        draft._diff = { status: 'modified', fields };
-      }
-      return draft;
-    });
-  },
+const DecisionNode: React.FC<
+  MinimalNodeProps & {
+    specification: Pick<NodeSpecification, 'displayName' | 'icon' | 'documentationUrl'>;
+  }
+> = ({ id, data, selected, specification }) => {
+  const graphActions = useDecisionGraphActions();
+  const { content, disabled } = useDecisionGraphState(({ decisionGraph, disabled }) => ({
+    content: (decisionGraph?.nodes || []).find((n) => n?.id === id)?.content as NodeDecisionData | undefined,
+    disabled,
+  }));
+
+  const keyLabel = content?.key?.trim() || 'No key set';
+
+  return (
+    <GraphNode
+      id={id}
+      className={clsx(['decision'])}
+      specification={specification}
+      name={data.name}
+      handleRight={true}
+      noBodyPadding
+      isSelected={selected}
+      actions={[
+        <Button
+          key='configure'
+          type='text'
+          disabled={disabled}
+          onClick={() => graphActions.openTab(id)}
+        >
+          Configure
+        </Button>,
+      ]}
+    >
+      <div className='decision-node__body'>
+        <div className='decision-node__key' title={keyLabel}>
+          {keyLabel}
+        </div>
+      </div>
+    </GraphNode>
+  );
 };

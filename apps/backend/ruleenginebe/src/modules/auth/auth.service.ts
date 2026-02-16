@@ -64,4 +64,20 @@ export class AuthService {
   public isTokenRevoked(token: string): boolean {
     return revokedTokens.has(token.trim());
   }
+
+  /**
+   * Verify JWT and return payload (sub = user id, role).
+   * Returns null if token is missing, invalid, expired, or revoked.
+   */
+  public verifyToken(token: string): { sub: string; role: string } | null {
+    const trimmed = token?.trim();
+    if (!trimmed || this.isTokenRevoked(trimmed)) return null;
+    try {
+      const payload = jwt.verify(trimmed, JWT_SECRET) as { sub?: string; role?: string };
+      if (payload?.sub && payload?.role) return { sub: payload.sub, role: payload.role };
+    } catch {
+      // invalid or expired
+    }
+    return null;
+  }
 }

@@ -1,128 +1,142 @@
+import { Collapse, Form, Input, Select, Switch } from 'antd';
 import type { DragDropManager } from 'dnd-core';
-import React from 'react';
-import type { z } from 'zod';
-import { Form, Input, Select, Switch } from 'antd';
+import React, { useCallback, useState } from 'react';
 
-import { decisionNodeSchema } from '../../../helpers/schema';
 import { useDecisionGraphActions, useDecisionGraphState } from '../context/dg-store.context';
+import type { NodeDecisionData } from '../nodes/specifications/decision.specification';
 
 export type TabDecisionProps = {
   id: string;
   manager?: DragDropManager;
 };
 
-type DecisionContent = z.infer<typeof decisionNodeSchema>['content'];
+const EXECUTION_MODES = [
+  { value: 'single', label: 'Single' },
+  { value: 'loop', label: 'Loop' },
+];
 
 export const TabDecision: React.FC<TabDecisionProps> = ({ id }) => {
   const graphActions = useDecisionGraphActions();
-  const { disabled, content, decisionKeyOptions } = useDecisionGraphState(
-    ({ disabled, decisionGraph, decisionKeyOptions }) => ({
-      disabled,
-      content: (decisionGraph?.nodes ?? []).find((node) => node.id === id)?.content as DecisionContent | undefined,
-      decisionKeyOptions: decisionKeyOptions ?? [],
-    }),
+  const { disabled, content } = useDecisionGraphState(({ disabled, decisionGraph }) => ({
+    disabled,
+    content: (decisionGraph?.nodes ?? []).find((node) => node.id === id)?.content as NodeDecisionData | undefined,
+  }));
+
+  const updateContent = useCallback(
+    (updates: Partial<NodeDecisionData>) => {
+      graphActions.updateNode(id, (draft) => {
+        Object.assign(draft.content, updates);
+        return draft;
+      });
+    },
+    [graphActions, id],
   );
 
-  const initialValues: Partial<DecisionContent> = content
-    ? {
-        key: content.key ?? '',
-        passThrough: content.passThrough ?? true,
-        inputField: content.inputField ?? undefined,
-        outputPath: content.outputPath ?? undefined,
-        executionMode: content.executionMode ?? 'single',
-      }
-    : {
-        key: '',
-        passThrough: true,
-        executionMode: 'single',
-      };
+  const [showOtherJson, setShowOtherJson] = useState(false);
+  const otherJson = content ? JSON.stringify(content, null, 2) : '{}';
 
-  const keyOptions = (decisionKeyOptions || []).map((path) => ({ value: path, label: path }));
-  const currentKey = content?.key?.trim() ?? '';
-  const hasCurrentKeyInOptions = currentKey && keyOptions.some((o) => o.value === currentKey);
-  const keySelectOptions = hasCurrentKeyInOptions
-    ? keyOptions
-    : currentKey
-      ? [{ value: currentKey, label: currentKey }, ...keyOptions]
-      : keyOptions;
+  const handleOtherJsonChange = (value: string) => {
+    try {
+      const parsed = JSON.parse(value || '{}') as NodeDecisionData;
+      graphActions.updateNode(id, (draft) => {
+        draft.content = {
+          key: parsed.key ?? '',
+          passThrough: parsed.passThrough ?? true,
+          inputField: parsed.inputField && String(parsed.inputField).trim() ? parsed.inputField : null,
+          outputPath: parsed.outputPath && String(parsed.outputPath).trim() ? parsed.outputPath : null,
+          executionMode: parsed.executionMode === 'loop' ? 'loop' : 'single',
+        };
+        return draft;
+      });
+    } catch {
+      // ignore invalid JSON while typing
+    }
+  };
+
+  if (!content) {
+    return null;
+  }
 
   return (
-    <div style={{ padding: 16 }}>
-      <Form
-        layout="vertical"
-        initialValues={initialValues}
-        onValuesChange={(_, values) => {
-          graphActions.updateNode(id, (draft) => {
-            draft.content = {
-              key: values.key ?? '',
-              passThrough: values.passThrough ?? true,
-              inputField: values.inputField && String(values.inputField).trim() ? values.inputField : null,
-              outputPath: values.outputPath && String(values.outputPath).trim() ? values.outputPath : null,
-              executionMode: values.executionMode ?? 'single',
-            };
-            return draft;
-          });
-        }}
-      >
+    <div className='grl-node-content' style={{ height: '100%', overflowY: 'auto', padding: 16 }}>
+      <Form layout='vertical' size='small'>
         <Form.Item
-          name="key"
-          label="Decision path / key"
-          rules={[{ required: true, message: 'Path to the referenced decision (e.g. path/to/file.json or module/decision-name)' }]}
-          tooltip="Path to the referenced decision. Select a JSON file from the folder or enter a custom path."
+          label='Key'
+          tooltip='Path to the referenced decision (e.g. pricing/calculate-discount). References another decision JSON in your repository.'
         >
-          {keySelectOptions.length > 0 ? (
-            <Select
-              disabled={disabled}
-              placeholder="Select a decision file or enter path"
-              showSearch
-              optionFilterProp="label"
-              options={keySelectOptions}
-              allowClear
-              notFoundContent={null}
-            />
-          ) : (
-            <Input
-              placeholder="e.g. pricing/calculate-discount or rules/discount.json"
-              disabled={disabled}
-            />
-          )}
-        </Form.Item>
-        <Form.Item
-          name="passThrough"
-          label="Pass through input"
-          valuePropName="checked"
-          tooltip="When enabled, the input context is merged with the sub-decision result in the output."
-        >
-          <Switch disabled={disabled} />
-        </Form.Item>
-        <Form.Item
-          name="executionMode"
-          label="Execution mode"
-          tooltip="Single: run once. Loop: iterate over an array field and run the decision for each item."
-        >
-          <Select
+          <Input
+            value={content.key ?? ''}
             disabled={disabled}
-            options={[
-              { value: 'single', label: 'Single' },
-              { value: 'loop', label: 'Loop' },
-            ]}
+            placeholder='e.g. pricing/calculate-discount'
+            onChange={(e) => updateContent({ key: e.target.value })}
+          />
+        </Form.Item>
+        <Form.Item label='Pass through' tooltip='Include input data in the output'>
+          <Switch
+            checked={content.passThrough ?? true}
+            disabled={disabled}
+            onChange={(checked) => updateContent({ passThrough: checked })}
           />
         </Form.Item>
         <Form.Item
-          name="inputField"
-          label="Input field (for loop)"
-          tooltip="When execution mode is Loop, the path to the array field to iterate over (e.g. items)."
+          label='Input field'
+          tooltip='Array field to iterate over (for loop execution mode). Leave empty for single execution.'
         >
-          <Input placeholder="e.g. items" disabled={disabled} />
+          <Input
+            value={content.inputField ?? ''}
+            disabled={disabled}
+            placeholder='Leave empty for single'
+            allowClear
+            onChange={(e) =>
+              updateContent({
+                inputField: e.target.value?.trim() ? e.target.value : null,
+              })
+            }
+          />
         </Form.Item>
-        <Form.Item
-          name="outputPath"
-          label="Output path"
-          tooltip="Optional path where to store the sub-decision result in the output (e.g. result.discount)."
-        >
-          <Input placeholder="e.g. result.discount" disabled={disabled} />
+        <Form.Item label='Output path' tooltip='Path where the sub-decision result will be stored'>
+          <Input
+            value={content.outputPath ?? ''}
+            disabled={disabled}
+            placeholder='Leave empty for root'
+            allowClear
+            onChange={(e) =>
+              updateContent({
+                outputPath: e.target.value?.trim() ? e.target.value : null,
+              })
+            }
+          />
+        </Form.Item>
+        <Form.Item label='Execution mode' tooltip='Single: run once. Loop: iterate over input field array.'>
+          <Select
+            value={content.executionMode ?? 'single'}
+            disabled={disabled}
+            options={EXECUTION_MODES}
+            onChange={(value) => updateContent({ executionMode: value })}
+            style={{ width: '100%' }}
+          />
         </Form.Item>
       </Form>
+      <Collapse
+        ghost
+        items={[
+          {
+            key: 'other-json',
+            label: 'Other (JSON)',
+            children: (
+              <Input.TextArea
+                rows={10}
+                value={otherJson}
+                disabled={disabled}
+                onChange={(e) => handleOtherJsonChange(e.target.value)}
+                style={{ fontFamily: 'var(--mono-font-family)', fontSize: 12 }}
+              />
+            ),
+          },
+        ]}
+        activeKey={showOtherJson ? ['other-json'] : []}
+        onChange={(keys) => setShowOtherJson(keys.includes('other-json'))}
+      />
     </div>
   );
 };

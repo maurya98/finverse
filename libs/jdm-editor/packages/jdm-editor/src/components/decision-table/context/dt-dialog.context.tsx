@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 import type { ColumnType, TableSchemaItem } from './dt-store.context';
 
-export type TableDialogType = 'reorder';
+export type TableDialogType = 'add' | 'reorder' | 'edit';
 export type TableDialogState = {
   type: TableDialogType;
   item: TableSchemaItem | null;

@@ -1,0 +1,72 @@
+.file-diff-viewer {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 12px;
+  background: #1e1e1e;
+}
+
+.file-diff-viewer-header {
+  padding: 6px 10px;
+  font-size: 12px;
+  font-family: ui-monospace, monospace;
+  color: #888;
+  background: #252526;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.file-diff-viewer-body {
+  margin: 0;
+  padding: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-x: auto;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.file-diff-viewer-body code {
+  display: block;
+  font-family: ui-monospace, monospace;
+}
+
+.file-diff-line {
+  display: flex;
+  min-height: 1.5em;
+  white-space: pre;
+}
+
+.file-diff-line-prefix {
+  flex-shrink: 0;
+  width: 1.2em;
+  padding-left: 4px;
+  user-select: none;
+  color: #666;
+}
+
+.file-diff-line-content {
+  padding-right: 8px;
+  word-break: break-all;
+}
+
+.file-diff-line-add .file-diff-line-prefix {
+  color: #22c55e;
+}
+
+.file-diff-line-add .file-diff-line-content {
+  background: rgba(34, 197, 94, 0.12);
+  color: #86efac;
+}
+
+.file-diff-line-remove .file-diff-line-prefix {
+  color: #f87171;
+}
+
+.file-diff-line-remove .file-diff-line-content {
+  background: rgba(248, 113, 113, 0.12);
+  color: #fca5a5;
+}
+
+.file-diff-line-context .file-diff-line-content {
+  color: #9ca3af;
+}

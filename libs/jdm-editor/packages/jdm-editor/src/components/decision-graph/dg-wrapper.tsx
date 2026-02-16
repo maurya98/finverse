@@ -94,15 +94,16 @@ const TabContents: React.FC = React.memo(() => {
             .with(NodeKind.DecisionTable, () =>
               decisionTableSpecification?.renderTab?.({ id: node?.id, manager: dndManager }),
             )
+            .with(NodeKind.Decision, () =>
+              decisionSpecification?.renderTab?.({ id: node?.id, manager: dndManager }),
+            )
             .with(NodeKind.Function, () => functionSpecification?.renderTab?.({ id: node?.id, manager: dndManager }))
             .with(NodeKind.Expression, () =>
               expressionSpecification?.renderTab?.({ id: node?.id, manager: dndManager }),
             )
             .with(NodeKind.Input, () => inputSpecification?.renderTab?.({ id: node?.id, manager: dndManager }))
             .with(NodeKind.Output, () => outputSpecification?.renderTab?.({ id: node?.id, manager: dndManager }))
-            .with(NodeKind.Decision, () =>
-              decisionSpecification?.renderTab?.({ id: node?.id, manager: dndManager }),
-            )
+
             .otherwise(() => {
               const component = components.find((cmp) => cmp.type === node.type);
               if (component) {

@@ -1,15 +1,13 @@
 {
   "name": "finverse-monorepo",
   "version": "1.0.0",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "scripts": {},
   "engines": {
     "node": ">=22.10.0",
     "pnpm": ">=10.28.2",
     "runtime": {
       "name": "node",
-      "version": "^22.10.0",
+      "version": "^22.22.0",
       "onFail": "download"
     }
   },
@@ -32,8 +30,8 @@
     }
   },
   "devDependencies": {
-    "@types/node": "^22.10.0",
-    "turbo": "^2.8.3"
+    "@types/node": "^22.19.11",
+    "turbo": "^2.8.9"
   },
   "dependencies": {}
 }

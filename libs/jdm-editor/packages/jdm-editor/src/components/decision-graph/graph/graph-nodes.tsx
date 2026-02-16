@@ -43,8 +43,8 @@ export const GraphNodes: React.FC<GraphComponentsProps> = React.memo(({ classNam
           disabled: match(kind)
             .with(NodeKind.Function, () => false)
             .with(NodeKind.DecisionTable, () => false)
-            .with(NodeKind.Expression, () => false)
             .with(NodeKind.Decision, () => false)
+            .with(NodeKind.Expression, () => false)
             .otherwise(() => true),
           position: node.position,
           icon: specification?.icon,

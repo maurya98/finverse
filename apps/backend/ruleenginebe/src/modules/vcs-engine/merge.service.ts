@@ -1,4 +1,8 @@
 import { prisma } from "../../databases/client";
+import { DiffService } from "./diff.service";
+import { TreeService } from "./tree.service";
+import { CommitService } from "./commit.service";
+import { BranchService } from "./branch.service";
 
 export type MergeRequestStatus = "OPEN" | "MERGED" | "CLOSED";
 
@@ -121,6 +125,58 @@ export class MergeRequestService {
       },
     });
     return toMergeRequest(updated);
+  }
+
+  /**
+   * Perform the full merge: build merged tree (source wins), create merge commit,
+   * update target branch head, mark MR as merged. Only valid for OPEN MRs.
+   * Returns updated merge request or null if MR not found / not open / branches have no head.
+   */
+  async performMerge(
+    id: string,
+    authorId: string
+  ): Promise<MergeRequestWithBranches | null> {
+    const mr = await prisma.mergeRequest.findUnique({
+      where: { id },
+      include: {
+        sourceBranch: { select: { id: true, name: true, headCommitId: true } },
+        targetBranch: { select: { id: true, name: true, headCommitId: true } },
+      },
+    });
+    if (!mr || mr.status !== "OPEN") return null;
+    const sourceBranch = mr.sourceBranch as { id: string; name: string; headCommitId: string | null };
+    const targetBranch = mr.targetBranch as { id: string; name: string; headCommitId: string | null };
+    if (!sourceBranch.headCommitId || !targetBranch.headCommitId) return null;
+
+    const diffService = new DiffService();
+    const treeService = new TreeService();
+    const commitService = new CommitService();
+    const branchService = new BranchService();
+
+    const [targetCommit, sourceCommit] = await Promise.all([
+      commitService.findById(targetBranch.headCommitId),
+      commitService.findById(sourceBranch.headCommitId),
+    ]);
+    if (!targetCommit || !sourceCommit) return null;
+
+    const [baseMap, sourceMap] = await Promise.all([
+      diffService.getPathToBlobIdMap(targetCommit.treeId),
+      diffService.getPathToBlobIdMap(sourceCommit.treeId),
+    ]);
+    const mergedMap = new Map<string, string>(baseMap);
+    for (const [path, blobId] of sourceMap) mergedMap.set(path, blobId);
+
+    const mergedTreeId = await treeService.createFromPathMap(mr.repositoryId, mergedMap);
+    const mergeCommit = await commitService.create({
+      repositoryId: mr.repositoryId,
+      treeId: mergedTreeId,
+      parentCommitId: targetBranch.headCommitId,
+      mergeParentCommitId: sourceBranch.headCommitId,
+      message: `Merge branch '${sourceBranch.name}' into ${targetBranch.name}`,
+      authorId,
+    });
+    await branchService.updateHead(targetBranch.id, mergeCommit.id);
+    return this.merge(id, authorId, mergeCommit.id);
   }
 
   async addComment(

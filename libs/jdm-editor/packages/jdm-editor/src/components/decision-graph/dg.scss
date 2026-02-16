@@ -891,6 +891,24 @@
   }
 }
 
+.decision {
+  width: 220px;
+  height: auto;
+
+  .decision-node__body {
+    padding: 8px;
+    border-top: 1px solid var(--grl-color-border);
+  }
+
+  .decision-node__key {
+    font-size: 12px;
+    color: var(--grl-color-text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
 .single-line {
   white-space: nowrap;
   width: 140px;

@@ -30,7 +30,7 @@ type FileTreeSidebarProps = {
   nodes: FileTreeNode[];
   loading: boolean;
   selectedPath: string | null;
-  onSelectFile: (path: string, blobId: string) => void;
+  onSelectFile: (path: string, blobId: string | null) => void;
   onSelectFolder?: (path: string, treeId: string) => void;
   onDeleteNode?: (node: FileTreeNode) => void;
   onMoveNode?: (draggedNode: FileTreeNode, targetFolder: FileTreeNode) => void;
@@ -255,14 +255,14 @@ function TreeNodeWithContextMenu({
   node: FileTreeNode;
   level: number;
   selectedPath: string | null;
-  onSelectFile: (path: string, blobId: string) => void;
+  onSelectFile: (path: string, blobId: string | null) => void;
   onSelectFolder?: (path: string, treeId: string) => void;
   onContextMenu?: (e: React.MouseEvent, node: FileTreeNode) => void;
   onMoveNode?: (draggedNode: FileTreeNode, targetFolder: FileTreeNode) => void;
   nodes: FileTreeNode[];
   findNodeById: (nodes: FileTreeNode[], id: string) => FileTreeNode | null;
   dragOverFolderId: string | null;
-  setDragOverFolderId: (id: string | null) => void;
+  setDragOverFolderId: React.Dispatch<React.SetStateAction<string | null>>;
 }) {
   const [open, setOpen] = useState(true);
   const isSelected = selectedPath === node.path;
@@ -316,7 +316,7 @@ function TreeNodeWithContextMenu({
         type="button"
         className={`tree-item file ${isSelected ? "selected" : ""}`}
         style={{ paddingLeft: 12 + level * 16 }}
-        onClick={() => node.blobId && onSelectFile(node.path, node.blobId)}
+        onClick={() => onSelectFile(node.path, node.blobId ?? null)}
         onContextMenu={handleContextMenu}
         draggable
         onDragStart={handleDragStart}

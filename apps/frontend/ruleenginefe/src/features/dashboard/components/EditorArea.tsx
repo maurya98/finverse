@@ -18,6 +18,8 @@ type EditorAreaProps = {
   /** When editing in a repo, pass so simulate can resolve Decision node keys */
   repositoryId?: string;
   branch?: string;
+  /** Build decisions map from current UI state so simulation uses uncommitted + committed state, not backend repo */
+  getDecisionsForSimulation?: () => Promise<Record<string, unknown>>;
 };
 
 export function EditorArea({
@@ -31,6 +33,7 @@ export function EditorArea({
   decisionKeyOptions,
   repositoryId,
   branch,
+  getDecisionsForSimulation,
 }: EditorAreaProps) {
   const [jsonViewMode, setJsonViewMode] = useState<JsonViewMode>("jdm");
   const handleEditorDidMount = useCallback(() => {}, []);
@@ -93,6 +96,7 @@ export function EditorArea({
             decisionKeyOptions={decisionKeyOptions}
             repositoryId={repositoryId}
             branch={branch}
+            getDecisionsForSimulation={getDecisionsForSimulation}
           />
         ) : (
           <Editor

@@ -1,8 +1,6 @@
 import type { ThemeConfig as AntThemeConfig } from 'antd';
 import { ConfigProvider, theme as antTheme, theme } from 'antd';
-import React, { useContext, useMemo } from 'react';
-
-import { useWasmReady } from './helpers/wasm';
+import React, { useMemo } from 'react';
 
 declare module 'antd/es/theme/interface/alias' {
   export interface AliasToken {
@@ -14,32 +12,17 @@ export type ThemeConfig = Omit<AntThemeConfig, 'algorithm'> & {
   mode?: 'light' | 'dark';
 };
 
-export type DictionaryMap = Record<string, { label: string; value: string }[]>;
-
-const DictionaryContext = React.createContext<DictionaryMap>({});
-
-export const useDictionaries = (): DictionaryMap => useContext(DictionaryContext);
-
-export const DictionaryProvider: React.FC<React.PropsWithChildren<{ value: DictionaryMap }>> = ({
-  value,
-  children,
-}) => <DictionaryContext.Provider value={value}>{children}</DictionaryContext.Provider>;
-
 export type JdmConfigProviderProps = {
   theme?: ThemeConfig;
   prefixCls?: string;
-  dictionaries?: DictionaryMap;
   children?: React.ReactNode;
 };
 
 export const JdmConfigProvider: React.FC<JdmConfigProviderProps> = ({
   theme: { mode = 'light' as const, token = {}, ...restTheme } = {},
   prefixCls,
-  dictionaries,
   children,
 }) => {
-  useWasmReady();
-
   const algorithm = useMemo(() => {
     switch (mode) {
       case 'dark':
@@ -50,14 +33,10 @@ export const JdmConfigProvider: React.FC<JdmConfigProviderProps> = ({
     }
   }, [mode]);
 
-  const dicts = useMemo(() => dictionaries ?? {}, [dictionaries]);
-
   return (
     <ConfigProvider prefixCls={prefixCls} theme={{ ...restTheme, algorithm, token: { ...token, mode, motion: false } }}>
-      <DictionaryContext.Provider value={dicts}>
-        <GlobalCssVariables mode={mode} />
-        {children}
-      </DictionaryContext.Provider>
+      <GlobalCssVariables mode={mode} />
+      {children}
     </ConfigProvider>
   );
 };

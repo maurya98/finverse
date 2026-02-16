@@ -3,19 +3,14 @@ import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 import { getUser } from "../../auth/services/auth";
 import {
   getRepository,
-  getBranchByName,
   getBlob,
-  getTree,
-  createBlob,
-  addTreeEntry,
-  createTree,
-  createCommit,
-  updateBranchHead,
-  updateTreeEntry,
-  removeTreeEntry,
   isApiError,
 } from "../services/api";
+import { getDecisionsMapForSimulation } from "../utils/simulationState";
 import { useBranchTree, type FileTreeNode } from "../hooks/useBranchTree";
+import { usePendingChanges } from "../hooks/usePendingChanges";
+import { mergeTreeWithPending, getPendingContent } from "../utils/mergeTreeWithPending";
+import { commitPendingChanges } from "../utils/commitPendingChanges";
 import { FileTreeSidebar } from "../components/FileTreeSidebar";
 import { EditorArea } from "../components/EditorArea";
 import { BranchFooter } from "../components/BranchFooter";
@@ -32,8 +27,6 @@ export function RepositoryEditorPage() {
 
   const [repo, setRepo] = useState<{ id: string; name: string } | null>(null);
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
-  const [selectedEntryId, setSelectedEntryId] = useState<string | null>(null);
-  const [selectedParentTreeId, setSelectedParentTreeId] = useState<string | null>(null);
   const [editorContent, setEditorContent] = useState("");
   const [editorDirty, setEditorDirty] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -57,9 +50,23 @@ export function RepositoryEditorPage() {
     });
   }, []);
 
-  const { tree, rootTreeId, loading, error, reload, reloadFromCommitId, appendNodeToRoot } = useBranchTree(
+  const { tree, loading, error, reloadFromCommitId } = useBranchTree(
     repositoryId ?? null,
     branchName
+  );
+  const {
+    pending,
+    addPending,
+    replacePending,
+    clearPending,
+    hasPending,
+    storageQuotaExceeded,
+    clearStorageQuotaError,
+  } = usePendingChanges(repositoryId ?? null, branchName);
+
+  const displayTree = useMemo(
+    () => mergeTreeWithPending(tree, pending),
+    [tree, pending]
   );
 
   useEffect(() => {
@@ -71,27 +78,45 @@ export function RepositoryEditorPage() {
   }, [repositoryId]);
 
   const loadFile = useCallback(
-    async (path: string, blobId: string, entryId?: string, parentTreeId?: string) => {
+    async (
+      path: string,
+      blobId: string | null,
+      _entryId?: string,
+      _parentTreeId?: string,
+      contentOverride?: unknown
+    ) => {
       setSelectedPath(path);
-      setSelectedEntryId(entryId ?? null);
-      setSelectedParentTreeId(parentTreeId ?? null);
       setEditorDirty(false);
-      setEditorContent(""); // Clear immediately so we don't show previous file's content while loading
+      setEditorContent("");
+      const pendingContent = getPendingContent(path, pending);
+      const content = contentOverride ?? pendingContent;
+      if (content !== undefined) {
+        setEditorContent(
+          typeof content === "string" ? content : JSON.stringify(content, null, 2)
+        );
+        return;
+      }
+      if (!blobId) {
+        setEditorContent("");
+        return;
+      }
       const res = await getBlob(blobId);
       if (isApiError(res) || !res.data) {
         setEditorContent("");
         return;
       }
-      const content = res.data.content;
+      const blobContent = res.data.content;
       setEditorContent(
-        typeof content === "string" ? content : JSON.stringify(content, null, 2)
+        typeof blobContent === "string"
+          ? blobContent
+          : JSON.stringify(blobContent, null, 2)
       );
     },
-    []
+    [pending]
   );
 
-  function handleSelectFile(path: string, blobId: string) {
-    const node = findNodeByPath(tree, path);
+  function handleSelectFile(path: string, blobId: string | null) {
+    const node = findNodeByPath(displayTree, path);
     loadFile(path, blobId, node?.id, node?.parentTreeId);
   }
 
@@ -109,85 +134,56 @@ export function RepositoryEditorPage() {
     return null;
   }
 
-  async function handleSave() {
-    if (!repositoryId || !user?.id || !selectedPath) return;
+  function handleSave() {
+    if (!selectedPath) return;
     setSaveError(null);
-
     let content: unknown;
     try {
       content = JSON.parse(editorContent);
     } catch {
       content = editorContent;
     }
-
-    const blobRes = await createBlob(repositoryId, content);
-    if (isApiError(blobRes) || !blobRes.data) {
-      setSaveError(blobRes.success === false ? (blobRes as { message: string }).message : "Failed to create blob");
-      return;
-    }
-    const newBlobId = blobRes.data.id;
-
-    if (selectedEntryId && selectedParentTreeId) {
-      const updateRes = await updateTreeEntry(
-        selectedParentTreeId,
-        selectedEntryId,
-        { blobId: newBlobId }
-      );
-      if (isApiError(updateRes)) {
-        setSaveError(updateRes.message);
-        return;
-      }
-    } else {
-      if (!rootTreeId) {
-        setSaveError("No tree to add file to");
-        return;
-      }
-      const fileName = selectedPath.split("/").pop() || "file.json";
-      const addRes = await addTreeEntry(rootTreeId, {
-        name: fileName,
-        type: "BLOB",
-        blobId: newBlobId,
-      });
-      if (isApiError(addRes)) {
-        setSaveError(addRes.message);
-        return;
-      }
-    }
-
+    const filtered = pending.filter(
+      (c) =>
+        !(c.op === "add" && c.path === selectedPath) &&
+        !(c.op === "edit" && c.path === selectedPath)
+    );
+    const isNewFile = pending.some(
+      (c) => c.op === "add" && c.type === "file" && c.path === selectedPath
+    );
+    const newChange =
+      isNewFile
+        ? { op: "add" as const, path: selectedPath, type: "file" as const, content }
+        : { op: "edit" as const, path: selectedPath, content };
+    replacePending([...filtered, newChange]);
     setEditorDirty(false);
     setSaveError(null);
-    await reload();
   }
 
   async function handleCommit(message: string) {
-    if (!repositoryId || !user?.id || !rootTreeId) return;
+    if (!repositoryId || !user?.id) return;
+    if (!hasPending) {
+      setCommitError("No changes to commit");
+      return;
+    }
     setCommitError(null);
     setIsCommitting(true);
     try {
-      const branchRes = await getBranchByName(repositoryId, branchName);
-      if (isApiError(branchRes) || !branchRes.data) {
-        setCommitError("Branch not found");
-        return;
-      }
-      const branch = branchRes.data;
-      const commitRes = await createCommit({
+      const result = await commitPendingChanges(
         repositoryId,
-        treeId: rootTreeId,
-        authorId: user.id,
-        message: message.trim() || "Update",
-        parentCommitId: branch.headCommitId,
-      });
-      if (isApiError(commitRes) || !commitRes.data) {
-        setCommitError(commitRes.success === false ? (commitRes as { message: string }).message : "Failed to create commit");
-        return;
-      }
-      const headRes = await updateBranchHead(branch.id, commitRes.data.id);
-      if (isApiError(headRes)) {
-        setCommitError(headRes.message);
+        branchName,
+        user.id,
+        message,
+        tree,
+        pending
+      );
+      if (!result.success) {
+        setCommitError(result.message);
         return;
       }
       setCommitModalOpen(false);
-      await reloadFromCommitId(commitRes.data.id);
+      clearPending();
+      await reloadFromCommitId(result.commitId);
     } finally {
       setIsCommitting(false);
     }
@@ -201,117 +197,22 @@ export function RepositoryEditorPage() {
     return "";
   }
 
-  async function handleCreateFileWithName(name: string, parentFolder: FileTreeNode | null) {
-    if (!user?.id || !repositoryId) return;
+  function handleCreateFileWithName(name: string, parentFolder: FileTreeNode | null) {
+    if (!repositoryId) return;
     const trimmed = name.trim();
     if (!trimmed) return;
-    const initialContent = getInitialContentForNewFile(trimmed);
-    let treeId = parentFolder ? parentFolder.childTreeId : rootTreeId;
-    if (!treeId) {
-      const branchRes = await getBranchByName(repositoryId, branchName);
-      if (isApiError(branchRes) || !branchRes.data) return;
-      const blobRes = await createBlob(repositoryId, initialContent);
-      if (isApiError(blobRes) || !blobRes.data) return;
-      const treeRes = await createTree(repositoryId, [
-        { name: trimmed, type: "BLOB", blobId: blobRes.data.id },
-      ]);
-      if (isApiError(treeRes) || !treeRes.data) return;
-      treeId = treeRes.data.id;
-      const commitRes = await createCommit({
-        repositoryId,
-        treeId,
-        authorId: user.id,
-        message: "Initial commit",
-        parentCommitId: null,
-      });
-      if (isApiError(commitRes) || !commitRes.data) return;
-      await updateBranchHead(branchRes.data.id, commitRes.data.id);
-      await reloadFromCommitId(commitRes.data.id);
-      const firstEntry = treeRes.data.entries?.[0];
-      loadFile(trimmed, blobRes.data.id, firstEntry?.id, treeId);
-      return;
-    }
-    const blobRes = await createBlob(repositoryId, initialContent);
-    if (isApiError(blobRes) || !blobRes.data) return;
-    const addRes = await addTreeEntry(treeId, {
-      name: trimmed,
-      type: "BLOB",
-      blobId: blobRes.data.id,
-    });
-    if (isApiError(addRes)) return;
-    const branchRes = await getBranchByName(repositoryId, branchName);
-    if (isApiError(branchRes) || !branchRes.data) return;
-    const commitRes = await createCommit({
-      repositoryId,
-      treeId: rootTreeId!,
-      authorId: user.id,
-      message: `Add ${trimmed}`,
-      parentCommitId: branchRes.data.headCommitId,
-    });
-    if (isApiError(commitRes) || !commitRes.data) return;
-    await updateBranchHead(branchRes.data.id, commitRes.data.id);
-    await reloadFromCommitId(commitRes.data.id);
     const path = parentFolder ? `${parentFolder.path}/${trimmed}` : trimmed;
-    const newEntry = addRes.data?.entries?.find((e: { name: string }) => e.name === trimmed);
-    const entryId = newEntry?.id;
-    loadFile(path, blobRes.data.id, entryId, treeId);
+    const initialContent = getInitialContentForNewFile(trimmed);
+    addPending({ op: "add", path, type: "file", content: initialContent });
+    loadFile(path, null, undefined, undefined, initialContent);
   }
 
-  async function handleCreateFolderWithName(name: string, parentFolder: FileTreeNode | null) {
-    if (!user?.id || !repositoryId) return;
+  function handleCreateFolderWithName(name: string, parentFolder: FileTreeNode | null) {
+    if (!repositoryId) return;
     const trimmed = name.trim();
     if (!trimmed) return;
-    let treeId = parentFolder ? parentFolder.childTreeId : rootTreeId;
-    if (!treeId) {
-      const branchRes = await getBranchByName(repositoryId, branchName);
-      if (isApiError(branchRes) || !branchRes.data) return;
-      const treeRes = await createTree(repositoryId, []);
-      if (isApiError(treeRes) || !treeRes.data) return;
-      treeId = treeRes.data.id;
-      const commitRes = await createCommit({
-        repositoryId,
-        treeId,
-        authorId: user.id,
-        message: "Initial commit",
-        parentCommitId: null,
-      });
-      if (isApiError(commitRes) || !commitRes.data) return;
-      await updateBranchHead(branchRes.data.id, commitRes.data.id);
-      await reloadFromCommitId(commitRes.data.id);
-      return;
-    }
-    const childTreeRes = await createTree(repositoryId, []);
-    if (isApiError(childTreeRes) || !childTreeRes.data) return;
-    const addRes = await addTreeEntry(treeId, {
-      name: trimmed,
-      type: "TREE",
-      childTreeId: childTreeRes.data.id,
-    });
-    if (isApiError(addRes)) return;
-    const newEntry = addRes.data?.entries?.find((e: { name: string }) => e.name === trimmed);
-    if (newEntry && !parentFolder) {
-      appendNodeToRoot({
-        id: newEntry.id,
-        name: trimmed,
-        type: "folder",
-        path: trimmed,
-        blobId: null,
-        childTreeId: childTreeRes.data.id,
-        parentTreeId: treeId,
-        children: [],
-      });
-    }
-    const branchRes = await getBranchByName(repositoryId, branchName);
-    if (isApiError(branchRes) || !branchRes.data) return;
-    const commitRes = await createCommit({
-      repositoryId,
-      treeId: rootTreeId!,
-      authorId: user.id,
-      message: `Add folder ${trimmed}`,
-      parentCommitId: branchRes.data.headCommitId,
-    });
-    if (isApiError(commitRes) || !commitRes.data) return;
-    await updateBranchHead(branchRes.data.id, commitRes.data.id);
+    const path = parentFolder ? `${parentFolder.path}/${trimmed}` : trimmed;
+    addPending({ op: "add", path, type: "folder" });
   }
 
   function handleBranchChange(newBranch: string) {
@@ -321,102 +222,31 @@ export function RepositoryEditorPage() {
     setEditorDirty(false);
   }
 
-  /** Recursively delete a tree entry. For folders, deletes all children first. */
-  async function deleteNodeRecursive(
-    parentTreeId: string,
-    entryId: string,
-    isFolder: boolean,
-    childTreeId: string | null
-  ): Promise<void> {
-    if (isFolder && childTreeId) {
-      const treeRes = await getTree(childTreeId);
-      if (!isApiError(treeRes) && treeRes.data?.entries) {
-        for (const entry of treeRes.data.entries) {
-          await deleteNodeRecursive(
-            childTreeId,
-            entry.id,
-            entry.type === "TREE",
-            entry.childTreeId
-          );
-        }
-      }
-    }
-    await removeTreeEntry(parentTreeId, entryId);
-  }
-
-  async function handleDeleteNode(node: FileTreeNode) {
-    if (!repositoryId || !user?.id || !rootTreeId || !node.parentTreeId) return;
-    setSaveError(null);
-    try {
-      await deleteNodeRecursive(
-        node.parentTreeId,
-        node.id,
-        node.type === "folder",
-        node.childTreeId
-      );
-      const branchRes = await getBranchByName(repositoryId, branchName);
-      if (isApiError(branchRes) || !branchRes.data) {
-        setSaveError("Branch not found");
-        return;
-      }
-      const commitRes = await createCommit({
-        repositoryId,
-        treeId: rootTreeId,
-        authorId: user.id,
-        message: `Delete ${node.type === "folder" ? "folder" : "file"} ${node.name}`,
-        parentCommitId: branchRes.data.headCommitId,
-      });
-      if (isApiError(commitRes) || !commitRes.data) {
-        setSaveError(commitRes.success === false ? (commitRes as { message: string }).message : "Failed to create commit");
-        return;
-      }
-      await updateBranchHead(branchRes.data.id, commitRes.data.id);
-      if (selectedPath === node.path || (node.type === "folder" && selectedPath?.startsWith(node.path + "/"))) {
-        setSelectedPath(null);
-        setEditorContent("");
-        setEditorDirty(false);
-      }
-      await reloadFromCommitId(commitRes.data.id);
-    } catch (e) {
-      setSaveError(e instanceof Error ? e.message : "Delete failed");
+  function handleDeleteNode(node: FileTreeNode) {
+    addPending({ op: "delete", path: node.path });
+    if (
+      selectedPath === node.path ||
+      (node.type === "folder" && selectedPath?.startsWith(node.path + "/"))
+    ) {
+      setSelectedPath(null);
+      setEditorContent("");
+      setEditorDirty(false);
     }
   }
 
-  async function handleMoveNode(draggedNode: FileTreeNode, targetFolder: FileTreeNode) {
-    if (!repositoryId || !user?.id || !rootTreeId || !draggedNode.parentTreeId || !targetFolder.childTreeId) return;
-    if (draggedNode.parentTreeId === targetFolder.childTreeId) return;
-    setSaveError(null);
-    try {
-      await removeTreeEntry(draggedNode.parentTreeId, draggedNode.id);
-      await addTreeEntry(targetFolder.childTreeId, {
-        name: draggedNode.name,
-        type: draggedNode.type === "file" ? "BLOB" : "TREE",
-        ...(draggedNode.type === "file" ? { blobId: draggedNode.blobId! } : { childTreeId: draggedNode.childTreeId! }),
-      });
-      const branchRes = await getBranchByName(repositoryId, branchName);
-      if (isApiError(branchRes) || !branchRes.data) {
-        setSaveError("Branch not found");
-        return;
-      }
-      const commitRes = await createCommit({
-        repositoryId,
-        treeId: rootTreeId,
-        authorId: user.id,
-        message: `Move ${draggedNode.name} to ${targetFolder.path || "root"}`,
-        parentCommitId: branchRes.data.headCommitId,
-      });
-      if (isApiError(commitRes) || !commitRes.data) {
-        setSaveError(commitRes.success === false ? (commitRes as { message: string }).message : "Failed to create commit");
-        return;
-      }
-      await updateBranchHead(branchRes.data.id, commitRes.data.id);
-      await reloadFromCommitId(commitRes.data.id);
-    } catch (e) {
-      setSaveError(e instanceof Error ? e.message : "Move failed");
-    }
+  function handleMoveNode(draggedNode: FileTreeNode, targetFolder: FileTreeNode) {
+    const newPath = targetFolder.path
+      ? `${targetFolder.path}/${draggedNode.name}`
+      : draggedNode.name;
+    if (newPath === draggedNode.path) return;
+    addPending({ op: "move", path: draggedNode.path, newPath });
   }
 
   const language = selectedPath?.endsWith(".json") ? "json" : "plaintext";
+
+  const getDecisionsForSimulation = useCallback(async () => {
+    return getDecisionsMapForSimulation(displayTree, pending, getBlob);
+  }, [displayTree, pending]);
 
   const decisionKeyOptions = useMemo(() => {
     function collectJsonPaths(nodes: FileTreeNode[], excludePath: string | null): string[] {
@@ -431,8 +261,8 @@ export function RepositoryEditorPage() {
       }
       return paths.sort((a, b) => a.localeCompare(b));
     }
-    return collectJsonPaths(tree, selectedPath);
-  }, [tree, selectedPath]);
+    return collectJsonPaths(displayTree, selectedPath);
+  }, [displayTree, selectedPath]);
 
   if (!repo) {
     return (
@@ -467,7 +297,7 @@ export function RepositoryEditorPage() {
       <div className={`repo-editor-body ${sidebarOpen ? "" : "repo-editor-sidebar-hidden"}`}>
         <div className="repo-editor-sidebar-wrap">
           <FileTreeSidebar
-            nodes={tree}
+            nodes={displayTree}
             loading={loading}
             selectedPath={selectedPath}
             onSelectFile={handleSelectFile}
@@ -503,6 +333,7 @@ export function RepositoryEditorPage() {
           decisionKeyOptions={decisionKeyOptions}
           repositoryId={repo.id}
           branch={branchName}
+          getDecisionsForSimulation={getDecisionsForSimulation}
         />
       </div>
 
@@ -521,8 +352,8 @@ export function RepositoryEditorPage() {
               setCommitError(null);
               setCommitModalOpen(true);
             }}
-            disabled={!rootTreeId}
-            title={!rootTreeId ? "No content to commit yet" : "Commit all saved changes"}
+            disabled={!hasPending}
+            title={!hasPending ? "No changes to commit" : "Commit all changes"}
           >
             Commit
           </button>
@@ -574,6 +405,19 @@ export function RepositoryEditorPage() {
       {error && <div className="repo-editor-error">{error}</div>}
       {saveError && <div className="repo-editor-error">{saveError}</div>}
       {commitError && <div className="repo-editor-error">{commitError}</div>}
+      {storageQuotaExceeded && (
+        <div className="repo-editor-error repo-editor-error-warning" role="alert">
+          Storage limit reached. Your changes are kept in memory only—commit soon or they will be lost on refresh.
+          <button
+            type="button"
+            className="repo-editor-error-dismiss"
+            onClick={clearStorageQuotaError}
+            aria-label="Dismiss"
+          >
+            ×
+          </button>
+        </div>
+      )}
     </div>
   );
 }
