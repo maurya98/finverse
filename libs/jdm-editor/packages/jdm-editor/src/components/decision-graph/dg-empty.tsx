@@ -35,6 +35,9 @@ export type DecisionGraphEmptyType = {
 
   simulate?: DecisionGraphStoreType['state']['simulate'];
 
+  /** Paths to JSON decision files in the repo (for Decision node key dropdown) */
+  decisionKeyOptions?: string[];
+
   onChange?: DecisionGraphStoreType['listeners']['onChange'];
   onReactFlowInit?: DecisionGraphStoreType['listeners']['onReactFlowInit'];
 
@@ -55,6 +58,7 @@ export const DecisionGraphEmpty: React.FC<DecisionGraphEmptyType> = ({
   hideLeftToolbar,
   panels,
   simulate,
+  decisionKeyOptions,
   viewConfigCta,
   viewConfig,
   onViewConfigCta,
@@ -97,8 +101,9 @@ export const DecisionGraphEmpty: React.FC<DecisionGraphEmptyType> = ({
       viewConfig,
       viewConfigCta,
       hideLeftToolbar,
+      decisionKeyOptions: Array.isArray(decisionKeyOptions) ? decisionKeyOptions : undefined,
     });
-  }, [id, disabled, components, customNodes, panels, viewConfig, viewConfigCta, hideLeftToolbar]);
+  }, [id, disabled, components, customNodes, panels, viewConfig, viewConfigCta, hideLeftToolbar, decisionKeyOptions]);
 
   useEffect(() => {
     stateStore.setState({ name: name ?? 'graph.json' });

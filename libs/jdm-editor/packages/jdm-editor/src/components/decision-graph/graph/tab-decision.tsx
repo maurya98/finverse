@@ -1,6 +1,6 @@
 import { Collapse, Form, Input, Select, Switch } from 'antd';
 import type { DragDropManager } from 'dnd-core';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { useDecisionGraphActions, useDecisionGraphState } from '../context/dg-store.context';
 import type { NodeDecisionData } from '../nodes/specifications/decision.specification';
@@ -17,10 +17,23 @@ const EXECUTION_MODES = [
 
 export const TabDecision: React.FC<TabDecisionProps> = ({ id }) => {
   const graphActions = useDecisionGraphActions();
-  const { disabled, content } = useDecisionGraphState(({ disabled, decisionGraph }) => ({
-    disabled,
-    content: (decisionGraph?.nodes ?? []).find((node) => node.id === id)?.content as NodeDecisionData | undefined,
-  }));
+  const { disabled, content, decisionKeyOptions } = useDecisionGraphState(
+    ({ disabled, decisionGraph, decisionKeyOptions }) => ({
+      disabled,
+      content: (decisionGraph?.nodes ?? []).find((node) => node.id === id)?.content as NodeDecisionData | undefined,
+      decisionKeyOptions,
+    }),
+  );
+
+  const keyOptions = useMemo(() => {
+    const paths = decisionKeyOptions ?? [];
+    const opts = paths.map((path) => ({ value: path, label: path }));
+    const current = content?.key?.trim();
+    if (current && !opts.some((o) => o.value === current)) {
+      opts.unshift({ value: current, label: `${current} (current)` });
+    }
+    return opts;
+  }, [decisionKeyOptions, content?.key]);
 
   const updateContent = useCallback(
     (updates: Partial<NodeDecisionData>) => {
@@ -62,14 +75,33 @@ export const TabDecision: React.FC<TabDecisionProps> = ({ id }) => {
       <Form layout='vertical' size='small'>
         <Form.Item
           label='Key'
-          tooltip='Path to the referenced decision (e.g. pricing/calculate-discount). References another decision JSON in your repository.'
+          tooltip='Path to the referenced decision. Select a JSON file from your repository or enter a path.'
         >
-          <Input
-            value={content.key ?? ''}
-            disabled={disabled}
-            placeholder='e.g. pricing/calculate-discount'
-            onChange={(e) => updateContent({ key: e.target.value })}
-          />
+          {keyOptions.length > 0 ? (
+            <Select
+              value={content.key ?? undefined}
+              disabled={disabled}
+              placeholder='Select decision JSON or enter path'
+              options={keyOptions}
+              onChange={(value) => updateContent({ key: value ?? '' })}
+              onClear={() => updateContent({ key: '' })}
+              allowClear
+              showSearch
+              filterOption={(input, option) =>
+                (option?.label ?? '').toString().toLowerCase().includes(input.toLowerCase())
+              }
+              optionFilterProp='label'
+              style={{ width: '100%' }}
+              notFoundContent={null}
+            />
+          ) : (
+            <Input
+              value={content.key ?? ''}
+              disabled={disabled}
+              placeholder='e.g. folder/decision.json'
+              onChange={(e) => updateContent({ key: e.target.value })}
+            />
+          )}
         </Form.Item>
         <Form.Item label='Pass through' tooltip='Include input data in the output'>
           <Switch

@@ -16,8 +16,21 @@ export const nodeSpecification = makeNodeSpecification({
   [NodeKind.Input]: inputSpecification,
   [NodeKind.Output]: outputSpecification,
   [NodeKind.DecisionTable]: decisionTableSpecification,
-  [NodeKind.Decision]: decisionSpecification,
   [NodeKind.Expression]: expressionSpecification,
   [NodeKind.Function]: functionSpecification,
   [NodeKind.Switch]: switchSpecification,
+  [NodeKind.Decision]: decisionSpecification,
 });
+
+/** Explicit order for the components sidebar: Decision is last. */
+export const CORE_NODE_ORDER: NodeKind[] = [
+  NodeKind.Input,
+  NodeKind.Output,
+  NodeKind.DecisionTable,
+  NodeKind.Expression,
+  NodeKind.Function,
+  NodeKind.Switch,
+  NodeKind.Decision,
+];
+
+export const coreNodeSpecificationsInOrder = CORE_NODE_ORDER.map((kind) => nodeSpecification[kind]);

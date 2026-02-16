@@ -7,7 +7,7 @@ import { match } from 'ts-pattern';
 import { useDecisionGraphState } from '../context/dg-store.context';
 import { DecisionNode } from '../nodes/decision-node';
 import { NodeKind, type NodeSpecification } from '../nodes/specifications/specification-types';
-import { nodeSpecification } from '../nodes/specifications/specifications';
+import { coreNodeSpecificationsInOrder, nodeSpecification } from '../nodes/specifications/specifications';
 
 export type GraphComponentsProps = {
   inputDisabled?: boolean;
@@ -46,7 +46,7 @@ export const GraphComponents: React.FC<GraphComponentsProps> = React.memo(({ inp
 
   const innerGroups = useMemo<Record<string, NodeSpecification[]>>(() => {
     const initialGroups: Record<string, NodeSpecification[]> = {
-      core: Object.values(nodeSpecification),
+      core: [...coreNodeSpecificationsInOrder],
     };
     if (customComponents?.length > 0) {
       initialGroups.extended = customComponents;

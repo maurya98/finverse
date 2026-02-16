@@ -25,7 +25,7 @@ export const decisionSpecification: NodeSpecification<NodeDecisionData> = {
   displayName: 'Decision',
   documentationUrl: 'https://docs.gorules.io/developers/jdm/node-types#decision-node',
   shortDescription: 'Sub-decision reference',
-  color: NodeColor.Blue,
+  color: NodeColor.Violet,
   inferTypes: {
     needsUpdate: () => false,
     determineOutputType: (state) => state.input,

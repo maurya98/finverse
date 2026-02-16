@@ -66,18 +66,23 @@ export const inputSpecification: NodeSpecification<NodeInputData> = {
             danger: true,
             label: <SpacedText left='Delete' right={platform.shortcut('Backspace')} />,
             disabled,
-            onClick: () =>
-              Modal.confirm({
-                icon: null,
-                title: 'Delete node',
-                content: (
-                  <Typography.Text>
-                    Are you sure you want to delete <Typography.Text strong>{data.name}</Typography.Text> node.
-                  </Typography.Text>
-                ),
-                okButtonProps: { danger: true },
-                onOk: () => graphActions.removeNodes([id]),
-              }),
+            onClick: () => {
+              const nodeId = id;
+              const nodeName = data.name;
+              setTimeout(() => {
+                Modal.confirm({
+                  icon: null,
+                  title: 'Delete node',
+                  content: (
+                    <Typography.Text>
+                      Are you sure you want to delete <Typography.Text strong>{nodeName}</Typography.Text> node.
+                    </Typography.Text>
+                  ),
+                  okButtonProps: { danger: true },
+                  onOk: () => graphActions.removeNodes([nodeId]),
+                });
+              }, 0);
+            },
           },
         ]}
       />

@@ -95,6 +95,7 @@ const GlobalCssVariables: React.FC<{ mode: 'light' | 'dark' }> = ({ mode }) => {
 
       '--node-color-blue': 'var(--grl-color-primary)',
       '--node-color-purple': '#7c4dff',
+      '--node-color-violet': '#8b5cf6',
       '--node-color-orange': '#f76d40',
       '--node-color-green': '#10ac84',
     }),

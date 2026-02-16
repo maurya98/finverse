@@ -457,10 +457,12 @@ export const Graph = forwardRef<GraphRef, GraphProps>(function GraphInner({ reac
               edgesUpdatable={!disabled}
               onNodesChange={graphActions.handleNodesChange}
               onEdgesChange={graphActions.handleEdgesChange}
-              onNodesDelete={(e) => {
-                e.forEach((node) => {
-                  graphActions.closeTab(node?.id);
-                });
+              onNodesDelete={(nodesToDelete) => {
+                const ids = nodesToDelete.map((n) => n?.id).filter(Boolean) as string[];
+                if (ids.length > 0) {
+                  nodesToDelete.forEach((node) => graphActions.closeTab(node?.id));
+                  graphActions.removeNodes(ids);
+                }
               }}
               onEdgeMouseEnter={(_, edge) => graphActions.setHoveredEdgeId(edge.id)}
               onEdgeMouseLeave={() => graphActions.setHoveredEdgeId(null)}

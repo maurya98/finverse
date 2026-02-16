@@ -90,18 +90,24 @@ export const GraphNode = React.forwardRef<HTMLDivElement, GraphNodeProps>(
         danger: true,
         label: <SpacedText left='Delete' right={platform.shortcut('Backspace')} />,
         disabled,
-        onClick: () =>
-          Modal.confirm({
-            icon: null,
-            title: 'Delete node',
-            content: (
-              <Typography.Text>
-                Are you sure you want to delete <Typography.Text strong>{name}</Typography.Text> node.
-              </Typography.Text>
-            ),
-            okButtonProps: { danger: true },
-            onOk: () => graphActions.removeNodes([id]),
-          }),
+        onClick: () => {
+          const nodeId = id;
+          const nodeName = name;
+          // Defer so modal opens after dropdown closes (avoids Ant Design Dropdown + Modal focus/close issues)
+          setTimeout(() => {
+            Modal.confirm({
+              icon: null,
+              title: 'Delete node',
+              content: (
+                <Typography.Text>
+                  Are you sure you want to delete <Typography.Text strong>{nodeName}</Typography.Text> node.
+                </Typography.Text>
+              ),
+              okButtonProps: { danger: true },
+              onOk: () => graphActions.removeNodes([nodeId]),
+            });
+          }, 0);
+        },
       },
     ].filter((i) => i !== false);
 

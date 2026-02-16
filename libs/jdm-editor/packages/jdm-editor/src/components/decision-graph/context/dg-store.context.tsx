@@ -74,6 +74,9 @@ export type DecisionGraphStoreType = {
 
     compactMode?: boolean;
 
+    /** Paths to JSON decision files in the repo (for Decision node key dropdown) */
+    decisionKeyOptions?: string[];
+
     nodeTypes: Record<string, Partial<Record<NodeTypeKind, VariableType>>>;
     globalType: Record<string, VariableType>;
   };
