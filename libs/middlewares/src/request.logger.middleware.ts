@@ -94,6 +94,18 @@ function maskObject(obj: unknown): unknown {
   return out;
 }
 
+/** JSON.stringify that replaces circular references with "[Circular]" */
+function safeStringify(value: unknown): string {
+  const seen = new WeakSet();
+  return JSON.stringify(value, (_, val) => {
+    if (val !== null && typeof val === "object") {
+      if (seen.has(val)) return "[Circular]";
+      seen.add(val);
+    }
+    return val;
+  });
+}
+
 /** Safe copy of headers to avoid circular refs; masks sensitive headers */
 function safeHeaders(headers: Record<string, string | string[] | undefined>): Record<string, string | string[]> {
   const safe = Object.fromEntries(
@@ -115,37 +127,50 @@ export function requestLoggerMiddleware(options?: RequestLoggerOptions): (req: R
 
   return (req: Request, res: Response, next: NextFunction) => {
     const startTime = Date.now();
+    let responseBody: unknown;
 
-    try {
-      const requestLog = {
-        ...(appName && { application: appName }),
-        method: req.method,
-        url: req.url,
-        headers: safeHeaders(req.headers as Record<string, string | string[] | undefined>),
-        body: maskObject(req.body),
-        query: maskObject(req.query),
-        params: maskObject(req.params),
-        timestamp: new Date().toISOString(),
-      };
-      logger.info(JSON.stringify(requestLog));
-    } catch (error) {
-      logger.error(`Error logging request: ${error}`);
-    }
+    const originalJson = res.json.bind(res);
+    res.json = function (body: unknown) {
+      responseBody = body;
+      return originalJson(body);
+    };
+
+    const originalSend = res.send.bind(res);
+    res.send = function (body?: unknown) {
+      if (responseBody === undefined) responseBody = body;
+      return originalSend(body as never);
+    };
+
+    const requestPayload = (() => {
+      try {
+        return {
+          ...(appName && { application: appName }),
+          method: req.method,
+          url: req.url,
+          headers: safeHeaders(req.headers as Record<string, string | string[] | undefined>),
+          body: maskObject(req.body),
+          query: maskObject(req.query),
+          params: maskObject(req.params),
+        };
+      } catch (error) {
+        logger.error(`Error building request log: ${error}`);
+        return null;
+      }
+    })();
 
     res.on("finish", () => {
       try {
         const durationMs = Date.now() - startTime;
-        const responseLog = {
-          ...(appName && { application: appName }),
-          method: req.method,
-          url: req.url,
+        const logPayload = {
+          ...requestPayload,
           statusCode: res.statusCode,
+          ...(responseBody !== undefined && { responseBody }),
           durationMs,
           timestamp: new Date().toISOString(),
         };
-        logger.info(JSON.stringify(responseLog));
+        if (logPayload.method) logger.info(safeStringify(logPayload));
       } catch (error) {
-        logger.error(`Error logging response: ${error}`);
+        logger.error(`Error logging request/response: ${error}`);
       }
     });
 

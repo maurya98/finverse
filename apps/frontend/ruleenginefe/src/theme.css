@@ -1,0 +1,372 @@
+/* Light theme overrides — applied when data-theme="light" on <html> */
+
+[data-theme="light"] .dashboard-page {
+  --dash-bg: #f1f5f9;
+  --dash-header-border: rgba(0, 0, 0, 0.08);
+  --dash-card-bg: rgba(255, 255, 255, 0.9);
+  --dash-card-hover: rgba(226, 232, 240, 0.9);
+  --dash-accent: #0d9488;
+  --dash-text: #0f172a;
+  --dash-text-muted: #64748b;
+  --dash-error: #dc2626;
+}
+
+[data-theme="light"] .dashboard-page .create-form input {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+[data-theme="light"] .dashboard-page .workspace-card.selected {
+  background: rgba(13, 148, 136, 0.12);
+}
+
+[data-theme="light"] .dashboard-page .dashboard-modal-btn.secondary {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .dashboard-page .dashboard-modal-btn.secondary:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .dashboard-page .dashboard-loading {
+  background: rgba(255, 255, 255, 0.85);
+  color: #0f172a;
+}
+
+/* Login page */
+[data-theme="light"] .login-page {
+  --login-bg-from: #f8fafc;
+  --login-bg-to: #e2e8f0;
+  --login-card-bg: rgba(255, 255, 255, 0.55);
+  --login-card-border: rgba(148, 163, 184, 0.35);
+  --login-card-border-highlight: rgba(255, 255, 255, 0.8);
+  --login-submit-glass: rgba(13, 148, 136, 0.5);
+  --login-submit-glass-border: rgba(255, 255, 255, 0.5);
+  --login-input-bg: rgba(241, 245, 249, 0.7);
+  --login-input-border: rgba(148, 163, 184, 0.35);
+  --login-text: #0f172a;
+  --login-text-muted: #64748b;
+}
+
+[data-theme="light"] .login-bg {
+  background: #f1f5f9;
+}
+
+[data-theme="light"] .login-card {
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.12),
+    0 0 0 1px var(--login-card-border-highlight) inset;
+}
+
+[data-theme="light"] .login-form input:focus {
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.2);
+}
+
+[data-theme="light"] .login-error {
+  background: rgba(248, 113, 113, 0.15);
+}
+
+/* Repo editor page */
+[data-theme="light"] .repo-editor-page {
+  --editor-bg: #f1f5f9;
+  --editor-header: #e2e8f0;
+  --editor-border: rgba(0, 0, 0, 0.1);
+  --editor-accent: #0d9488;
+  --editor-text: #334155;
+}
+
+/* Branch management page — direct overrides */
+[data-theme="light"] .branch-mgmt-page {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+[data-theme="light"] .branch-mgmt-loading {
+  color: #64748b;
+}
+
+[data-theme="light"] .branch-mgmt-header,
+[data-theme="light"] .branch-mgmt-toolbar {
+  background: #e2e8f0;
+  border-bottom-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .branch-mgmt-back {
+  border-color: rgba(0, 0, 0, 0.12);
+  color: #334155;
+}
+
+[data-theme="light"] .branch-mgmt-back:hover {
+  border-color: #0d9488;
+  color: #0d9488;
+}
+
+[data-theme="light"] .branch-mgmt-label,
+[data-theme="light"] .branch-mgmt-loading-inline,
+[data-theme="light"] .branch-mgmt-empty,
+[data-theme="light"] .branch-mgmt-commit-message,
+[data-theme="light"] .branch-mgmt-commit-author,
+[data-theme="light"] .branch-mgmt-commit-date,
+[data-theme="light"] .branch-mgmt-mr-date,
+[data-theme="light"] .branch-mgmt-modal-label {
+  color: #64748b;
+}
+
+[data-theme="light"] .branch-mgmt-select {
+  border-color: rgba(0, 0, 0, 0.2);
+  background: #fff;
+  color: #0f172a;
+}
+
+[data-theme="light"] .branch-mgmt-mr-item,
+[data-theme="light"] .branch-mgmt-commit-item,
+[data-theme="light"] .branch-mgmt-modal {
+  background: #fff;
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .branch-mgmt-modal-backdrop {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="light"] .branch-mgmt-btn.secondary {
+  background: rgba(0, 0, 0, 0.06);
+  color: #334155;
+}
+
+[data-theme="light"] .branch-mgmt-btn.secondary:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .branch-mgmt-modal-input,
+[data-theme="light"] .branch-mgmt-modal-textarea,
+[data-theme="light"] .branch-mgmt-modal-select {
+  background: #f8fafc;
+  border-color: rgba(0, 0, 0, 0.15);
+  color: #0f172a;
+}
+
+/* File tree sidebar */
+[data-theme="light"] .file-tree-sidebar {
+  background: #e2e8f0;
+  color: #334155;
+  border-right-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .file-tree-header {
+  border-bottom-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .file-tree-title,
+[data-theme="light"] .file-tree-loading,
+[data-theme="light"] .file-tree-empty {
+  color: #64748b;
+}
+
+[data-theme="light"] .file-tree-repo {
+  color: #0f172a;
+}
+
+[data-theme="light"] .tree-item {
+  color: #334155;
+}
+
+[data-theme="light"] .tree-item.selected {
+  background: rgba(13, 148, 136, 0.12);
+  color: #0d9488;
+}
+
+[data-theme="light"] .file-tree-context-menu {
+  background: #fff;
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .file-tree-context-menu-item {
+  color: #334155;
+}
+
+[data-theme="light"] .file-tree-context-menu-item.danger {
+  color: #dc2626;
+}
+
+/* Editor area */
+[data-theme="light"] .editor-area {
+  background: #f8fafc;
+}
+
+[data-theme="light"] .editor-area-empty {
+  color: #64748b;
+}
+
+[data-theme="light"] .editor-toolbar {
+  background: #e2e8f0;
+  border-bottom-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .editor-tab {
+  color: #0f172a;
+}
+
+[data-theme="light"] .editor-view-tab {
+  color: #64748b;
+}
+
+[data-theme="light"] .editor-view-tab.active {
+  background: #fff;
+  color: #0f172a;
+}
+
+[data-theme="light"] .editor-save-btn {
+  border-color: rgba(0, 0, 0, 0.15);
+  color: #334155;
+}
+
+[data-theme="light"] .editor-save-btn:hover:not(:disabled) {
+  border-color: #0d9488;
+  color: #0d9488;
+}
+
+/* ========== Dark accent themes (ocean, forest, violet, sunset) ========== */
+
+[data-theme="ocean"] {
+  color-scheme: dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #0f172a;
+}
+[data-theme="ocean"] .dashboard-page { --dash-accent: #3b82f6; }
+[data-theme="ocean"] .dashboard-page .workspace-card.selected { background: rgba(59, 130, 246, 0.15); }
+[data-theme="ocean"] .login-page { --login-accent: #3b82f6; --login-accent-hover: #2563eb; }
+[data-theme="ocean"] .login-form input:focus { box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.35); }
+[data-theme="ocean"] .repo-editor-page { --editor-accent: #3b82f6; }
+[data-theme="ocean"] .branch-mgmt-back:hover, [data-theme="ocean"] .repo-editor-back:hover, [data-theme="ocean"] .repo-editor-sidebar-toggle:hover { border-color: #3b82f6; color: #3b82f6; }
+[data-theme="ocean"] .dashboard-user button:hover { border-color: #3b82f6; color: #3b82f6; }
+[data-theme="ocean"] .tree-item.selected { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+[data-theme="ocean"] .editor-save-btn:hover:not(:disabled) { border-color: #3b82f6; color: #3b82f6; }
+[data-theme="ocean"] .create-form button { background: #3b82f6; }
+[data-theme="ocean"] .branch-mgmt-btn.primary { background: #3b82f6; }
+[data-theme="ocean"] .login-page { --login-submit-glass: rgba(59, 130, 246, 0.5); }
+[data-theme="ocean"] .login-submit:hover:not(:disabled) { background: rgba(37, 99, 235, 0.65); }
+
+[data-theme="forest"] {
+  color-scheme: dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #0f1419;
+}
+[data-theme="forest"] .dashboard-page { --dash-accent: #22c55e; }
+[data-theme="forest"] .dashboard-page .workspace-card.selected { background: rgba(34, 197, 94, 0.15); }
+[data-theme="forest"] .login-page { --login-accent: #22c55e; --login-accent-hover: #16a34a; }
+[data-theme="forest"] .login-form input:focus { box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.35); }
+[data-theme="forest"] .repo-editor-page { --editor-accent: #22c55e; }
+[data-theme="forest"] .branch-mgmt-back:hover, [data-theme="forest"] .repo-editor-back:hover, [data-theme="forest"] .repo-editor-sidebar-toggle:hover { border-color: #22c55e; color: #22c55e; }
+[data-theme="forest"] .dashboard-user button:hover { border-color: #22c55e; color: #22c55e; }
+[data-theme="forest"] .tree-item.selected { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+[data-theme="forest"] .editor-save-btn:hover:not(:disabled) { border-color: #22c55e; color: #22c55e; }
+[data-theme="forest"] .create-form button { background: #22c55e; }
+[data-theme="forest"] .branch-mgmt-btn.primary { background: #22c55e; }
+[data-theme="forest"] .login-page { --login-submit-glass: rgba(34, 197, 94, 0.5); }
+[data-theme="forest"] .login-submit:hover:not(:disabled) { background: rgba(22, 163, 74, 0.65); }
+
+[data-theme="violet"] {
+  color-scheme: dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #1e1b4b;
+}
+[data-theme="violet"] .dashboard-page { --dash-accent: #8b5cf6; }
+[data-theme="violet"] .dashboard-page .workspace-card.selected { background: rgba(139, 92, 246, 0.15); }
+[data-theme="violet"] .login-page { --login-accent: #8b5cf6; --login-accent-hover: #7c3aed; }
+[data-theme="violet"] .login-form input:focus { box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.35); }
+[data-theme="violet"] .repo-editor-page { --editor-accent: #8b5cf6; }
+[data-theme="violet"] .branch-mgmt-back:hover, [data-theme="violet"] .repo-editor-back:hover, [data-theme="violet"] .repo-editor-sidebar-toggle:hover { border-color: #8b5cf6; color: #8b5cf6; }
+[data-theme="violet"] .dashboard-user button:hover { border-color: #8b5cf6; color: #8b5cf6; }
+[data-theme="violet"] .tree-item.selected { background: rgba(139, 92, 246, 0.15); color: #8b5cf6; }
+[data-theme="violet"] .editor-save-btn:hover:not(:disabled) { border-color: #8b5cf6; color: #8b5cf6; }
+[data-theme="violet"] .create-form button { background: #8b5cf6; }
+[data-theme="violet"] .branch-mgmt-btn.primary { background: #8b5cf6; }
+[data-theme="violet"] .login-page { --login-submit-glass: rgba(139, 92, 246, 0.5); }
+[data-theme="violet"] .login-submit:hover:not(:disabled) { background: rgba(124, 58, 237, 0.65); }
+
+[data-theme="sunset"] {
+  color-scheme: dark;
+  color: rgba(255, 255, 255, 0.87);
+  background-color: #292524;
+}
+[data-theme="sunset"] .dashboard-page { --dash-accent: #f59e0b; }
+[data-theme="sunset"] .dashboard-page .workspace-card.selected { background: rgba(245, 158, 11, 0.15); }
+[data-theme="sunset"] .login-page { --login-accent: #f59e0b; --login-accent-hover: #d97706; }
+[data-theme="sunset"] .login-form input:focus { box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.35); }
+[data-theme="sunset"] .repo-editor-page { --editor-accent: #f59e0b; }
+[data-theme="sunset"] .branch-mgmt-back:hover, [data-theme="sunset"] .repo-editor-back:hover, [data-theme="sunset"] .repo-editor-sidebar-toggle:hover { border-color: #f59e0b; color: #f59e0b; }
+[data-theme="sunset"] .dashboard-user button:hover { border-color: #f59e0b; color: #f59e0b; }
+[data-theme="sunset"] .tree-item.selected { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+[data-theme="sunset"] .editor-save-btn:hover:not(:disabled) { border-color: #f59e0b; color: #f59e0b; }
+[data-theme="sunset"] .create-form button { background: #f59e0b; }
+[data-theme="sunset"] .branch-mgmt-btn.primary { background: #f59e0b; }
+[data-theme="sunset"] .login-page { --login-submit-glass: rgba(245, 158, 11, 0.5); }
+[data-theme="sunset"] .login-submit:hover:not(:disabled) { background: rgba(217, 119, 6, 0.65); }
+
+/* ========== Light accent themes (rose, lavender, sky) ========== */
+
+[data-theme="rose"] {
+  color-scheme: light;
+  color: #1c1917;
+  background-color: #fff5f5;
+}
+[data-theme="rose"] .dashboard-page { --dash-bg: #fff1f2; --dash-accent: #e11d48; --dash-text: #1c1917; --dash-text-muted: #9f1239; }
+[data-theme="rose"] .dashboard-page .workspace-card.selected { background: rgba(225, 29, 72, 0.12); }
+[data-theme="rose"] .login-page { --login-accent: #e11d48; --login-accent-hover: #be123c; --login-text: #1c1917; --login-text-muted: #9f1239; }
+[data-theme="rose"] .login-bg { background: #fff1f2; }
+[data-theme="rose"] .repo-editor-page { --editor-accent: #e11d48; --editor-bg: #fff5f5; --editor-text: #431407; }
+[data-theme="rose"] .branch-mgmt-page { background: #fff5f5; color: #1c1917; }
+[data-theme="rose"] .branch-mgmt-back:hover, [data-theme="rose"] .repo-editor-back:hover { border-color: #e11d48; color: #e11d48; }
+[data-theme="rose"] .tree-item.selected { background: rgba(225, 29, 72, 0.12); color: #e11d48; }
+[data-theme="rose"] .editor-save-btn:hover:not(:disabled) { border-color: #e11d48; color: #e11d48; }
+[data-theme="rose"] .create-form button { background: #e11d48; }
+[data-theme="rose"] .branch-mgmt-btn.primary { background: #e11d48; }
+[data-theme="rose"] .login-page { --login-submit-glass: rgba(225, 29, 72, 0.5); }
+[data-theme="rose"] .login-submit:hover:not(:disabled) { background: rgba(190, 18, 60, 0.65); }
+[data-theme="rose"] .file-tree-sidebar { background: #ffe4e6; color: #431407; }
+[data-theme="rose"] .editor-toolbar { background: #ffe4e6; }
+[data-theme="rose"] .editor-area { background: #fff5f5; }
+
+[data-theme="lavender"] {
+  color-scheme: light;
+  color: #1e1b4b;
+  background-color: #f5f3ff;
+}
+[data-theme="lavender"] .dashboard-page { --dash-bg: #ede9fe; --dash-accent: #7c3aed; --dash-text: #1e1b4b; --dash-text-muted: #5b21b6; }
+[data-theme="lavender"] .dashboard-page .workspace-card.selected { background: rgba(124, 58, 237, 0.12); }
+[data-theme="lavender"] .login-page { --login-accent: #7c3aed; --login-accent-hover: #6d28d9; --login-text: #1e1b4b; --login-text-muted: #5b21b6; }
+[data-theme="lavender"] .login-bg { background: #ede9fe; }
+[data-theme="lavender"] .repo-editor-page { --editor-accent: #7c3aed; --editor-bg: #f5f3ff; --editor-text: #3730a3; }
+[data-theme="lavender"] .branch-mgmt-page { background: #f5f3ff; color: #1e1b4b; }
+[data-theme="lavender"] .branch-mgmt-back:hover, [data-theme="lavender"] .repo-editor-back:hover { border-color: #7c3aed; color: #7c3aed; }
+[data-theme="lavender"] .tree-item.selected { background: rgba(124, 58, 237, 0.12); color: #7c3aed; }
+[data-theme="lavender"] .editor-save-btn:hover:not(:disabled) { border-color: #7c3aed; color: #7c3aed; }
+[data-theme="lavender"] .create-form button { background: #7c3aed; }
+[data-theme="lavender"] .branch-mgmt-btn.primary { background: #7c3aed; }
+[data-theme="lavender"] .login-page { --login-submit-glass: rgba(124, 58, 237, 0.5); }
+[data-theme="lavender"] .login-submit:hover:not(:disabled) { background: rgba(109, 40, 217, 0.65); }
+[data-theme="lavender"] .file-tree-sidebar { background: #e9d5ff; color: #4c1d95; }
+[data-theme="lavender"] .editor-toolbar { background: #e9d5ff; }
+[data-theme="lavender"] .editor-area { background: #f5f3ff; }
+
+[data-theme="sky"] {
+  color-scheme: light;
+  color: #0c4a6e;
+  background-color: #f0f9ff;
+}
+[data-theme="sky"] .dashboard-page { --dash-bg: #e0f2fe; --dash-accent: #0284c7; --dash-text: #0c4a6e; --dash-text-muted: #0369a1; }
+[data-theme="sky"] .dashboard-page .workspace-card.selected { background: rgba(2, 132, 199, 0.12); }
+[data-theme="sky"] .login-page { --login-accent: #0284c7; --login-accent-hover: #0369a1; --login-text: #0c4a6e; --login-text-muted: #0369a1; }
+[data-theme="sky"] .login-bg { background: #e0f2fe; }
+[data-theme="sky"] .repo-editor-page { --editor-accent: #0284c7; --editor-bg: #f0f9ff; --editor-text: #0c4a6e; }
+[data-theme="sky"] .branch-mgmt-page { background: #f0f9ff; color: #0c4a6e; }
+[data-theme="sky"] .branch-mgmt-back:hover, [data-theme="sky"] .repo-editor-back:hover { border-color: #0284c7; color: #0284c7; }
+[data-theme="sky"] .tree-item.selected { background: rgba(2, 132, 199, 0.12); color: #0284c7; }
+[data-theme="sky"] .editor-save-btn:hover:not(:disabled) { border-color: #0284c7; color: #0284c7; }
+[data-theme="sky"] .create-form button { background: #0284c7; }
+[data-theme="sky"] .branch-mgmt-btn.primary { background: #0284c7; }
+[data-theme="sky"] .login-page { --login-submit-glass: rgba(2, 132, 199, 0.5); }
+[data-theme="sky"] .login-submit:hover:not(:disabled) { background: rgba(3, 105, 161, 0.65); }
+[data-theme="sky"] .file-tree-sidebar { background: #bae6fd; color: #0c4a6e; }
+[data-theme="sky"] .editor-toolbar { background: #bae6fd; }
+[data-theme="sky"] .editor-area { background: #f0f9ff; }

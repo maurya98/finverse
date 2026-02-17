@@ -14,14 +14,19 @@ export type FileDiffViewerProps = {
   mode: "added" | "removed" | "modified";
 };
 
+function lineCount(text: string): number {
+  if (!text.length) return 0;
+  return (text.match(/\n/g)?.length ?? 0) + 1;
+}
+
 export function FileDiffViewer({ path, oldContent, newContent, mode }: FileDiffViewerProps) {
   const oldText = contentToText(oldContent);
   const newText = contentToText(newContent);
   const changes: Change[] =
     mode === "added"
-      ? [{ value: newText, added: true }]
+      ? [{ value: newText, added: true, removed: false, count: lineCount(newText) }]
       : mode === "removed"
-        ? [{ value: oldText, removed: true }]
+        ? [{ value: oldText, added: false, removed: true, count: lineCount(oldText) }]
         : diffLines(oldText, newText);
 
   const lines: { kind: "add" | "remove" | "context"; text: string }[] = [];

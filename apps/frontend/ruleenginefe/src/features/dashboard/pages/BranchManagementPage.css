@@ -43,6 +43,12 @@
   margin: 0;
   font-size: 14px;
   font-weight: 600;
+  flex: 1;
+  min-width: 0;
+}
+
+.branch-mgmt-header .theme-picker {
+  flex-shrink: 0;
 }
 
 .branch-mgmt-toolbar {

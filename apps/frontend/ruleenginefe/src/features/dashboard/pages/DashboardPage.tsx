@@ -14,6 +14,7 @@ import {
   type Repository,
 } from "../services/api";
 import { TrashIcon } from "../components/icons/TrashIcon";
+import { ThemePicker } from "../../../components/ThemePicker";
 import "./DashboardPage.css";
 
 export function DashboardPage() {
@@ -147,6 +148,7 @@ export function DashboardPage() {
       <header className="dashboard-header">
         <h1>Rule Engine — Dashboard</h1>
         <div className="dashboard-user">
+          <ThemePicker />
           {user && <span>{user.email}</span>}
           <button type="button" onClick={handleLogout}>
             Log out

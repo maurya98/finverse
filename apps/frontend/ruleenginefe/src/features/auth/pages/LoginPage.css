@@ -6,13 +6,16 @@
   --login-accent-hover: #0f766e;
   --login-bg-from: #0f172a;
   --login-bg-to: #1e293b;
-  --login-card-bg: rgba(30, 41, 59, 0.85);
-  --login-card-border: rgba(148, 163, 184, 0.12);
-  --login-input-bg: rgba(15, 23, 42, 0.6);
+  --login-card-bg: rgba(15, 23, 42, 0.35);
+  --login-card-border: rgba(255, 255, 255, 0.12);
+  --login-card-border-highlight: rgba(255, 255, 255, 0.18);
+  --login-input-bg: rgba(15, 23, 42, 0.5);
   --login-input-border: rgba(148, 163, 184, 0.2);
   --login-text: #f1f5f9;
   --login-text-muted: #94a3b8;
   --login-error: #f87171;
+  --login-submit-glass: rgba(13, 148, 136, 0.45);
+  --login-submit-glass-border: rgba(255, 255, 255, 0.25);
 
   position: fixed;
   inset: 0;
@@ -35,8 +38,17 @@
   overflow-x: hidden;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  cursor: crosshair;
 }
 
+.login-page-theme-picker {
+  position: fixed;
+  top: max(1rem, env(safe-area-inset-top));
+  right: max(1rem, env(safe-area-inset-right));
+  z-index: 10;
+}
+
+/* Three.js canvas background (replaces SVG) */
 .login-bg {
   position: fixed;
   inset: 0;
@@ -44,52 +56,32 @@
   height: 100%;
   min-height: 100vh;
   min-height: 100dvh;
-  background: #1a1b20;
+  background-color: #000;
   z-index: 0;
   pointer-events: none;
 }
 
-.login-bg-svg {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+.login-bg-three {
   overflow: hidden;
 }
 
-.login-bg-svg-element {
+.login-bg-canvas {
+  display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
 }
 
-/* Wave drift is handled by SVG SMIL (animateTransform) for a seamless infinite loop in user units */
-
-.login-bg::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image: radial-gradient(
-      ellipse 80% 50% at 50% -20%,
-      rgba(13, 148, 136, 0.12),
-      transparent
-    ),
-    radial-gradient(
-      ellipse 60% 40% at 100% 100%,
-      rgba(13, 148, 136, 0.06),
-      transparent
-    );
-  pointer-events: none;
+/* Prevent text selection on the background area */
+.disable-selection {
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -khtml-user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  user-select: none;
 }
 
-.login-bg::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
-  pointer-events: none;
-}
-
+/* Glassmorphism: frosted panel over background */
 .login-card {
   position: relative;
   z-index: 1;
@@ -100,9 +92,11 @@
   border-radius: 20px;
   border: 1px solid var(--login-card-border);
   background: var(--login-card-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  box-shadow:
+    0 25px 50px -12px rgba(0, 0, 0, 0.35),
+    0 0 0 1px var(--login-card-border-highlight) inset;
   flex-shrink: 0;
 }
 
@@ -220,13 +214,16 @@
   font-size: 0.875rem;
 }
 
+/* Sign In button — glass effect */
 .login-submit {
   margin-top: 0.25rem;
   padding: 0.875rem 1.25rem;
   min-height: 48px;
-  border: none;
+  border: 1px solid var(--login-submit-glass-border);
   border-radius: 12px;
-  background: var(--login-accent);
+  background: var(--login-submit-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   color: #fff;
   font: inherit;
   font-size: 0.9375rem;
@@ -236,12 +233,14 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  transition: background 0.2s, transform 0.15s;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12) inset;
 }
 
 .login-submit:hover:not(:disabled) {
-  background: var(--login-accent-hover);
+  background: rgba(15, 118, 110, 0.6);
   transform: translateY(-1px);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2) inset;
 }
 
 .login-submit:active:not(:disabled) {
@@ -250,7 +249,7 @@
 
 .login-submit:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.4);
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.12) inset;
 }
 
 .login-submit:disabled {
@@ -296,27 +295,4 @@
   }
 }
 
-@media (prefers-color-scheme: light) {
-  .login-page {
-    --login-bg-from: #f8fafc;
-    --login-bg-to: #e2e8f0;
-    --login-card-bg: rgba(255, 255, 255, 0.9);
-    --login-card-border: rgba(148, 163, 184, 0.25);
-    --login-input-bg: #f1f5f9;
-    --login-input-border: rgba(148, 163, 184, 0.35);
-    --login-text: #0f172a;
-    --login-text-muted: #64748b;
-  }
-
-  .login-card {
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.12);
-  }
-
-  .login-form input:focus {
-    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.2);
-  }
-
-  .login-error {
-    background: rgba(248, 113, 113, 0.15);
-  }
-}
+/* Light theme is applied via [data-theme="light"] in src/theme.css */

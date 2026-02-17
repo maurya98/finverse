@@ -16,6 +16,7 @@ import { EditorArea } from "../components/EditorArea";
 import { BranchFooter } from "../components/BranchFooter";
 import { CommitMessageModal } from "../components/CommitMessageModal";
 import { NameInputModal } from "../components/NameInputModal";
+import { ThemePicker } from "../../../components/ThemePicker";
 import "./RepositoryEditorPage.css";
 
 export function RepositoryEditorPage() {
@@ -292,6 +293,7 @@ export function RepositoryEditorPage() {
           {sidebarOpen ? "◀" : "▶"}
         </button>
         <h1 className="repo-editor-title">{repo.name}</h1>
+        <ThemePicker />
       </header>
 
       <div className={`repo-editor-body ${sidebarOpen ? "" : "repo-editor-sidebar-hidden"}`}>

@@ -2,9 +2,20 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <script>
+      (function () {
+        var s = localStorage.getItem("ruleenginefe-theme");
+        var valid = ["light","dark","system","ocean","forest","violet","sunset","rose","lavender","sky"];
+        var stored = valid.indexOf(s) !== -1 ? s : null;
+        var resolved = !stored || stored === "system"
+          ? (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+          : stored;
+        document.documentElement.setAttribute("data-theme", resolved);
+      })();
+    </script>
+    <link rel="icon" href="https://www.buddyloan.com/assets/image/buddy-loan-favicon.png" type="image/gif">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ruleenginefe</title>
+    <title>Buddy BRE</title>
   </head>
   <body>
     <div id="root"></div>

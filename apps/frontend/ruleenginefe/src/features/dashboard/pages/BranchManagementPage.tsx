@@ -20,6 +20,7 @@ import {
 import { getUser } from "../../auth/services/auth";
 import { TrashIcon } from "../components/icons/TrashIcon";
 import { FileDiffViewer } from "../components/FileDiffViewer";
+import { ThemePicker } from "../../../components/ThemePicker";
 import "./BranchManagementPage.css";
 
 export function BranchManagementPage() {
@@ -276,6 +277,7 @@ export function BranchManagementPage() {
           ← Editor
         </button>
         <h1 className="branch-mgmt-title">{repo.name} — Branches</h1>
+        <ThemePicker />
       </header>
 
       <div className="branch-mgmt-toolbar">
