@@ -1,14 +1,14 @@
 import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import type { FileTreeNode } from "../hooks/useBranchTree";
+import { pathParent } from "../utils/pendingChanges";
 import { TrashIcon } from "./icons/TrashIcon";
 import "./FileTreeSidebar.css";
 
 function FolderIcon() {
   return (
     <span className="tree-icon-svg tree-icon-folder" aria-hidden>
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
-      </svg>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="16px" height="16px"><path fill="#FFA000" d="M40,12H22l-4-4H8c-2.2,0-4,1.8-4,4v8h40v-4C44,13.8,42.2,12,40,12z" /><path fill="#FFCA28" d="M40,12H8c-2.2,0-4,1.8-4,4v20c0,2.2,1.8,4,4,4h32c2.2,0,4-1.8,4-4V16C44,13.8,42.2,12,40,12z" /></svg>
     </span>
   );
 }
@@ -16,15 +16,18 @@ function FolderIcon() {
 function FileIcon() {
   return (
     <span className="tree-icon-svg tree-icon-file" aria-hidden>
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-        <polyline points="14 2 14 8 20 8" />
-        <line x1="16" y1="13" x2="8" y2="13" />
-        <line x1="16" y1="17" x2="8" y2="17" />
+      <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px" width="16px" height="16px" viewBox="0 0 48 48">
+        <path fill="#90caf9" d="M33.2,10H17c-1.7,0-3,1.3-3,3v31c0,1.7,1.3,3,3,3h23c1.7,0,3-1.3,3-3V19.8c0-0.5-0.2-1-0.6-1.4l-7.8-7.8	C34.2,10.2,33.7,10,33.2,10z"></path><path fill="none" stroke="#18193f" strokeLinecap="round" strokeLinejoin="round" strokeMiterlimit="10" strokeWidth="3" d="M22.1,42.5h13.4c1.7,0,3-1.3,3-3v-25h-7c-1.1,0-2-0.9-2-2v-7"></path><path fill="none" stroke="#18193f" strokeLinecap="round" strokeLinejoin="round" strokeMiterlimit="10" strokeWidth="3" d="M24,5.5H12.5c-1.7,0-3,1.3-3,3v31c0,1.7,1.3,3,3,3h3.9"></path><line x1="38.5" x2="29.5" y1="14.5" y2="5.5" fill="none" stroke="#18193f" strokeLinecap="round" strokeLinejoin="round" strokeMiterlimit="10" strokeWidth="3"></line>
       </svg>
     </span>
   );
 }
+
+/** Set by sidebar when context menu is open; used by page's document listener to run delete on Delete button click. */
+export type ContextMenuStateRef = React.MutableRefObject<{
+  node: FileTreeNode;
+  onClose: () => void;
+} | null>;
 
 type FileTreeSidebarProps = {
   nodes: FileTreeNode[];
@@ -33,6 +36,10 @@ type FileTreeSidebarProps = {
   onSelectFile: (path: string, blobId: string | null) => void;
   onSelectFolder?: (path: string, treeId: string) => void;
   onDeleteNode?: (node: FileTreeNode) => void;
+  onDeleteNodeRef?: React.RefObject<((node: FileTreeNode) => void) | null>;
+  /** When provided, page can use this in a document capture listener to handle Delete button clicks. */
+  contextMenuStateRef?: ContextMenuStateRef;
+  onRenameNode?: (node: FileTreeNode) => void;
   onMoveNode?: (draggedNode: FileTreeNode, targetFolder: FileTreeNode) => void;
   onNewFile?: (parentFolder: FileTreeNode | null) => void;
   onNewFolder?: (parentFolder: FileTreeNode | null) => void;
@@ -68,6 +75,8 @@ function TreeContextMenu({
   nodes,
   onClose,
   onDelete,
+  onDeleteRef,
+  onRename,
   onNewFile,
   onNewFolder,
 }: {
@@ -75,6 +84,8 @@ function TreeContextMenu({
   nodes: FileTreeNode[];
   onClose: () => void;
   onDelete: (node: FileTreeNode) => void;
+  onDeleteRef?: React.RefObject<((node: FileTreeNode) => void) | null>;
+  onRename?: (node: FileTreeNode) => void;
   onNewFile?: (parentFolder: FileTreeNode | null) => void;
   onNewFolder?: (parentFolder: FileTreeNode | null) => void;
 }) {
@@ -128,15 +139,35 @@ function TreeContextMenu({
           New folder
         </button>
       )}
-      {state.node && onDelete && (
+      {state.node && (
         <>
           {(onNewFile || onNewFolder) && <div className="file-tree-context-menu-divider" />}
+          {onRename && (
+            <button
+              type="button"
+              className="file-tree-context-menu-item"
+              onClick={() => {
+                onClose();
+                onRename(state.node!);
+              }}
+            >
+              Rename {state.node.type === "folder" ? "folder" : "file"}
+            </button>
+          )}
           <button
             type="button"
             className="file-tree-context-menu-item danger"
-            onClick={() => {
+            data-tree-delete
+            onMouseDown={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const nodeToDelete = state.node!;
+              if (onDeleteRef?.current) {
+                onDeleteRef.current(nodeToDelete);
+              } else {
+                onDelete(nodeToDelete);
+              }
               onClose();
-              onDelete(state.node!);
             }}
           >
             <TrashIcon size={14} className="file-tree-context-menu-icon" />
@@ -155,6 +186,9 @@ export function FileTreeSidebar({
   onSelectFile,
   onSelectFolder,
   onDeleteNode,
+  onDeleteNodeRef,
+  contextMenuStateRef,
+  onRenameNode,
   onMoveNode,
   onNewFile,
   onNewFolder,
@@ -162,8 +196,22 @@ export function FileTreeSidebar({
 }: FileTreeSidebarProps) {
   const [contextMenu, setContextMenu] = useState<ContextMenuState>(null);
   const [dragOverFolderId, setDragOverFolderId] = useState<string | null>(null);
+  const [draggingNodeId, setDraggingNodeId] = useState<string | null>(null);
 
-  const showContextMenu = onDeleteNode || onNewFile || onNewFolder;
+  const showContextMenu = onDeleteNode || onRenameNode || onNewFile || onNewFolder;
+
+  const handleCloseContextMenu = () => setContextMenu(null);
+
+  useEffect(() => {
+    if (!contextMenuStateRef) return;
+    contextMenuStateRef.current =
+      contextMenu?.node != null
+        ? { node: contextMenu.node, onClose: handleCloseContextMenu }
+        : null;
+    return () => {
+      contextMenuStateRef.current = null;
+    };
+  }, [contextMenu, contextMenuStateRef]);
 
   const handleContextMenuOnNode = (e: React.MouseEvent, node: FileTreeNode) => {
     e.preventDefault();
@@ -179,8 +227,6 @@ export function FileTreeSidebar({
     if (!showContextMenu) return;
     setContextMenu({ x: e.clientX, y: e.clientY, node: null });
   };
-
-  const handleCloseContextMenu = () => setContextMenu(null);
 
   const handleContextMenuOnSidebar = (e: React.MouseEvent) => {
     if ((e.target as HTMLElement).closest(".tree-item")) return;
@@ -222,19 +268,27 @@ export function FileTreeSidebar({
                 findNodeById={findNodeById}
                 dragOverFolderId={dragOverFolderId}
                 setDragOverFolderId={setDragOverFolderId}
+                draggingNodeId={draggingNodeId}
+                setDraggingNodeId={setDraggingNodeId}
               />
             ))}
           </div>
         )}
       </div>
-      <TreeContextMenu
-        state={contextMenu}
-        nodes={nodes}
-        onClose={handleCloseContextMenu}
-        onDelete={onDeleteNode ?? (() => {})}
-        onNewFile={onNewFile}
-        onNewFolder={onNewFolder}
-      />
+      {contextMenu &&
+        createPortal(
+          <TreeContextMenu
+            state={contextMenu}
+            nodes={nodes}
+            onClose={handleCloseContextMenu}
+            onDelete={onDeleteNode ?? (() => {})}
+            onDeleteRef={onDeleteNodeRef}
+            onRename={onRenameNode}
+            onNewFile={onNewFile}
+            onNewFolder={onNewFolder}
+          />,
+          document.getElementById("root") ?? document.body
+        )}
     </aside>
   );
 }
@@ -251,6 +305,8 @@ function TreeNodeWithContextMenu({
   findNodeById,
   dragOverFolderId,
   setDragOverFolderId,
+  draggingNodeId,
+  setDraggingNodeId,
 }: {
   node: FileTreeNode;
   level: number;
@@ -263,6 +319,8 @@ function TreeNodeWithContextMenu({
   findNodeById: (nodes: FileTreeNode[], id: string) => FileTreeNode | null;
   dragOverFolderId: string | null;
   setDragOverFolderId: React.Dispatch<React.SetStateAction<string | null>>;
+  draggingNodeId: string | null;
+  setDraggingNodeId: React.Dispatch<React.SetStateAction<string | null>>;
 }) {
   const [open, setOpen] = useState(true);
   const isSelected = selectedPath === node.path;
@@ -274,26 +332,36 @@ function TreeNodeWithContextMenu({
   const handleDragStart = (e: React.DragEvent) => {
     e.dataTransfer.setData("text/plain", node.id);
     e.dataTransfer.effectAllowed = "move";
+    setDraggingNodeId(node.id);
   };
 
   const handleDragEnd = () => {
     setDragOverFolderId(null);
+    setDraggingNodeId(null);
   };
 
   const canDrop = (draggedId: string): boolean => {
-    if (!onMoveNode || !node.childTreeId) return false;
+    if (!onMoveNode) return false;
     const dragged = findNodeById(nodes, draggedId);
-    if (!dragged || !dragged.parentTreeId) return false;
+    if (!dragged) return false;
     if (dragged.id === node.id) return false;
+    if (node.type !== "folder") return false;
+    // Don't drop a folder into itself or into any of its descendants
+    if (
+      dragged.type === "folder" &&
+      (node.path === dragged.path || node.path.startsWith(dragged.path + "/"))
+    )
+      return false;
+    // Already a child of this folder (by path; works for server and pending nodes)
+    if (pathParent(dragged.path) === node.path) return false;
     if (dragged.parentTreeId === node.childTreeId) return false;
-    if (dragged.type === "folder" && (node.path === dragged.path || node.path.startsWith(dragged.path + "/"))) return false;
     return true;
   };
 
   const handleFolderDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
-    const draggedId = e.dataTransfer.getData("text/plain");
+    const draggedId = draggingNodeId || e.dataTransfer.getData("text/plain");
     if (draggedId && canDrop(draggedId)) setDragOverFolderId(node.id);
   };
 
@@ -310,13 +378,22 @@ function TreeNodeWithContextMenu({
     if (dragged) onMoveNode(dragged, node);
   };
 
+  const handleTreeItemKeyDown = (e: React.KeyboardEvent, action: () => void) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      action();
+    }
+  };
+
   if (node.type === "file") {
     return (
-      <button
-        type="button"
+      <div
+        role="button"
+        tabIndex={0}
         className={`tree-item file ${isSelected ? "selected" : ""}`}
         style={{ paddingLeft: 12 + level * 16 }}
         onClick={() => onSelectFile(node.path, node.blobId ?? null)}
+        onKeyDown={(e) => handleTreeItemKeyDown(e, () => onSelectFile(node.path, node.blobId ?? null))}
         onContextMenu={handleContextMenu}
         draggable
         onDragStart={handleDragStart}
@@ -324,20 +401,27 @@ function TreeNodeWithContextMenu({
       >
         <FileIcon />
         <span className="tree-label">{node.name}</span>
-      </button>
+      </div>
     );
   }
 
   return (
     <div className="tree-folder-block">
-      <button
-        type="button"
+      <div
+        role="button"
+        tabIndex={0}
         className={`tree-item folder ${isSelected ? "selected" : ""} ${dragOverFolderId === node.id ? "drop-target" : ""}`}
         style={{ paddingLeft: 12 + level * 16 }}
         onClick={() => {
           setOpen((o) => !o);
           if (node.childTreeId) onSelectFolder?.(node.path, node.childTreeId);
         }}
+        onKeyDown={(e) =>
+          handleTreeItemKeyDown(e, () => {
+            setOpen((o) => !o);
+            if (node.childTreeId) onSelectFolder?.(node.path, node.childTreeId);
+          })
+        }
         onContextMenu={handleContextMenu}
         draggable
         onDragStart={handleDragStart}
@@ -349,9 +433,14 @@ function TreeNodeWithContextMenu({
         <span className="tree-chevron">{open ? "▼" : "▶"}</span>
         <FolderIcon />
         <span className="tree-label">{node.name}</span>
-      </button>
+      </div>
       {open && node.children && (
-        <div className="tree-children">
+        <div
+          className="tree-children"
+          onDragOver={handleFolderDragOver}
+          onDragLeave={handleFolderDragLeave}
+          onDrop={handleFolderDrop}
+        >
           {node.children.map((child) => (
             <TreeNodeWithContextMenu
               key={child.id}
@@ -366,6 +455,8 @@ function TreeNodeWithContextMenu({
               findNodeById={findNodeById}
               dragOverFolderId={dragOverFolderId}
               setDragOverFolderId={setDragOverFolderId}
+              draggingNodeId={draggingNodeId}
+              setDraggingNodeId={setDraggingNodeId}
             />
           ))}
         </div>

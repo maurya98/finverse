@@ -68,14 +68,22 @@ function deepCloneNode(n: FileTreeNode): FileTreeNode {
 /** Merge server tree with pending changes and return the display tree. */
 export function mergeTreeWithPending(
   serverTree: FileTreeNode[],
-  pending: PendingChange[]
+  pending: PendingChange[],
+  deletedPaths: string[] = []
 ): FileTreeNode[] {
   const map = new Map<string, FileTreeNode>();
   for (const [path, node] of treeToMap(serverTree)) {
     map.set(path, deepCloneNode(node));
   }
 
-  // Apply deletes first
+  // Apply deletes from deletedPaths (and legacy delete ops in pending)
+  for (const delPath of deletedPaths) {
+    for (const path of Array.from(map.keys())) {
+      if (path === delPath || path.startsWith(delPath + "/")) {
+        map.delete(path);
+      }
+    }
+  }
   for (const c of pending) {
     if (c.op !== "delete") continue;
     for (const path of Array.from(map.keys())) {
@@ -85,40 +93,7 @@ export function mergeTreeWithPending(
     }
   }
 
-  // Apply moves: remove from old path, add at new path (with updated path on node and descendants)
-  for (const c of pending) {
-    if (c.op !== "move") continue;
-    const node = map.get(c.path);
-    if (!node) continue;
-    const moved = deepCloneNode(node);
-    const oldPrefix = c.path.endsWith("/") ? c.path : c.path + "/";
-    const updatePaths = (n: FileTreeNode): FileTreeNode => {
-      const newPath = n.path.startsWith(oldPrefix)
-        ? c.newPath + n.path.slice(c.path.length)
-        : n.path === c.path
-          ? c.newPath
-          : n.path;
-      const out: FileTreeNode = {
-        ...n,
-        path: newPath,
-        name: pathBaseName(newPath),
-        children: n.children?.map(updatePaths),
-      };
-      return out;
-    };
-    const updated = updatePaths(moved);
-    map.delete(c.path);
-    for (const path of Array.from(map.keys())) {
-      if (path.startsWith(c.path + "/")) map.delete(path);
-    }
-    const addToMap = (n: FileTreeNode) => {
-      map.set(n.path, n);
-      n.children?.forEach(addToMap);
-    };
-    addToMap(updated);
-  }
-
-  // Apply adds: ensure parent folders exist, then add node
+  // Apply adds before moves so that pending-added nodes exist in the map when we process moves
   for (const c of pending) {
     if (c.op !== "add") continue;
     const path = c.path;
@@ -169,6 +144,39 @@ export function mergeTreeWithPending(
     }
   }
 
+  // Apply moves: remove from old path, add at new path (with updated path on node and descendants)
+  for (const c of pending) {
+    if (c.op !== "move") continue;
+    const node = map.get(c.path);
+    if (!node) continue;
+    const moved = deepCloneNode(node);
+    const oldPrefix = c.path.endsWith("/") ? c.path : c.path + "/";
+    const updatePaths = (n: FileTreeNode): FileTreeNode => {
+      const newPath = n.path.startsWith(oldPrefix)
+        ? c.newPath + n.path.slice(c.path.length)
+        : n.path === c.path
+          ? c.newPath
+          : n.path;
+      const out: FileTreeNode = {
+        ...n,
+        path: newPath,
+        name: pathBaseName(newPath),
+        children: n.children?.map(updatePaths),
+      };
+      return out;
+    };
+    const updated = updatePaths(moved);
+    map.delete(c.path);
+    for (const path of Array.from(map.keys())) {
+      if (path.startsWith(c.path + "/")) map.delete(path);
+    }
+    const addToMap = (n: FileTreeNode) => {
+      map.set(n.path, n);
+      n.children?.forEach(addToMap);
+    };
+    addToMap(updated);
+  }
+
   return mapToTree(map, "");
 }
 
@@ -185,8 +193,13 @@ export function getPendingContent(
   return undefined;
 }
 
-/** True if path is deleted in pending. */
-export function isPathDeleted(path: string, pending: PendingChange[]): boolean {
+/** True if path is deleted (in deletedPaths or delete op in pending). */
+export function isPathDeleted(
+  path: string,
+  pending: PendingChange[],
+  deletedPaths: string[] = []
+): boolean {
+  if (deletedPaths.some((d) => path === d || path.startsWith(d + "/"))) return true;
   return pending.some(
     (c) => c.op === "delete" && (path === c.path || path.startsWith(c.path + "/"))
   );

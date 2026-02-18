@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useParams, useSearchParams, useNavigate } from "react-router-dom";
 import { getUser } from "../../auth/services/auth";
 import {
@@ -9,9 +9,24 @@ import {
 import { getDecisionsMapForSimulation } from "../utils/simulationState";
 import { useBranchTree, type FileTreeNode } from "../hooks/useBranchTree";
 import { usePendingChanges } from "../hooks/usePendingChanges";
+import {
+  addToDeletedPaths,
+  getPendingStorageKey,
+  removePathFromAllPendingKeys,
+  removePathFromPending,
+  setPendingChanges as updatePendingInStorage,
+  updatePathsForFolderRename,
+  updateDeletedPathsForFolderRename,
+  getPendingState,
+  setPendingStateByKey,
+  PENDING_STORAGE_PREFIX,
+  parseStored,
+  resolveUniqueName,
+  type PendingChange,
+} from "../utils/pendingChanges";
 import { mergeTreeWithPending, getPendingContent } from "../utils/mergeTreeWithPending";
 import { commitPendingChanges } from "../utils/commitPendingChanges";
-import { FileTreeSidebar } from "../components/FileTreeSidebar";
+import { FileTreeSidebar, type ContextMenuStateRef } from "../components/FileTreeSidebar";
 import { EditorArea } from "../components/EditorArea";
 import { BranchFooter } from "../components/BranchFooter";
 import { CommitMessageModal } from "../components/CommitMessageModal";
@@ -34,6 +49,7 @@ export function RepositoryEditorPage() {
   const [createModal, setCreateModal] = useState<
     { type: "file" | "folder"; parentFolder: FileTreeNode | null } | null
   >(null);
+  const [renameModal, setRenameModal] = useState<FileTreeNode | null>(null);
   const [commitModalOpen, setCommitModalOpen] = useState(false);
   const [commitError, setCommitError] = useState<string | null>(null);
   const [isCommitting, setIsCommitting] = useState(false);
@@ -57,17 +73,24 @@ export function RepositoryEditorPage() {
   );
   const {
     pending,
+    deletedPaths,
     addPending,
     replacePending,
+    replacePendingAndDeleted,
     clearPending,
     hasPending,
     storageQuotaExceeded,
     clearStorageQuotaError,
   } = usePendingChanges(repositoryId ?? null, branchName);
 
+  const pendingRef = useRef(pending);
+  pendingRef.current = pending;
+  const deletedPathsRef = useRef(deletedPaths);
+  deletedPathsRef.current = deletedPaths;
+
   const displayTree = useMemo(
-    () => mergeTreeWithPending(tree, pending),
-    [tree, pending]
+    () => mergeTreeWithPending(tree, pending, deletedPaths),
+    [tree, pending, deletedPaths]
   );
 
   useEffect(() => {
@@ -136,7 +159,7 @@ export function RepositoryEditorPage() {
   }
 
   function handleSave() {
-    if (!selectedPath) return;
+    if (!selectedPath || !repositoryId || !branchName) return;
     setSaveError(null);
     let content: unknown;
     try {
@@ -156,7 +179,9 @@ export function RepositoryEditorPage() {
       isNewFile
         ? { op: "add" as const, path: selectedPath, type: "file" as const, content }
         : { op: "edit" as const, path: selectedPath, content };
-    replacePending([...filtered, newChange]);
+    const nextPending = [...filtered, newChange];
+    replacePending(nextPending);
+    updatePendingInStorage(repositoryId, branchName, nextPending);
     setEditorDirty(false);
     setSaveError(null);
   }
@@ -176,7 +201,8 @@ export function RepositoryEditorPage() {
         user.id,
         message,
         tree,
-        pending
+        pending,
+        deletedPaths
       );
       if (!result.success) {
         setCommitError(result.message);
@@ -204,7 +230,9 @@ export function RepositoryEditorPage() {
     if (!trimmed) return;
     const path = parentFolder ? `${parentFolder.path}/${trimmed}` : trimmed;
     const initialContent = getInitialContentForNewFile(trimmed);
-    addPending({ op: "add", path, type: "file", content: initialContent });
+    const nextPending = [...pending, { op: "add" as const, path, type: "file" as const, content: initialContent }];
+    replacePending(nextPending);
+    updatePendingInStorage(repositoryId, branchName, nextPending);
     loadFile(path, null, undefined, undefined, initialContent);
   }
 
@@ -213,7 +241,9 @@ export function RepositoryEditorPage() {
     const trimmed = name.trim();
     if (!trimmed) return;
     const path = parentFolder ? `${parentFolder.path}/${trimmed}` : trimmed;
-    addPending({ op: "add", path, type: "folder" });
+    const nextPending = [...pending, { op: "add" as const, path, type: "folder" as const }];
+    replacePending(nextPending);
+    updatePendingInStorage(repositoryId, branchName, nextPending);
   }
 
   function handleBranchChange(newBranch: string) {
@@ -223,24 +253,180 @@ export function RepositoryEditorPage() {
     setEditorDirty(false);
   }
 
-  function handleDeleteNode(node: FileTreeNode) {
-    addPending({ op: "delete", path: node.path });
-    if (
-      selectedPath === node.path ||
-      (node.type === "folder" && selectedPath?.startsWith(node.path + "/"))
-    ) {
-      setSelectedPath(null);
-      setEditorContent("");
-      setEditorDirty(false);
+  const handleDeleteNode = useCallback(
+    (node: FileTreeNode) => {
+      const currentPending = pendingRef.current;
+      const currentDeleted = deletedPathsRef.current;
+      const nextPending = removePathFromPending(
+        currentPending,
+        node.path,
+        node.type === "folder"
+      );
+      const nextDeletedPaths = addToDeletedPaths(
+        currentDeleted,
+        node.path,
+        node.type === "folder"
+      );
+      if (repositoryId && branchName) {
+        const currentKey = getPendingStorageKey(repositoryId, branchName);
+        removePathFromAllPendingKeys(
+          node.path,
+          node.type === "folder",
+          currentKey,
+          nextPending,
+          nextDeletedPaths
+        );
+      }
+      replacePendingAndDeleted(nextPending, nextDeletedPaths);
+      if (
+        selectedPath === node.path ||
+        (node.type === "folder" && selectedPath?.startsWith(node.path + "/"))
+      ) {
+        setSelectedPath(null);
+        setEditorContent("");
+        setEditorDirty(false);
+      }
+    },
+    [replacePendingAndDeleted, repositoryId, branchName, selectedPath]
+  );
+
+  const deleteNodeRef = useRef(handleDeleteNode);
+  deleteNodeRef.current = handleDeleteNode;
+
+  const contextMenuStateRef: ContextMenuStateRef = useRef(null);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest?.("[data-tree-delete]")) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const state = contextMenuStateRef.current;
+      if (state) {
+        state.onClose();
+        deleteNodeRef.current?.(state.node);
+      }
+    };
+    document.addEventListener("mousedown", handler, true);
+    return () => document.removeEventListener("mousedown", handler, true);
+  }, []);
+
+  function collectAllPaths(nodes: FileTreeNode[]): string[] {
+    const out: string[] = [];
+    function collect(n: FileTreeNode[]) {
+      for (const item of n) {
+        out.push(item.path);
+        if (item.children?.length) collect(item.children);
+      }
     }
+    collect(nodes);
+    return out;
   }
 
   function handleMoveNode(draggedNode: FileTreeNode, targetFolder: FileTreeNode) {
-    const newPath = targetFolder.path
-      ? `${targetFolder.path}/${draggedNode.name}`
-      : draggedNode.name;
-    if (newPath === draggedNode.path) return;
-    addPending({ op: "move", path: draggedNode.path, newPath });
+    const targetPath = targetFolder.path ?? "";
+    const baseName = draggedNode.name;
+    const candidatePath = targetPath ? `${targetPath}/${baseName}` : baseName;
+    if (candidatePath === draggedNode.path) return;
+
+    const existingPaths = collectAllPaths(displayTree);
+    const newPath = resolveUniqueName(existingPaths, targetPath, baseName);
+    const nextPending = [...pending, { op: "move" as const, path: draggedNode.path, newPath }];
+    replacePending(nextPending);
+    if (repositoryId && branchName) {
+      updatePendingInStorage(repositoryId, branchName, nextPending);
+    }
+  }
+
+  function handleRenameNode(node: FileTreeNode) {
+    setRenameModal(node);
+  }
+
+  function handleRenameConfirm(newName: string) {
+    if (!renameModal || !repositoryId || !branchName) return;
+    const trimmed = newName.trim();
+    if (!trimmed || trimmed === renameModal.name) {
+      setRenameModal(null);
+      return;
+    }
+    const parentPath = renameModal.path.includes("/")
+      ? renameModal.path.split("/").slice(0, -1).join("/")
+      : "";
+    const newPath = parentPath ? `${parentPath}/${trimmed}` : trimmed;
+    if (newPath === renameModal.path) {
+      setRenameModal(null);
+      return;
+    }
+
+    const oldPath = renameModal.path;
+    const isFolder = renameModal.type === "folder";
+
+    // If renaming a folder, update all pending changes that reference paths under the old folder
+    let nextPending = pending;
+    let nextDeletedPaths = deletedPaths;
+
+    if (isFolder) {
+      // Update paths in existing pending changes
+      nextPending = updatePathsForFolderRename(pending, oldPath, newPath);
+      // Update paths in deletedPaths
+      nextDeletedPaths = updateDeletedPathsForFolderRename(deletedPaths, oldPath, newPath);
+    }
+
+    // Add the move operation for the renamed item itself
+    // Check if there's already a move operation for this path and replace it instead
+    const existingMoveIndex = nextPending.findIndex(
+      (c) => c.op === "move" && c.path === oldPath
+    );
+    const moveOp: PendingChange = { op: "move", path: oldPath, newPath };
+    if (existingMoveIndex >= 0) {
+      nextPending[existingMoveIndex] = moveOp;
+    } else {
+      nextPending = [...nextPending, moveOp];
+    }
+
+    // Update current key
+    const currentKey = getPendingStorageKey(repositoryId, branchName);
+    setPendingStateByKey(currentKey, { pending: nextPending, deletedPaths: nextDeletedPaths });
+    replacePendingAndDeleted(nextPending, nextDeletedPaths);
+
+    // Update all other repo-pending-* keys
+    if (isFolder) {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (!key || !key.startsWith(PENDING_STORAGE_PREFIX) || key === currentKey) continue;
+        try {
+          const raw = localStorage.getItem(key);
+          if (!raw) continue;
+          const { pending: otherPending, deletedPaths: otherDeletedPaths } = parseStored(raw);
+          const updatedPending = updatePathsForFolderRename(otherPending, oldPath, newPath);
+          const updatedDeletedPaths = updateDeletedPathsForFolderRename(
+            otherDeletedPaths,
+            oldPath,
+            newPath
+          );
+          if (
+            updatedPending.length !== otherPending.length ||
+            JSON.stringify(updatedPending) !== JSON.stringify(otherPending) ||
+            JSON.stringify(updatedDeletedPaths) !== JSON.stringify(otherDeletedPaths)
+          ) {
+            setPendingStateByKey(key, {
+              pending: updatedPending,
+              deletedPaths: updatedDeletedPaths,
+            });
+          }
+        } catch {
+          // skip invalid keys
+        }
+      }
+    }
+
+    // Update selected path if needed
+    if (selectedPath === renameModal.path) {
+      setSelectedPath(newPath);
+    } else if (isFolder && selectedPath?.startsWith(renameModal.path + "/")) {
+      setSelectedPath(newPath + selectedPath.slice(renameModal.path.length));
+    }
+    setRenameModal(null);
   }
 
   const language = selectedPath?.endsWith(".json") ? "json" : "plaintext";
@@ -304,6 +490,9 @@ export function RepositoryEditorPage() {
             selectedPath={selectedPath}
             onSelectFile={handleSelectFile}
             onDeleteNode={handleDeleteNode}
+            onDeleteNodeRef={deleteNodeRef}
+            contextMenuStateRef={contextMenuStateRef}
+            onRenameNode={handleRenameNode}
             onMoveNode={handleMoveNode}
             onNewFile={(parentFolder) => setCreateModal({ type: "file", parentFolder })}
             onNewFolder={(parentFolder) => setCreateModal({ type: "folder", parentFolder })}
@@ -389,6 +578,17 @@ export function RepositoryEditorPage() {
             setCreateModal(null);
           }}
           onClose={() => setCreateModal(null)}
+        />
+      )}
+
+      {renameModal && (
+        <NameInputModal
+          title={renameModal.type === "folder" ? "Rename folder" : "Rename file"}
+          placeholder={renameModal.type === "folder" ? "Folder name" : "File name"}
+          initialValue={renameModal.name}
+          submitLabel="Rename"
+          onConfirm={handleRenameConfirm}
+          onClose={() => setRenameModal(null)}
         />
       )}
 

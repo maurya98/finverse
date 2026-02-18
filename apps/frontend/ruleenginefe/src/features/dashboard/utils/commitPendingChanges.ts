@@ -44,13 +44,19 @@ function serverTreeToMap(nodes: FileTreeNode[], parentPath = ""): Map<string, Pa
   return map;
 }
 
-/** Apply pending changes to path map. Produces path -> { type, blobId?, content? }. */
+/** Apply pending changes and deletedPaths to path map. Produces path -> { type, blobId?, content? }. */
 function applyPendingToMap(
   map: Map<string, PathEntry>,
-  pending: PendingChange[]
+  pending: PendingChange[],
+  deletedPaths: string[] = []
 ): Map<string, PathEntry> {
   const result = new Map(map);
 
+  for (const delPath of deletedPaths) {
+    for (const path of Array.from(result.keys())) {
+      if (path === delPath || path.startsWith(delPath + "/")) result.delete(path);
+    }
+  }
   for (const c of pending) {
     if (c.op === "delete") {
       for (const path of Array.from(result.keys())) {
@@ -107,7 +113,7 @@ export type CommitPendingResult =
   | { success: false; message: string };
 
 /**
- * Build merged tree from server tree + pending, create all blobs/trees, and create one commit.
+ * Build merged tree from server tree + pending + deletedPaths, create all blobs/trees, and create one commit.
  */
 export async function commitPendingChanges(
   repositoryId: string,
@@ -115,14 +121,15 @@ export async function commitPendingChanges(
   authorId: string,
   message: string,
   serverTree: FileTreeNode[],
-  pending: PendingChange[]
+  pending: PendingChange[],
+  deletedPaths: string[] = []
 ): Promise<CommitPendingResult> {
-  if (pending.length === 0) {
+  if (pending.length === 0 && deletedPaths.length === 0) {
     return { success: false, message: "No pending changes to commit" };
   }
 
   const pathMap = serverTreeToMap(serverTree);
-  const merged = applyPendingToMap(pathMap, pending);
+  const merged = applyPendingToMap(pathMap, pending, deletedPaths);
 
   const branchRes = await getBranchByName(repositoryId, branchName);
   if (isApiError(branchRes) || !branchRes.data) {

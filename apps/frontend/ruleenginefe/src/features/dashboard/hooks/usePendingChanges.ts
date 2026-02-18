@@ -1,7 +1,8 @@
 import { useState, useCallback, useEffect } from "react";
 import {
-  getPendingChanges,
+  getPendingState,
   setPendingChanges,
+  setPendingState,
   clearPendingChanges as clearPendingStorage,
   addPendingChange as addPendingChangeStorage,
   type PendingChange,
@@ -12,15 +13,19 @@ export function usePendingChanges(
   branchName: string | null
 ) {
   const [pending, setPending] = useState<PendingChange[]>([]);
+  const [deletedPaths, setDeletedPaths] = useState<string[]>([]);
   const [storageQuotaExceeded, setStorageQuotaExceeded] = useState(false);
 
   useEffect(() => {
     if (!repositoryId || !branchName) {
       setPending([]);
+      setDeletedPaths([]);
       setStorageQuotaExceeded(false);
       return;
     }
-    setPending(getPendingChanges(repositoryId, branchName));
+    const state = getPendingState(repositoryId, branchName);
+    setPending(state.pending);
+    setDeletedPaths(state.deletedPaths);
     setStorageQuotaExceeded(false);
   }, [repositoryId, branchName]);
 
@@ -36,9 +41,20 @@ export function usePendingChanges(
 
   const replacePending = useCallback(
     (changes: PendingChange[]) => {
-      if (!repositoryId || !branchName) return;
-      const ok = setPendingChanges(repositoryId, branchName, changes);
       setPending(changes);
+      if (!repositoryId || !branchName) return;
+      const ok = setPendingState(repositoryId, branchName, { pending: changes, deletedPaths });
+      setStorageQuotaExceeded(!ok);
+    },
+    [repositoryId, branchName, deletedPaths]
+  );
+
+  const replacePendingAndDeleted = useCallback(
+    (changes: PendingChange[], newDeletedPaths: string[]) => {
+      setPending(changes);
+      setDeletedPaths(newDeletedPaths);
+      if (!repositoryId || !branchName) return;
+      const ok = setPendingState(repositoryId, branchName, { pending: changes, deletedPaths: newDeletedPaths });
       setStorageQuotaExceeded(!ok);
     },
     [repositoryId, branchName]
@@ -48,6 +64,7 @@ export function usePendingChanges(
     if (!repositoryId || !branchName) return;
     clearPendingStorage(repositoryId, branchName);
     setPending([]);
+    setDeletedPaths([]);
     setStorageQuotaExceeded(false);
   }, [repositoryId, branchName]);
 
@@ -55,12 +72,14 @@ export function usePendingChanges(
     setStorageQuotaExceeded(false);
   }, []);
 
-  const hasPending = pending.length > 0;
+  const hasPending = pending.length > 0 || deletedPaths.length > 0;
 
   return {
     pending,
+    deletedPaths,
     addPending,
     replacePending,
+    replacePendingAndDeleted,
     clearPending,
     hasPending,
     storageQuotaExceeded,

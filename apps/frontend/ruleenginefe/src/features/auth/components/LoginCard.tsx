@@ -23,7 +23,7 @@ export function LoginCard({
         <span className="login-brand-icon" aria-hidden>
           ◈
         </span>
-        <span className="login-brand-name">Rule Engine</span>
+        <span className="login-brand-name">Buddy Loan Business Rule Engine</span>
       </div>
       <h1 className="login-title">Welcome back</h1>
       <p className="login-subtitle">Sign in to continue</p>
