@@ -6,3 +6,4 @@
 **/.vscode/**
 **/.pnpm-store/**
 .pnpm-store
+**/.env/**

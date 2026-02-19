@@ -3,4 +3,4 @@ export { compressionMiddleware } from "./compression.middleware";
 export {
   requestLoggerMiddleware,
   type RequestLoggerOptions,
-} from "./request.logger.middleware";
+} from "./request-logger/request.logger.middleware";

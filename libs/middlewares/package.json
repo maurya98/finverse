@@ -30,10 +30,13 @@
     "@types/express": "^5.0.6",
     "compression": "^1.8.1",
     "cors": "^2.8.5",
+    "dotenv": "^17.3.1",
     "express": "^5.2.1",
-    "helmet": "^8.1.0"
+    "helmet": "^8.1.0",
+    "pg": "^8.13.0"
   },
   "devDependencies": {
+    "@types/pg": "^8.11.10",
     "typescript": "^5.9.3"
   }
 }

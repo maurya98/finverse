@@ -29,10 +29,6 @@ const PERSONAL_KEYS = new Set([
   "phone",
   "phonenumber",
   "mobile",
-  "firstname",
-  "lastname",
-  "name",
-  "fullname",
   "address",
   "street",
   "city",
@@ -168,7 +164,17 @@ export function requestLoggerMiddleware(options?: RequestLoggerOptions): (req: R
           durationMs,
           timestamp: new Date().toISOString(),
         };
-        if (logPayload.method) logger.info(safeStringify(logPayload));
+        if (logPayload.method === "POST" || logPayload.method === "PUT" || logPayload.method === "PATCH" || logPayload.method === "DELETE") {
+          logger.info(safeStringify(logPayload));
+        } else {
+          logger.info(logPayload);
+        }
+        try {
+          const { pushLogToPg } = require("./pg-writer");
+          pushLogToPg(logPayload);
+        } catch {
+          // pg-writer may not be available or Postgres not configured
+        }
       } catch (error) {
         logger.error(`Error logging request/response: ${error}`);
       }

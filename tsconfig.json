@@ -8,18 +8,6 @@
       "path": "apps/frontend/admin_dashboard"
     },
     {
-      "path": "apps/backend/app_orch"
-    },
-    {
-      "path": "apps/backend/iam"
-    },
-    {
-      "path": "apps/backend/lms"
-    },
-    {
-      "path": "apps/backend/pas"
-    },
-    {
       "path": "apps/backend/ruleenginebe"
     },
     {
