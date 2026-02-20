@@ -27,9 +27,6 @@
       "path": "apps/frontend/ruleenginefe"
     },
     {
-      "path": "libs/jdm-editor"
-    },
-    {
       "path": "libs/logger"
     },
     {

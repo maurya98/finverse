@@ -5,9 +5,10 @@
   "main": "index.js",
   "scripts": {
     "lint": "eslint .",
-    "build": "rimraf dist && tsc -b --force",
+    "prisma:generate": "prisma generate",
+    "build": "prisma generate && rimraf dist && tsc -b --force",
     "start": "node dist/app.js",
-    "dev": "nodemon"
+    "dev": "prisma generate && nodemon"
   },
   "keywords": [],
   "author": "Saurabh Kumar Maurya",
