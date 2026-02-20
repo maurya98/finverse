@@ -11,6 +11,9 @@
       "path": "apps/backend/ruleenginebe"
     },
     {
+      "path": "apps/backend/siteplatform"
+    },
+    {
       "path": "apps/frontend/ruleenginefe"
     },
     {

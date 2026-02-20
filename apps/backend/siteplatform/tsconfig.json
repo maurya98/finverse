@@ -1,0 +1,45 @@
+{
+  "extends": "../../../tooling/tsconfig/node.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "noImplicitAny": true,
+    "baseUrl": ".",
+    "paths": {
+      "@finverse/logger": ["../../../libs/logger"],
+      "@finverse/logger/*": ["../../../libs/logger/*"],
+      "@finverse/validator": ["../../../libs/validator"],
+      "@finverse/validator/*": ["../../../libs/validator/*"],
+      "@finverse/cache": ["../../../libs/cache"],
+      "@finverse/cache/*": ["../../../libs/cache/*"],
+      "@finverse/middlewares": ["../../../libs/middlewares"],
+      "@finverse/middlewares/*": ["../../../libs/middlewares/*"],
+      "@finverse/types": ["../../../packages/types"],
+      "@finverse/types/*": ["../../../packages/types/*"],
+      "@finverse/utils": ["../../../packages/utils"],
+      "@finverse/utils/*": ["../../../packages/utils/*"]
+    }
+  },
+  "references": [
+    {
+      "path": "../../../packages/types"
+    },
+    {
+      "path": "../../../packages/utils"
+    },
+    {
+      "path": "../../../libs/logger"
+    },
+    {
+      "path": "../../../libs/middlewares"
+    },
+    {
+      "path": "../../../libs/cache"
+    },
+    {
+      "path": "../../../libs/validator"
+    }
+  ],
+  "include": ["src"],
+  "typeRoots": ["./src/types"]
+}
