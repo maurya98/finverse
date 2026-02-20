@@ -6,4 +6,4 @@ tree-maker/**
 .vscode/**
 .pnpm-store/**
 .pnpm-store
-.env/**
+.env
