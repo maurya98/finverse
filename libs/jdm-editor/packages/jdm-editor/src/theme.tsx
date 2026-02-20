@@ -34,6 +34,7 @@ export const JdmConfigProvider: React.FC<JdmConfigProviderProps> = ({
   }, [mode]);
 
   return (
+    // @ts-ignore - Ant Design v5 React 19 compatibility issue with ConfigProvider
     <ConfigProvider prefixCls={prefixCls} theme={{ ...restTheme, algorithm, token: { ...token, mode, motion: false } }}>
       <GlobalCssVariables mode={mode} />
       {children}

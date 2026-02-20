@@ -3,13 +3,12 @@
   "private": true,
   "scripts": {
     "lint": "eslint .",
-    "build": "rimraf dist && tsc -b --force",
+    "build": "prisma generate && rimraf dist && tsc -b --force",
     "start": "node dist/app.js",
-    "dev": "nodemon"
+    "dev": "prisma generate && nodemon"
   },
   "devDependencies": {
     "@finverse/eslint-config": "workspace:*",
-    "@finverse/middlewares": "workspace:*",
     "@types/bcrypt": "^6.0.0",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
@@ -26,12 +25,12 @@
   "dependencies": {
     "@finverse/logger": "workspace:*",
     "@finverse/middlewares": "workspace:*",
-    "@finverse/utils": "workspace:*",
+    "@finverse/validator": "workspace:*",
     "@gorules/zen-engine": "^0.52.1",
     "@prisma/adapter-pg": "^7.4.1",
     "@prisma/client": "^7.4.1",
     "nodemon": "^3.1.13",
     "pg": "^8.18.0",
-    "zod": "^3.25.76"
+    "zod": "^4.3.6"
   }
 }

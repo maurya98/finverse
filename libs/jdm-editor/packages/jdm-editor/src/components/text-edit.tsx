@@ -23,6 +23,7 @@ export const TextEdit: React.FC<TextEditProps> = ({ className, value, onChange, 
   return (
     <div className={clsx('grl-text-edit', className)} {...props}>
       {!contentEditing && (
+        // @ts-ignore - Ant Design v5 React 19 compatibility issue
         <Typography.Text
           className={clsx('grl-text-edit__text')}
           onClick={() => {

@@ -7,3 +7,4 @@
 **/.pnpm-store/**
 .pnpm-store
 **/.env/**
+.env

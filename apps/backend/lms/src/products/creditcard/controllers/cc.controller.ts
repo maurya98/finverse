@@ -1,6 +1,6 @@
 import { Request, Response, Router } from "express";
 import { CreditCardService } from "../services/cc.service";
-import { sendSuccess, sendError } from "@finverse/utils";
+import { sendSuccess, sendError } from "@finverse/validator";
 
 export class CreditCardController {
     public router: Router;

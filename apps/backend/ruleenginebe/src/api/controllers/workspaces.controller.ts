@@ -1,6 +1,6 @@
 import { Request, Response, Router } from "express";
-import { validateBody } from "@finverse/utils";
-import { sendSuccess, sendError } from "@finverse/utils";
+import { validateBody } from "@finverse/validator";
+import { sendSuccess, sendError } from "@finverse/validator";
 import { WorkspaceService } from "../../modules/workspaces/workspace.service";
 import { createWorkspaceSchema, listWorkspacesQuerySchema } from "../validations/workspace.validator";
 
@@ -47,7 +47,7 @@ export class WorkspacesController {
     try {
       const parsed = listWorkspacesQuerySchema.safeParse(req.query);
       if (!parsed.success) {
-        return sendError(res, "Invalid query", 400, parsed.error.errors.map((e) => ({ path: e.path.join("."), message: e.message })));
+        return sendError(res, "Invalid query", 400, parsed.error.issues.map((e) => ({ path: e.path.join("."), message: e.message })));
       }
       const { ownerId, skip, take } = parsed.data;
       const list = await this.workspaceService.listByOwner(ownerId, skip ?? 0, take ?? 50);

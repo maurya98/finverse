@@ -1,17 +1,24 @@
 {
-  "extends": "../../../tooling/tsconfig/node.json",
-  "compilerOptions": {
-    "rootDir": "src",
-    "outDir": "dist",
-    "baseUrl": ".",
-    "paths": {
-      "@finverse/middlewares": ["../../../libs/middlewares/src/index.ts"]
-    }
-  },
-  "references": [
-    { "path": "../../../packages/types" },
-    { "path": "../../../libs/logger" },
-    { "path": "../../../libs/middlewares" }
-  ],
-  "include": ["src"]
+    "extends": "../../../tooling/tsconfig/node.json",
+    "compilerOptions": {
+        "rootDir": "src",
+        "outDir": "dist"
+    },
+    "references": [
+        {
+            "path": "../../../packages/types"
+        },
+        {
+            "path": "../../../libs/logger"
+        },
+        {
+            "path": "../../../libs/middlewares"
+        },
+        {
+            "path": "../../../libs/validator"
+        }
+    ],
+    "include": [
+        "src"
+    ]
 }

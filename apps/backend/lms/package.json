@@ -14,6 +14,9 @@
   "license": "ISC",
   "packageManager": "pnpm@10.29.3",
   "dependencies": {
+    "@finverse/logger": "workspace:*",
+    "@finverse/middlewares": "workspace:*",
+    "@finverse/validator": "workspace:*",
     "@prisma/adapter-pg": "^7.4.0",
     "@prisma/client": "^7.4.0",
     "dotenv": "^17.3.1",
@@ -23,9 +26,6 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@finverse/logger": "workspace:*",
-    "@finverse/middlewares": "workspace:*",
-    "@finverse/utils": "workspace:*",
     "@types/express": "^5.0.6",
     "@types/node": "^25.3.0",
     "nodemon": "^3.1.11",

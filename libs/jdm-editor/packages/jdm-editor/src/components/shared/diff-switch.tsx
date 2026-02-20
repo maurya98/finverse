@@ -10,13 +10,16 @@ export type DiffSwitchProps = {
 
 export const DiffSwitch: React.FC<DiffSwitchProps> = ({ displayDiff, previousChecked, ...rest }) => {
   return (
+    // @ts-ignore - Ant Design v5 React 19 compatibility issue
     <Space size={4}>
       {displayDiff && (
         <>
+          {/* @ts-ignore - Ant Design v5 React 19 compatibility issue */}
           <Switch disabled={rest.disabled} size={'small'} checked={previousChecked} />
           <ArrowDiffIcon />
         </>
       )}
+      {/* @ts-ignore - Ant Design v5 React 19 compatibility issue */}
       <Switch size={'small'} {...rest} />
     </Space>
   );

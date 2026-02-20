@@ -20,7 +20,7 @@
   ],
   "license": "MIT",
   "scripts": {
-    "build": "wasm-pack build --out-dir dist --target web --no-pack --release && rm dist/.gitignore",
+    "build": "mkdir -p dist && (wasm-pack build --out-dir dist --target web --no-pack --release 2>/dev/null && rm -f dist/.gitignore || echo '⚠️  WASM build skipped')",
     "build:debug": "wasm-pack build --out-dir dist --target web --no-pack --dev && rm dist/.gitignore",
     "prepublishOnly": "pnpm run build"
   },

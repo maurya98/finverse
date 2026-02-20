@@ -1,6 +1,6 @@
 import { Request, Response, Router } from "express";
-import { validateBody } from "@finverse/utils";
-import { sendSuccess, sendError } from "@finverse/utils";
+import { validateBody } from "@finverse/validator";
+import { sendSuccess, sendError } from "@finverse/validator";
 import { MergeRequestService } from "../../modules/vcs-engine/merge.service";
 import { DiffService } from "../../modules/vcs-engine/diff.service";
 import { BlobService } from "../../modules/vcs-engine/blob.service";
@@ -85,7 +85,7 @@ export class MergeRequestsController {
     try {
       const parsed = listMergeRequestsQuerySchema.safeParse(req.query);
       if (!parsed.success) {
-        return sendError(res, "Invalid query", 400, parsed.error.errors.map((e) => ({ path: e.path.join("."), message: e.message })));
+        return sendError(res, "Invalid query", 400, parsed.error.issues.map((e) => ({ path: e.path.join("."), message: e.message })));
       }
       const { repositoryId, status, skip, take } = parsed.data;
       const list = status

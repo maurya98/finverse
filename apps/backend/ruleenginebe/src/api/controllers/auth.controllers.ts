@@ -1,7 +1,7 @@
 import { Request, Response, Router } from "express";
 import { loginSchema } from "../validations/auth.validator";
-import { validateBody } from "@finverse/utils";
-import { sendSuccess, sendError } from "@finverse/utils";
+import { validateBody } from "@finverse/validator";
+import { sendSuccess, sendError } from "@finverse/validator";
 import { AuthService } from "../../modules/auth/auth.service";
 
 export class AuthController {

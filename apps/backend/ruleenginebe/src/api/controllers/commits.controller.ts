@@ -1,6 +1,6 @@
 import { Request, Response, Router } from "express";
-import { validateBody } from "@finverse/utils";
-import { sendSuccess, sendError } from "@finverse/utils";
+import { validateBody } from "@finverse/validator";
+import { sendSuccess, sendError } from "@finverse/validator";
 import { CommitService } from "../../modules/vcs-engine/commit.service";
 import { DiffService } from "../../modules/vcs-engine/diff.service";
 import { BlobService } from "../../modules/vcs-engine/blob.service";
@@ -106,7 +106,7 @@ export class CommitsController {
     try {
       const parsed = listCommitsQuerySchema.safeParse(req.query);
       if (!parsed.success) {
-        return sendError(res, "Invalid query", 400, parsed.error.errors.map((e) => ({ path: e.path.join("."), message: e.message })));
+        return sendError(res, "Invalid query", 400, parsed.error.issues.map((e: any) => ({ path: e.path.join("."), message: e.message })));
       }
       const { repositoryId, branch, skip, take } = parsed.data;
       const commits = branch

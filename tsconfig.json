@@ -1,5 +1,12 @@
 {
   "files": [],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@finverse/utils": ["packages/utils/index.ts"],
+      "@finverse/utils/*": ["packages/utils/*"]
+    }
+  },
   "references": [
     {
       "path": "packages/types"
@@ -9,6 +16,9 @@
     },
     {
       "path": "apps/backend/ruleenginebe"
+    },
+    {
+      "path": "apps/backend/lms"
     },
     {
       "path": "apps/backend/siteplatform"
@@ -24,6 +34,9 @@
     },
     {
       "path": "libs/middlewares"
+    },
+    {
+      "path": "libs/validator"
     }
   ]
 }
