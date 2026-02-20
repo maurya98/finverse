@@ -1,0 +1,34 @@
+{
+  "name": "lms",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "lint": "eslint .",
+    "build": "rimraf dist && tsc -b --force",
+    "start": "node dist/app.js",
+    "dev": "nodemon"
+  },
+  "keywords": [],
+  "author": "Saurabh Kumar Maurya",
+  "license": "ISC",
+  "packageManager": "pnpm@10.29.3",
+  "dependencies": {
+    "@prisma/adapter-pg": "^7.4.0",
+    "@prisma/client": "^7.4.0",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "pg": "^8.18.0",
+    "rimraf": "^6.1.3",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@finverse/logger": "workspace:*",
+    "@finverse/middlewares": "workspace:*",
+    "@finverse/utils": "workspace:*",
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.3.0",
+    "nodemon": "^3.1.11",
+    "typescript": "^5.9.3"
+  }
+}
