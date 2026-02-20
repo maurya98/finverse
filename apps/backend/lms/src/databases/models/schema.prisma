@@ -1,0 +1,117 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+//////////////////////////////////////////////////////
+// MOBILE VERIFICATION
+//////////////////////////////////////////////////////
+
+model MobileVerification {
+  verification_id              String    @id @default(uuid())
+  phone_number                 String    @unique @db.VarChar(10)
+  is_verified                  Boolean   @default(false)
+  verified_at                  DateTime?
+  verification_failed          Boolean   @default(false)
+  verification_failed_at       DateTime?
+  failure_reason               String?
+  verification_attempts        Int       @default(0)
+  last_verification_attempt_at DateTime?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@index([is_verified])
+  @@index([verified_at])
+  @@map("mobile_verifications")
+}
+
+//////////////////////////////////////////////////////
+// LEAD
+//////////////////////////////////////////////////////
+
+model Lead {
+  lead_id         String   @id @default(uuid())
+  product_id      Int
+  customer_id     String
+  lead_stage      String
+  is_active       Boolean  @default(true)
+  visit_id        String?
+  employment_type String?
+  mobile_no       String
+  income          Decimal? @db.Decimal(15, 2)
+  annual_turnover Decimal? @db.Decimal(15, 2)
+  pincode         Int?
+  city_name       String?
+  segment         String?
+  optional_info   Json?
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // Relations
+  leadStates  LeadState[]
+  creditCards CreditCard[]
+
+  @@map("leads")
+}
+
+//////////////////////////////////////////////////////
+// LEAD STATE
+//////////////////////////////////////////////////////
+
+model LeadState {
+  id             Int     @id @default(autoincrement())
+  lead_id        String
+  product_id     Int
+  partner_id     Int?
+  application_id String?
+  lead_details   Json?
+  lead_stage     String
+  utm_details    Json?
+  is_active      Boolean @default(true)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // Relations
+  lead Lead @relation(fields: [lead_id], references: [lead_id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([lead_id])
+  @@map("lead_states")
+}
+
+//////////////////////////////////////////////////////
+// CREDIT CARD
+//////////////////////////////////////////////////////
+
+model CreditCard {
+  id           String  @id @default(uuid())
+  lead_id      String
+  partner_id   Int?
+  lead_details Json
+  is_active    Boolean @default(true)
+
+  cardName       String
+  similarCards   String[]
+  information    Json[]
+  firstYearFee   Float?
+  additionalInfo Json?
+  cardImg        String?
+  theme          String?
+  isPreQualified Boolean  @default(false)
+  tagName        String   @default("")
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // Relations
+  lead Lead @relation(fields: [lead_id], references: [lead_id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@index([lead_id])
+  @@map("creditcard")
+}
