@@ -172,8 +172,8 @@ export function requestLoggerMiddleware(options?: RequestLoggerOptions): (req: R
         try {
           const { pushLogToPg } = require("./pg-writer");
           pushLogToPg(logPayload);
-        } catch {
-          // pg-writer may not be available or Postgres not configured
+        } catch (error: unknown) {
+          logger.error("Error pushing log to Postgres");
         }
       } catch (error) {
         logger.error(`Error logging request/response: ${error}`);

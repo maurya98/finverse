@@ -1,7 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import {
   getPendingState,
-  setPendingChanges,
   setPendingState,
   clearPendingChanges as clearPendingStorage,
   addPendingChange as addPendingChangeStorage,

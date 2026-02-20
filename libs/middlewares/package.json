@@ -13,7 +13,7 @@
     }
   },
   "scripts": {
-    "build": "tsc -b"
+    "build": "rimraf dist tsconfig.tsbuildinfo && tsc -b"
   },
   "keywords": [
     "middleware",
@@ -37,6 +37,7 @@
   },
   "devDependencies": {
     "@types/pg": "^8.11.10",
+    "rimraf": "^6.1.3",
     "typescript": "^5.9.3"
   }
 }

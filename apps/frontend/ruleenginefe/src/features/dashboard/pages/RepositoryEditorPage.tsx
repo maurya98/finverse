@@ -17,7 +17,6 @@ import {
   setPendingChanges as updatePendingInStorage,
   updatePathsForFolderRename,
   updateDeletedPathsForFolderRename,
-  getPendingState,
   setPendingStateByKey,
   PENDING_STORAGE_PREFIX,
   parseStored,
@@ -74,7 +73,6 @@ export function RepositoryEditorPage() {
   const {
     pending,
     deletedPaths,
-    addPending,
     replacePending,
     replacePendingAndDeleted,
     clearPending,

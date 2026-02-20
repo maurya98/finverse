@@ -72,7 +72,6 @@ export function LoginBackground() {
       });
 
       const cube = new THREE.Mesh(geometry, material);
-      const wire = new THREE.Mesh(geometry, wmaterial);
       const floor = new THREE.Mesh(geometry, material);
       const wfloor = new THREE.Mesh(geometry, wmaterial);
 
@@ -105,8 +104,8 @@ export function LoginBackground() {
     const pmaterial = new THREE.MeshPhongMaterial({
       color: 0x000000,
       side: THREE.DoubleSide,
-      roughness: 10,
-      metalness: 0.6,
+      shininess: 30,
+      specular: 0x222222,
       opacity: 0.9,
       transparent: true,
     });

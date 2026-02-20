@@ -4,3 +4,4 @@ export {
   requestLoggerMiddleware,
   type RequestLoggerOptions,
 } from "./request-logger/request.logger.middleware";
+export { requestLoggerRoutes } from "./request-logger/logs.routes";

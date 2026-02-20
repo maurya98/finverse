@@ -4,6 +4,7 @@ import { ProtectedRoute } from "./features/auth/pages/ProtectedRoute";
 import { DashboardPage } from "./features/dashboard/pages/DashboardPage";
 import { RepositoryEditorPage } from "./features/dashboard/pages/RepositoryEditorPage";
 import { BranchManagementPage } from "./features/dashboard/pages/BranchManagementPage";
+import { LogsPage } from "./features/logs/pages/LogsPage";
 
 function App() {
   return (
@@ -39,6 +40,14 @@ function App() {
           element={
             <ProtectedRoute>
               <BranchManagementPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/logs"
+          element={
+            <ProtectedRoute>
+              <LogsPage />
             </ProtectedRoute>
           }
         />

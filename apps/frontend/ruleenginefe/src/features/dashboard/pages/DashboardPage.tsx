@@ -148,6 +148,9 @@ export function DashboardPage() {
       <header className="dashboard-header">
         <h1>Rule Engine — Dashboard</h1>
         <div className="dashboard-user">
+          <button type="button" onClick={() => navigate("/dashboard/logs")}>
+            Logs
+          </button>
           <ThemePicker />
           {user && <span>{user.email}</span>}
           <button type="button" onClick={handleLogout}>

@@ -4,11 +4,14 @@
  */
 
 import { Client } from "pg";
-import "dotenv/config";
-const connectionString = process.env.DB_URL;
-if (!connectionString) {
-  throw new Error("DB_URL environment variable is not set");
-}
+import * as path from "path";
+import { config } from "dotenv";
+
+// Load .env from this package root (so it works when app runs from another app's cwd)
+const packageRoot = path.resolve(__dirname, "..", "..");
+config({ path: path.join(packageRoot, ".env") });
+
+
 const QUEUE_MAX = 10_000;
 const BATCH_SIZE = 50;
 const FLUSH_MS = 2_000;
@@ -29,7 +32,7 @@ let consumerScheduled = false;
 let flushTimer: ReturnType<typeof setTimeout> | null = null;
 
 function getConnectionUrl(): string | null {
-  return connectionString ?? null;
+  return process.env.DB_URL ?? process.env.LOG_PG_URL ?? null;
 }
 
 function getTableName(): string {
@@ -134,10 +137,13 @@ function startConsumer(): void {
  * Consumer runs in main thread and batch-inserts; does not block the request.
  */
 export function pushLogToPg(payload: RequestLogPayload): void {
-  console.log("pushLogToPg", JSON.stringify(getConnectionUrl(), null, 2));
-  if (!getConnectionUrl()) return;
-  if (queue.length >= QUEUE_MAX) queue.shift();
-  queue.push(payload);
-  startConsumer();
-  scheduleDrain();
+  try {
+    if (!getConnectionUrl()) return;
+    if (queue.length >= QUEUE_MAX) queue.shift();
+    queue.push(payload);
+    startConsumer();
+    scheduleDrain();
+  } catch (error) {
+    console.error("Error pushing log to Postgres", error as Error);
+  }
 }

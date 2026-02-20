@@ -19,6 +19,7 @@
     "three": "^0.182.0"
   },
   "devDependencies": {
+    "@types/three": "^0.169.0",
     "@eslint/js": "^9.39.2",
     "@types/node": "^24.10.13",
     "@types/react": "^19.2.14",
