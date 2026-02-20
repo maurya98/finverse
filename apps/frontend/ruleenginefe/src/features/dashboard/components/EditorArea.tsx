@@ -1,5 +1,6 @@
 import { useCallback, useState } from "react";
 import Editor from "@monaco-editor/react";
+import { useTheme } from "../../../contexts/ThemeContext";
 import { JdmEditorView } from "./JdmEditorView";
 import "./EditorArea.css";
 
@@ -35,7 +36,10 @@ export function EditorArea({
   branch,
   getDecisionsForSimulation,
 }: EditorAreaProps) {
+  const { appliedTheme } = useTheme();
   const [jsonViewMode, setJsonViewMode] = useState<JsonViewMode>("jdm");
+  const [businessMode, setBusinessMode] = useState(false);
+  const monacoTheme = appliedTheme === "light" ? "vs" : "vs-dark";
   const handleEditorDidMount = useCallback(() => {}, []);
 
   if (!fileName) {
@@ -55,26 +59,39 @@ export function EditorArea({
       <div className="editor-toolbar">
         <span className="editor-tab">{fileName}</span>
         {isJson && (
-          <div className="editor-json-view-toggle" role="tablist" aria-label="JSON view mode">
-            <button
-              type="button"
-              role="tab"
-              aria-selected={jsonViewMode === "jdm"}
-              className={`editor-view-tab ${jsonViewMode === "jdm" ? "active" : ""}`}
-              onClick={() => setJsonViewMode("jdm")}
-            >
-              JDM Editor
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={jsonViewMode === "raw"}
-              className={`editor-view-tab ${jsonViewMode === "raw" ? "active" : ""}`}
-              onClick={() => setJsonViewMode("raw")}
-            >
-              Raw JSON
-            </button>
-          </div>
+          <>
+            <div className="editor-json-view-toggle" role="tablist" aria-label="JSON view mode">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={jsonViewMode === "jdm"}
+                className={`editor-view-tab ${jsonViewMode === "jdm" ? "active" : ""}`}
+                onClick={() => setJsonViewMode("jdm")}
+              >
+                JDM Editor
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={jsonViewMode === "raw"}
+                className={`editor-view-tab ${jsonViewMode === "raw" ? "active" : ""}`}
+                onClick={() => setJsonViewMode("raw")}
+              >
+                Raw JSON
+              </button>
+            </div>
+            {jsonViewMode === "jdm" && (
+              <label className="editor-business-mode-toggle">
+                <input
+                  type="checkbox"
+                  checked={businessMode}
+                  onChange={(e) => setBusinessMode(e.target.checked)}
+                  aria-label="Business mode: show node list and restrict editing to rule values"
+                />
+                <span>Business mode</span>
+              </label>
+            )}
+          </>
         )}
         {dirty && <span className="editor-dirty">Modified</span>}
         {onSave && (
@@ -97,6 +114,7 @@ export function EditorArea({
             repositoryId={repositoryId}
             branch={branch}
             getDecisionsForSimulation={getDecisionsForSimulation}
+            businessMode={businessMode}
           />
         ) : (
           <Editor
@@ -105,7 +123,7 @@ export function EditorArea({
             value={content}
             onChange={(v) => onChange(v ?? "")}
             onMount={handleEditorDidMount}
-            theme="vs-dark"
+            theme={monacoTheme}
             options={{
               readOnly: !!readOnly,
               minimap: { enabled: true },

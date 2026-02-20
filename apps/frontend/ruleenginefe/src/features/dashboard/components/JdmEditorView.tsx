@@ -8,25 +8,9 @@ import {
   type DecisionGraphRef,
   type Simulation,
 } from "@gorules/jdm-editor";
+import { useTheme } from "../../../contexts/ThemeContext";
 import { simulate as simulateApi, isApiError } from "../services/api";
 import "./JdmEditorView.css";
-
-function usePrefersColorScheme(): "light" | "dark" {
-  const [mode, setMode] = useState<"light" | "dark">(() =>
-    typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches
-      ? "dark"
-      : "light"
-  );
-
-  useEffect(() => {
-    const media = window.matchMedia("(prefers-color-scheme: dark)");
-    const handler = () => setMode(media.matches ? "dark" : "light");
-    media.addEventListener("change", handler);
-    return () => media.removeEventListener("change", handler);
-  }, []);
-
-  return mode;
-}
 
 const emptyGraph: DecisionGraphType = { nodes: [], edges: [] };
 
@@ -62,6 +46,12 @@ type JdmEditorViewProps = {
    * Use this so simulation runs against current UI state (including uncommitted changes), not repo state.
    */
   getDecisionsForSimulation?: () => Promise<Record<string, unknown>>;
+  /**
+   * When true, enables "business mode": shows node list view instead of graph canvas,
+   * and gives assistance to create rules. Decision Table nodes use edit:rules (add/remove
+   * rule rows, edit cells, add/reorder input columns); other nodes use edit:values.
+   */
+  businessMode?: boolean;
 };
 
 export function JdmEditorView({
@@ -71,14 +61,14 @@ export function JdmEditorView({
   repositoryId,
   branch,
   getDecisionsForSimulation,
+  businessMode = false,
 }: JdmEditorViewProps) {
-  const themeMode = usePrefersColorScheme();
+  const { appliedTheme } = useTheme();
   const graphRef = useRef<DecisionGraphRef>(null);
   const [simulate, setSimulate] = useState<Simulation | undefined>();
   const lastEmittedRef = useRef<string | null>(null);
   const latestGraphRef = useRef<DecisionGraphType | null>(null);
   const [externalKey, setExternalKey] = useState(0);
-
   // When content changes from outside (new file, raw edit), remount graph so it picks up new data.
   useEffect(() => {
     if (content !== lastEmittedRef.current) {
@@ -183,15 +173,27 @@ export function JdmEditorView({
     });
   }, []);
 
+  const viewConfig = useMemo(() => {
+    if (!businessMode) return undefined;
+    const graph = latestGraphRef.current ?? parseGraph(content);
+    const nodes = graph?.nodes ?? [];
+    const permissions: Record<string, "edit:values" | "edit:rules" | "edit:full"> = {};
+    for (const node of nodes) {
+      const type = node.type as string;
+      // Decision Table: edit:rules so users can add/remove rule rows and edit cells (assistance to create rules)
+      permissions[node.id] =
+        type === "decisionTableNode" ? ("edit:rules" as const) : ("edit:values" as const);
+    }
+    return {
+      enabled: true,
+      description: "Configure business rules for your decision model",
+      permissions,
+    };
+  }, [businessMode, content, externalKey]);
+
   return (
     <div className="jdm-editor-view">
-      {/* <div className="jdm-editor-view-toolbar">
-        <button type="button" className="jdm-simulator-btn" onClick={openSimulator} title="Open Simulator">
-          <span className="jdm-simulator-btn-icon" aria-hidden>▶</span>
-          Simulator
-        </button>
-      </div> */}
-      <JdmConfigProvider theme={{ mode: themeMode }}>
+      <JdmConfigProvider theme={{ mode: appliedTheme as "light" | "dark" }}>
         <DecisionGraph
           key={externalKey}
           ref={graphRef}
@@ -201,6 +203,7 @@ export function JdmEditorView({
           simulate={simulate}
           onReactFlowInit={handleReactFlowInit}
           decisionKeyOptions={decisionKeyOptions}
+          viewConfig={viewConfig}
         />
       </JdmConfigProvider>
     </div>

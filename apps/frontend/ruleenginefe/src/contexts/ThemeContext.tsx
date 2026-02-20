@@ -7,13 +7,13 @@ export const THEME_IDS = [
   "light",
   "dark",
   "system",
-  "ocean",
-  "forest",
-  "violet",
-  "sunset",
-  "rose",
-  "lavender",
-  "sky",
+  // "ocean",
+  // "forest",
+  // "violet",
+  // "sunset",
+  // "rose",
+  // "lavender",
+  // "sky",
 ] as const;
 
 export type ThemeId = (typeof THEME_IDS)[number];

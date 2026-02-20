@@ -122,10 +122,19 @@
 [data-theme="light"] .branch-mgmt-modal {
   background: #fff;
   border-color: rgba(0, 0, 0, 0.1);
+  color: #0f172a;
 }
 
 [data-theme="light"] .branch-mgmt-modal-backdrop {
   background: rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="light"] .branch-mgmt-modal-title {
+  color: #0f172a;
+}
+
+[data-theme="light"] .branch-mgmt-modal-text {
+  color: #64748b;
 }
 
 [data-theme="light"] .branch-mgmt-btn.secondary {
@@ -137,11 +146,61 @@
   background: rgba(0, 0, 0, 0.1);
 }
 
+[data-theme="light"] .branch-mgmt-modal-btn.secondary {
+  background: rgba(0, 0, 0, 0.06);
+  color: #334155;
+}
+
+[data-theme="light"] .branch-mgmt-modal-btn.secondary:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.1);
+  color: #0f172a;
+}
+
 [data-theme="light"] .branch-mgmt-modal-input,
 [data-theme="light"] .branch-mgmt-modal-textarea,
 [data-theme="light"] .branch-mgmt-modal-select {
   background: #f8fafc;
   border-color: rgba(0, 0, 0, 0.15);
+  color: #0f172a;
+}
+
+/* Logs page */
+[data-theme="light"] .logs-page {
+  --logs-bg: #f1f5f9;
+  --logs-border: rgba(15, 23, 42, 0.12);
+  --logs-card: rgba(255, 255, 255, 0.9);
+  --logs-accent: #0d9488;
+  --logs-text: #0f172a;
+  --logs-muted: #64748b;
+  --logs-error: #dc2626;
+  --logs-2xx: #16a34a;
+  --logs-4xx: #ca8a04;
+  --logs-5xx: #dc2626;
+}
+
+[data-theme="light"] .logs-page .logs-filters-row input,
+[data-theme="light"] .logs-page .logs-filters-row select {
+  background: #f8fafc;
+}
+
+[data-theme="light"] .logs-page .logs-table-row {
+  border-bottom-color: rgba(15, 23, 42, 0.06);
+}
+
+[data-theme="light"] .logs-page .logs-table-row:hover {
+  background: rgba(148, 163, 184, 0.2);
+}
+
+[data-theme="light"] .logs-page .logs-tabs button.active {
+  background: rgba(13, 148, 136, 0.12);
+}
+
+[data-theme="light"] .logs-page .logs-error {
+  background: rgba(220, 38, 38, 0.1);
+}
+
+[data-theme="light"] .logs-page .logs-modal-payload {
+  background: rgba(15, 23, 42, 0.06);
   color: #0f172a;
 }
 
@@ -206,8 +265,16 @@
   color: #0f172a;
 }
 
+[data-theme="light"] .editor-json-view-toggle {
+  background: rgba(0, 0, 0, 0.06);
+}
+
 [data-theme="light"] .editor-view-tab {
   color: #64748b;
+}
+
+[data-theme="light"] .editor-view-tab:hover {
+  color: #0f172a;
 }
 
 [data-theme="light"] .editor-view-tab.active {
@@ -223,6 +290,71 @@
 [data-theme="light"] .editor-save-btn:hover:not(:disabled) {
   border-color: #0d9488;
   color: #0d9488;
+}
+
+/* JDM editor view — container uses fallback when library vars are on inner wrapper */
+[data-theme="light"] .jdm-editor-view {
+  background: #f8fafc;
+}
+
+[data-theme="light"] .jdm-editor-view-toolbar {
+  border-bottom-color: rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.8);
+}
+
+[data-theme="light"] .jdm-simulator-btn {
+  border-color: rgba(0, 0, 0, 0.15);
+  background: rgba(0, 0, 0, 0.04);
+  color: #0f172a;
+}
+
+[data-theme="light"] .jdm-simulator-btn:hover {
+  background: rgba(0, 0, 0, 0.08);
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+/* File diff viewer */
+[data-theme="light"] .file-diff-viewer {
+  border-color: rgba(0, 0, 0, 0.12);
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+[data-theme="light"] .file-diff-viewer-header {
+  color: #64748b;
+  background: #e2e8f0;
+  border-bottom-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .file-diff-viewer-body,
+[data-theme="light"] .file-diff-viewer-body code {
+  color: #0f172a;
+}
+
+[data-theme="light"] .file-diff-line-prefix {
+  color: #94a3b8;
+}
+
+[data-theme="light"] .file-diff-line-add .file-diff-line-prefix {
+  color: #16a34a;
+}
+
+[data-theme="light"] .file-diff-line-add .file-diff-line-content {
+  background: rgba(34, 197, 94, 0.12);
+  color: #15803d;
+}
+
+[data-theme="light"] .file-diff-line-remove .file-diff-line-prefix {
+  color: #dc2626;
+}
+
+[data-theme="light"] .file-diff-line-remove .file-diff-line-content {
+  background: rgba(248, 113, 113, 0.15);
+  color: #b91c1c;
+}
+
+[data-theme="light"] .file-diff-line-context .file-diff-line-content {
+  color: #64748b;
 }
 
 /* ========== Dark accent themes (ocean, forest, violet, sunset) ========== */
