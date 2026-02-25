@@ -14,23 +14,28 @@ datasource db {
 }
 
 model lead_master {
-  lead_id         String   @id @default(uuid())
+  lead_id         String    @id @default(uuid())
   product_id      Int
   customer_id     String
-  name            String
-  email           String   @unique
-  mobile_no       String   @unique
-  pincode         Int
-  employment_type Int
-  income          Int
-  city            String
-  segment         String
-  visit_id        String   @default(uuid())
+  fname           String?
+  lname           String?
+  pan_card        String?
+  company_name    String?
+  gender          String?
+  dob             DateTime? @db.Date
+  email           String?   @unique
+  mobile_no       String    @unique
+  pincode         Int?
+  employment_type Int?
+  income          Int?
+  city            String?
+  segment         String?
+  visit_id        String?   @default(uuid())
   utm_source      String?
-  is_active       Boolean  @default(true)
-  optional_info   Json
-  created_at      DateTime @default(now())
-  updated_at      DateTime @updatedAt
+  is_active       Boolean   @default(true)
+  optional_info   Json?
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
 
   lead_stage lead_stage[]
   offers     offer[]

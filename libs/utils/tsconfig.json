@@ -7,7 +7,8 @@
   "include": [
     "src/index.ts",
     "src/request.validator.ts",
-    "src/response.handler.ts"
+    "src/response.handler.ts",
+    "src/maskPI.ts"
   ],
   "exclude": [
     "node_modules"

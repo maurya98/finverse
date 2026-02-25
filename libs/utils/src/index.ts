@@ -11,3 +11,4 @@ export {
   type ErrorResponseBody,
   type ApiResponseBody,
 } from "./response.handler";
+export { maskPI, detectPIIType, type PIIType } from "./maskPI";
