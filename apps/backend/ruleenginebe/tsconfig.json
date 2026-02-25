@@ -9,9 +9,9 @@
     }
   },
   "references": [
-    { "path": "../../../packages/types" },
     { "path": "../../../libs/logger" },
-    { "path": "../../../libs/middlewares" }
+    { "path": "../../../libs/middlewares" },
+    { "path": "../../../libs/utils" }
   ],
   "include": ["src"]
 }

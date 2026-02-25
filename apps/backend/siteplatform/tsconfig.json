@@ -14,19 +14,11 @@
       "@finverse/cache/*": ["../../../libs/cache/*"],
       "@finverse/middlewares": ["../../../libs/middlewares"],
       "@finverse/middlewares/*": ["../../../libs/middlewares/*"],
-      "@finverse/types": ["../../../packages/types"],
-      "@finverse/types/*": ["../../../packages/types/*"],
-      "@finverse/utils": ["../../../packages/utils"],
-      "@finverse/utils/*": ["../../../packages/utils/*"]
+      "@finverse/utils": ["../../../libs/utils"],
+      "@finverse/utils/*": ["../../../libs/utils/*"]
     }
   },
   "references": [
-    {
-      "path": "../../../packages/types"
-    },
-    {
-      "path": "../../../packages/utils"
-    },
     {
       "path": "../../../libs/logger"
     },
@@ -37,7 +29,7 @@
       "path": "../../../libs/cache"
     },
     {
-      "path": "../../../libs/validator"
+      "path": "../../../libs/utils"
     }
   ],
   "include": ["src"],
