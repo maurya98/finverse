@@ -1,3 +1,8 @@
+# Environment variables
+.env
+.env.local
+.env.*.local
+
 # Logs
 logs
 *.log
@@ -7,16 +12,34 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
+# Node.js
+node_modules/
+.npm
+
+# Build artifacts
+dist/
+dist-ssr/
+*.tsbuildinfo
+.eslintcache
 *.local
 
-# Editor directories and files
+# Turbo
+.turbo/
+turbo-build.log
+
+# pnpm
+pnpm-lock.yaml
+.pnpmfile.cjs
+
+# IDEs
 .vscode/*
 !.vscode/extensions.json
-.idea
+.idea/
+*.swp
+*.swo
+*~
 .DS_Store
+*.iml
 *.suo
 *.ntvs*
 *.njsproj
