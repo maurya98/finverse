@@ -25,12 +25,13 @@ enum PermissionScope {
  * Internal microservices
  */
 model Service {
-    id        String   @id @default(uuid())
-    name      String   @unique
-    baseUrl   String
-    createdAt DateTime @default(now())
-
-    routes ServiceRoute[]
+    id          String         @id @default(uuid())
+    name        String         @unique
+    baseUrl     String
+    createdAt   DateTime       @default(now())
+    description String         @default("")
+    isActive    Boolean        @default(true)
+    routes      ServiceRoute[]
 }
 
 /**
@@ -42,6 +43,8 @@ model ServiceRoute {
     service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
 
     name        String // e.g. "Get User Profile"
+    description String     @default("")
+    isActive    Boolean    @default(true)
     method      HttpMethod
     actualPath  String // actual service path
     exposedPath String // exposed path
@@ -58,10 +61,12 @@ model ServiceRoute {
  * External client applications
  */
 model ClientApp {
-    id        String   @id @default(uuid())
-    name      String   @unique
-    secret    String // hashed secret
-    createdAt DateTime @default(now())
+    id          String   @id @default(uuid())
+    name        String   @unique
+    description String   @default("")
+    isActive    Boolean  @default(true)
+    secret      String // hashed secret
+    createdAt   DateTime @default(now())
 
     permissions ClientPermission[]
 }
@@ -70,12 +75,13 @@ model ClientApp {
  * Which client can access which route
  */
 model ClientPermission {
-    id       String @id @default(uuid())
-    clientId String
-    routeId  String
-
-    client ClientApp    @relation(fields: [clientId], references: [id], onDelete: Cascade)
-    route  ServiceRoute @relation(fields: [routeId], references: [id], onDelete: Cascade)
+    id          String       @id @default(uuid())
+    clientId    String
+    routeId     String
+    description String       @default("")
+    isActive    Boolean      @default(true)
+    client      ClientApp    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+    route       ServiceRoute @relation(fields: [routeId], references: [id], onDelete: Cascade)
 
     scope PermissionScope @default(FULL)
 
