@@ -29,8 +29,8 @@ export const TabFunction: React.FC<TabFunctionProps> = ({ id }) => {
   const onFunctionReady = useDecisionGraphListeners((s) => s.onFunctionReady);
   const [monaco, setMonaco] = useState<Monaco>();
   const nodeType = useNodeType(id);
-  const { nodeTrace, disabled, content, nodeError, viewConfig } = useDecisionGraphState(
-    ({ simulate, disabled, decisionGraph, viewConfig }) => ({
+  const { nodeTrace, disabled, content, nodeError } = useDecisionGraphState(
+    ({ simulate, disabled, decisionGraph }) => ({
       nodeTrace: match(simulate)
         .with({ result: P._ }, ({ result }) => result?.trace?.[id])
         .otherwise(() => null),
@@ -39,7 +39,6 @@ export const TabFunction: React.FC<TabFunctionProps> = ({ id }) => {
         .otherwise(() => null),
       disabled,
       content: (decisionGraph?.nodes ?? []).find((node) => node.id === id)?.content,
-      viewConfig,
     }),
   );
 
@@ -74,7 +73,7 @@ export const TabFunction: React.FC<TabFunctionProps> = ({ id }) => {
         previousValue={typeof previousValue === 'string' ? previousValue : undefined}
         error={nodeError ?? undefined}
         inputData={nodeType}
-        permission={(viewConfig?.enabled ? viewConfig?.permissions?.[id] : 'edit:full') as FunctionPermission}
+        permission={'edit:full'}
         onChange={(val) => {
           graphActions.updateNode(id, (draft) => {
             if (kind === FunctionKind.Stable) {

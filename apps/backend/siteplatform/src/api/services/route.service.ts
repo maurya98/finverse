@@ -1,4 +1,4 @@
-import { ServiceRoute } from "../../generated/prisma";
+import { ServiceRoute } from "@prisma/client";
 import { prisma } from "../../databases/client";
 
 // Service

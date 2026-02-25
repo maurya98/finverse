@@ -47,6 +47,13 @@
   min-width: 0;
 }
 
+.branch-mgmt-repo-id {
+  font-size: 0.85em;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: ui-monospace, monospace;
+}
+
 .branch-mgmt-header .theme-picker {
   flex-shrink: 0;
 }

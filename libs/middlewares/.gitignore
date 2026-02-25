@@ -1,9 +1,0 @@
-dist/**
-node_modules/**
-tree-maker/**
-.git/**
-.idea/**
-.vscode/**
-.pnpm-store/**
-.pnpm-store
-.env

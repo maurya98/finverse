@@ -1,0 +1,45 @@
+{
+  "name": "@finverse/utils",
+  "version": "1.0.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "test": "vitest run --config config/vitest.config.ts",
+    "test:watch": "vitest --config config/vitest.config.ts",
+    "build": "pnpm test && rimraf dist && tsc -b --force"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./response": {
+      "types": "./dist/response.handler.d.ts",
+      "import": "./dist/response.handler.js",
+      "require": "./dist/response.handler.js",
+      "default": "./dist/response.handler.js"
+    }
+  },
+  "dependencies": {
+    "rimraf": "^6.1.3",
+    "zod": "^3.24.2"
+  },
+  "peerDependencies": {
+    "express": ">=5.0.0"
+  },
+  "peerDependenciesMeta": {
+    "express": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@finverse/eslint-config": "workspace:*",
+    "@types/express": "^5.0.6",
+    "@types/node": "^22.10.0",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  }
+}

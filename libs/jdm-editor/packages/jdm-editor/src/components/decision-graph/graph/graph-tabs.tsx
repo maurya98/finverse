@@ -1,4 +1,4 @@
-import { CloseOutlined, DeploymentUnitOutlined, UnorderedListOutlined } from '@ant-design/icons';
+import { CloseOutlined, DeploymentUnitOutlined } from '@ant-design/icons';
 import type { TabsProps } from 'antd';
 import { Avatar, Button, Dropdown, Tabs } from 'antd';
 import clsx from 'clsx';
@@ -21,8 +21,8 @@ type TabItem = NonUndefined<TabsProps['items']>[number];
 
 export const GraphTabs: React.FC<GraphTabsProps> = ({ disabled, tabBarExtraContent }) => {
   const graphActions = useDecisionGraphActions();
-  const { openNodes, activeNodeId, viewConfig } = useDecisionGraphState(
-    ({ decisionGraph, activeTab, openTabs, viewConfig }) => ({
+  const { openNodes, activeNodeId } = useDecisionGraphState(
+    ({ decisionGraph, activeTab, openTabs }) => ({
       activeNodeId: (decisionGraph?.nodes ?? []).find((node) => node.id === activeTab)?.id,
       openNodes: (openTabs || [])
         .map((tab) => {
@@ -36,7 +36,6 @@ export const GraphTabs: React.FC<GraphTabsProps> = ({ disabled, tabBarExtraConte
           };
         })
         .filter((node) => !!node),
-      viewConfig,
     }),
   );
 
@@ -48,8 +47,8 @@ export const GraphTabs: React.FC<GraphTabsProps> = ({ disabled, tabBarExtraConte
         label: (
           <TabLabel
             total={openNodes?.length}
-            icon={viewConfig?.enabled ? <UnorderedListOutlined /> : <DeploymentUnitOutlined />}
-            name={viewConfig?.enabled ? 'Nodes' : 'Graph'}
+            icon={<DeploymentUnitOutlined />}
+            name='Graph'
             active={!activeNodeId || activeNodeId === 'graph'}
             onContextClick={(action) => {
               graphActions.closeTab('graph', action);
@@ -58,7 +57,7 @@ export const GraphTabs: React.FC<GraphTabsProps> = ({ disabled, tabBarExtraConte
         ),
       },
     ];
-  }, [viewConfig]);
+  }, [openNodes?.length, activeNodeId]);
 
   return (
     <div>

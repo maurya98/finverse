@@ -1,4 +1,4 @@
-import { sendError } from "@finverse/validator";
+import { sendError } from "@finverse/utils";
 import { logger } from "@finverse/logger";
 import { Request, Response } from "express";
 import { ClientAppService } from "../services";

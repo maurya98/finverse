@@ -3,17 +3,9 @@
   "private": true,
   "scripts": {
     "lint": "eslint .",
-    "build": "prisma generate && tsc -b && cp -r src/generated dist/",
+    "build": "rimraf dist && tsc -b --force",
     "start": "node dist/app.js",
-    "dev": "prisma generate && tsc -b && cp -r src/generated dist/ && nodemon",
-    "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev",
-    "prisma:studio": "prisma studio",
-    "prisma:seed": "prisma db seed",
-    "prisma:push": "prisma db push",
-    "prisma:pull": "prisma db pull",
-    "prisma:reset": "prisma db reset",
-    "prisma:deploy": "prisma db deploy"
+    "dev": "nodemon"
   },
   "devDependencies": {
     "@finverse/eslint-config": "workspace:*",
@@ -23,15 +15,16 @@
     "dotenv": "^17.3.1",
     "eslint": "^9.39.2",
     "express": "^5.2.1",
-    "prisma": "^7.4.0",
+    "prisma": "^7.4.1",
+    "rimraf": "^6.1.3",
     "typescript": "^5.9.3"
   },
   "dependencies": {
     "@finverse/logger": "workspace:*",
     "@finverse/middlewares": "workspace:*",
-    "@finverse/validator": "workspace:*",
+    "@finverse/utils": "workspace:*",
     "@prisma/adapter-pg": "^7.4.0",
-    "@prisma/client": "^7.4.0",
+    "@prisma/client": "^7.4.1",
     "nodemon": "^3.1.11",
     "path-to-regexp": "^8.3.0",
     "pg": "^8.18.0",

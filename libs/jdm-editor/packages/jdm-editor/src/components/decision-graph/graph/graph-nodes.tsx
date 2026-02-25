@@ -4,7 +4,7 @@ import clsx from 'clsx';
 import React, { useMemo, useState } from 'react';
 import { match } from 'ts-pattern';
 
-import { useDecisionGraphActions, useDecisionGraphListeners, useDecisionGraphState } from '../context/dg-store.context';
+import { useDecisionGraphActions, useDecisionGraphState } from '../context/dg-store.context';
 import { type DecisionNode } from '../dg-types';
 import { NodeColor } from '../nodes/specifications/colors';
 import { NodeKind } from '../nodes/specifications/specification-types';
@@ -17,20 +17,16 @@ export type GraphComponentsProps = {
 };
 
 export const GraphNodes: React.FC<GraphComponentsProps> = React.memo(({ className }) => {
-  const { decisionGraph, customComponents, viewConfig, viewConfigCta } = useDecisionGraphState((store) => ({
+  const { decisionGraph, customComponents } = useDecisionGraphState((store) => ({
     decisionGraph: store.decisionGraph || [],
     customComponents: store.components,
     activeTabId: store.activeTab,
-    viewConfig: store.viewConfig,
-    viewConfigCta: store.viewConfigCta,
   }));
 
   const { openTab } = useDecisionGraphActions();
-  const onViewConfigCta = useDecisionGraphListeners((s) => s.onViewConfigCta);
 
   const nodes = useMemo(() => {
     return (decisionGraph?.nodes || [])
-      .filter((node) => (viewConfig?.enabled ? !!viewConfig?.permissions?.[node.id] : true))
       .map((node) => {
         const kind = node.type as NodeKind;
         const specification =
@@ -51,7 +47,7 @@ export const GraphNodes: React.FC<GraphComponentsProps> = React.memo(({ classNam
           ...(node?._diff ? { _diff: node._diff } : {}),
         };
       });
-  }, [decisionGraph, viewConfig]);
+  }, [decisionGraph]);
 
   const [search, setSearch] = useState('');
 
@@ -123,25 +119,11 @@ export const GraphNodes: React.FC<GraphComponentsProps> = React.memo(({ classNam
     <div className={clsx(['grl-dg__view', className])}>
       <div className={'grl-dg__view__content'}>
         <div className={'grl-dg__view__content__heading'}>
-          <div className={'grl-dg__view__content__heading__first-row'}>
-            <Title level={4} style={{ margin: 0, marginBottom: '8px' }}>
-              {isEmpty ? 'Decision View Not Configured' : 'Decision View'}
-            </Title>
-            {viewConfigCta && (
-              <Button
-                type={'primary'}
-                onClick={() => {
-                  onViewConfigCta?.();
-                }}
-              >
-                {viewConfigCta}
-              </Button>
-            )}
-          </div>
+          <Title level={4} style={{ margin: 0, marginBottom: '8px' }}>
+            {isEmpty ? 'Decision View Not Configured' : 'Decision View'}
+          </Title>
           {!isEmpty ? (
-            <Text type='secondary'>
-              {viewConfig?.description || 'Configure business rules for your decision model'}
-            </Text>
+            <Text type='secondary'>Configure business rules for your decision model</Text>
           ) : (
             <>
               {decisionGraph?.nodes?.length > 0 ? (

@@ -13,13 +13,11 @@
     }
   },
   "scripts": {
-    "build": "tsc -b"
+    "test": "pnpm exec vitest run --config config/vitest.config.ts",
+    "test:watch": "pnpm exec vitest --config config/vitest.config.ts",
+    "build": "pnpm test && tsc -b"
   },
-  "keywords": [
-    "logger",
-    "pino",
-    "logging"
-  ],
+  "keywords": ["logger", "pino", "logging"],
   "author": "Saurabh Kumar Maurya",
   "license": "ISC",
   "packageManager": "pnpm@10.28.2",
@@ -31,6 +29,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
   }
 }

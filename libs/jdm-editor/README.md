@@ -41,7 +41,6 @@ export type DecisionGraphProps = {
   defaultValue?: DecisionGraphType;
   value?: DecisionGraphType;
   disabled?: boolean;
-  viewConfig?: ViewConfig;
   components?: CustomNodeType[];
   onChange?: (val: DecisionGraphType) => void;
   manager?: DragDropManager;

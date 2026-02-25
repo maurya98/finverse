@@ -476,7 +476,7 @@ export function RepositoryEditorPage() {
         >
           {sidebarOpen ? "◀" : "▶"}
         </button>
-        <h1 className="repo-editor-title">{repo.name}</h1>
+        <h1 className="repo-editor-title">{repo.name} <span className="repo-editor-repo-id">({repo.id})</span></h1>
         <ThemePicker />
       </header>
 

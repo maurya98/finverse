@@ -1,7 +1,0 @@
-{
-    "extends": "../../tooling/tsconfig/react.json",
-    "include": ["src"],
-    "references": [
-      { "path": "../types" }
-    ]
-  }

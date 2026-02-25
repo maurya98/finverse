@@ -1,9 +1,8 @@
+/// <reference path="./types/express.d.ts" />
 import express, { Express } from "express";
-import dotenv from "dotenv";
 import { logger } from "@finverse/logger";
-import routes from "./api/routes";
-import { requestLoggerMiddleware, securityMiddleware } from "@finverse/middlewares";
-dotenv.config();
+import { errorHandlerMiddleware, requestLoggerMiddleware, securityMiddleware } from "@finverse/middlewares";
+import apiRouter from "./routes/api";
 
 const app: Express = express();
 
@@ -11,11 +10,11 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(requestLoggerMiddleware);
 app.use(securityMiddleware);
-app.use(routes);
+app.use(errorHandlerMiddleware);
+app.use(apiRouter);
 
-
-app.listen(process.env.PORT!, () => {
-    logger.info(`LMS server is running on port ${process.env.PORT!}`);
+app.listen(process.env.PORT ?? 3002, () => {
+  logger.info(`LMS server is running on port ${process.env.PORT ?? 3002}`);
 });
 
 export default app;

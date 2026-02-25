@@ -1,9 +1,9 @@
-**/dist/**
-**/node_modules/**
+/dist
+/node_modules
 **/tree-maker/**
-**/.git/**
-**/.idea/**
-**/.vscode/**
-**/.pnpm-store/**
-.pnpm-store
-**/.env/**
+.env
+.DS_Store
+**/.DS_Store/**
+**/.turbo/**
+.turbo
+**/generated/**

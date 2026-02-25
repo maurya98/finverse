@@ -276,7 +276,7 @@ export function BranchManagementPage() {
         >
           ← Editor
         </button>
-        <h1 className="branch-mgmt-title">{repo.name} — Branches</h1>
+        <h1 className="branch-mgmt-title">{repo.name} <span className="branch-mgmt-repo-id">({repo.id})</span> — Branches</h1>
         <ThemePicker />
       </header>
 

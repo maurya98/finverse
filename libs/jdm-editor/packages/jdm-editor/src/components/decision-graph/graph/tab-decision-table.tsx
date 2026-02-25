@@ -7,7 +7,6 @@ import { get } from '../../../helpers/utility';
 import { isWasmAvailable } from '../../../helpers/wasm';
 import type { DecisionTableType } from '../../decision-table';
 import { DecisionTable } from '../../decision-table';
-import type { DecisionTablePermission } from '../../decision-table/context/dt-store.context';
 import { useDecisionGraphActions, useDecisionGraphState } from '../context/dg-store.context';
 import type { NodeDecisionTableData } from '../nodes/specifications/decision-table.specification';
 import type { SimulationTrace, SimulationTraceDataTable } from '../simulator/simulation.types';
@@ -19,8 +18,8 @@ export type TabDecisionTableProps = {
 
 export const TabDecisionTable: React.FC<TabDecisionTableProps> = ({ id, manager }) => {
   const graphActions = useDecisionGraphActions();
-  const { nodeName, nodeTrace, inputData, nodeSnapshot, viewConfig } = useDecisionGraphState(
-    ({ simulate, decisionGraph, viewConfig }) => ({
+  const { nodeName, nodeTrace, inputData, nodeSnapshot, disabled, content } = useDecisionGraphState(
+    ({ simulate, decisionGraph, disabled }) => ({
       nodeName: decisionGraph.nodes.find((n) => n.id === id)?.name,
       nodeTrace: match(simulate)
         .with({ result: P.nonNullable }, ({ result }) => result.trace[id] as SimulationTrace<SimulationTraceDataTable>)
@@ -34,14 +33,10 @@ export const TabDecisionTable: React.FC<TabDecisionTableProps> = ({ id, manager 
           ({ result }) => (result.snapshot?.nodes || []).find((n) => n.id === id)?.content as DecisionTableType,
         )
         .otherwise(() => null),
-      viewConfig,
+      disabled,
+      content: (decisionGraph?.nodes ?? []).find((node) => node.id === id)?.content as NodeDecisionTableData,
     }),
   );
-
-  const { disabled, content } = useDecisionGraphState(({ disabled, decisionGraph }) => ({
-    disabled,
-    content: (decisionGraph?.nodes ?? []).find((node) => node.id === id)?.content as NodeDecisionTableData,
-  }));
 
   const debug = useMemo(() => {
     if (!nodeTrace || !inputData || !nodeSnapshot) {
@@ -58,7 +53,7 @@ export const TabDecisionTable: React.FC<TabDecisionTableProps> = ({ id, manager 
     }
 
     return { trace: nodeTrace, inputData: extendedInputData, snapshot: nodeSnapshot };
-  }, [nodeTrace, nodeSnapshot, inputData]);
+  }, [nodeTrace, nodeSnapshot, inputData, content?.inputField]);
 
   return (
     <DecisionTable
@@ -68,7 +63,7 @@ export const TabDecisionTable: React.FC<TabDecisionTableProps> = ({ id, manager 
       value={content as any}
       manager={manager}
       disabled={disabled}
-      permission={viewConfig?.enabled ? (viewConfig?.permissions?.[id] as DecisionTablePermission) : 'edit:full'}
+      permission={'edit:full'}
       debug={debug}
       onChange={(val) => {
         graphActions.updateNode(id, (draft) => {

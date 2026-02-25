@@ -232,6 +232,7 @@ export function DashboardPage() {
                     >
                       <span className="repo-name">{r.name}</span>
                       <span className="repo-meta">branch: {r.defaultBranch}</span>
+                      <span className="repo-meta repo-id">id: {r.id}</span>
                     </button>
                     <button
                       type="button"

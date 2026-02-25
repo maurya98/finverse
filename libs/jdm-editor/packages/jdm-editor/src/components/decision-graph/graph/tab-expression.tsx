@@ -26,8 +26,8 @@ export const TabExpression: React.FC<TabExpressionProps> = ({ id, manager }) => 
     content: (decisionGraph?.nodes ?? []).find((node) => node.id === id)?.content as NodeExpressionData,
   }));
 
-  const { nodeTrace, inputData, nodeSnapshot, viewConfig } = useDecisionGraphState(
-    ({ simulate, decisionGraph, viewConfig }) => ({
+  const { nodeTrace, inputData, nodeSnapshot } = useDecisionGraphState(
+    ({ simulate, decisionGraph }) => ({
       nodeTrace: match(simulate)
         .with(
           { result: P.nonNullable },
@@ -46,7 +46,6 @@ export const TabExpression: React.FC<TabExpressionProps> = ({ id, manager }) => 
             >['content'],
         )
         .otherwise(() => null),
-      viewConfig,
     }),
   );
 
@@ -79,7 +78,7 @@ export const TabExpression: React.FC<TabExpressionProps> = ({ id, manager }) => 
       <Expression
         value={content?.expressions}
         disabled={disabled}
-        permission={(viewConfig?.enabled ? viewConfig?.permissions?.[id] : 'edit:full') as ExpressionPermission}
+        permission={'edit:full'}
         manager={manager}
         debug={debug}
         onChange={(val) => {

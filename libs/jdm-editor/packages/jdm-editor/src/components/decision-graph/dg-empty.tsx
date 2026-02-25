@@ -25,10 +25,6 @@ export type DecisionGraphEmptyType = {
 
   name?: DecisionGraphStoreType['state']['name'];
 
-  viewConfigCta?: DecisionGraphStoreType['state']['viewConfigCta'];
-  viewConfig?: DecisionGraphStoreType['state']['viewConfig'];
-  onViewConfigCta?: DecisionGraphStoreType['listeners']['onViewConfigCta'];
-
   defaultActivePanel?: string;
   panels?: DecisionGraphStoreType['state']['panels'];
   onPanelsChange?: DecisionGraphStoreType['listeners']['onPanelsChange'];
@@ -59,9 +55,6 @@ export const DecisionGraphEmpty: React.FC<DecisionGraphEmptyType> = ({
   panels,
   simulate,
   decisionKeyOptions,
-  viewConfigCta,
-  viewConfig,
-  onViewConfigCta,
   onPanelsChange,
   onReactFlowInit,
   onCodeExtension,
@@ -70,26 +63,11 @@ export const DecisionGraphEmpty: React.FC<DecisionGraphEmptyType> = ({
   const mountedRef = useRef(false);
   const graphActions = useDecisionGraphActions();
   const { stateStore, listenerStore } = useDecisionGraphRaw();
-  const { decisionGraph, openTabs, activeTab } = useDecisionGraphState(({ decisionGraph, openTabs, activeTab }) => ({
-    decisionGraph,
-    openTabs,
-    activeTab,
-  }));
+  const { decisionGraph } = useDecisionGraphState(({ decisionGraph }) => ({ decisionGraph }));
 
   const innerChange = useDebouncedCallback((graph: DecisionGraphType) => {
     onChange?.(graph);
   }, 100);
-
-  useEffect(() => {
-    if (viewConfig?.enabled) {
-      const filtered = openTabs.filter((tab) => !!viewConfig?.permissions?.[tab]);
-
-      stateStore.setState({
-        openTabs: filtered,
-        activeTab: !!viewConfig?.permissions?.[activeTab] ? activeTab : 'graph',
-      });
-    }
-  }, [viewConfig]);
 
   useEffect(() => {
     stateStore.setState({
@@ -98,12 +76,10 @@ export const DecisionGraphEmpty: React.FC<DecisionGraphEmptyType> = ({
       components: Array.isArray(components) ? components : [],
       customNodes: Array.isArray(customNodes) ? customNodes : [],
       panels,
-      viewConfig,
-      viewConfigCta,
       hideLeftToolbar,
       decisionKeyOptions: Array.isArray(decisionKeyOptions) ? decisionKeyOptions : undefined,
     });
-  }, [id, disabled, components, customNodes, panels, viewConfig, viewConfigCta, hideLeftToolbar, decisionKeyOptions]);
+  }, [id, disabled, components, customNodes, panels, hideLeftToolbar, decisionKeyOptions]);
 
   useEffect(() => {
     stateStore.setState({ name: name ?? 'graph.json' });
@@ -119,9 +95,8 @@ export const DecisionGraphEmpty: React.FC<DecisionGraphEmptyType> = ({
       onPanelsChange,
       onCodeExtension,
       onFunctionReady,
-      onViewConfigCta,
     });
-  }, [onReactFlowInit, onPanelsChange, onCodeExtension, onFunctionReady, onViewConfigCta]);
+  }, [onReactFlowInit, onPanelsChange, onCodeExtension, onFunctionReady]);
 
   useEffect(() => {
     listenerStore.setState({ onChange: innerChange });

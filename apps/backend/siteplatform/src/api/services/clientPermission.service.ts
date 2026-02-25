@@ -1,4 +1,4 @@
-import { ClientPermission } from "../../generated/prisma";
+import { ClientPermission } from "@prisma/client";
 import { prisma } from "../../databases/client";
 
 // Service

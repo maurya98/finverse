@@ -188,6 +188,10 @@
   margin-top: 0.25rem;
 }
 
+.repo-meta.repo-id {
+  font-family: ui-monospace, monospace;
+}
+
 .dashboard-modal-backdrop {
   position: fixed;
   inset: 0;

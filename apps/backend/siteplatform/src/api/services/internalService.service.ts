@@ -1,4 +1,4 @@
-import { Service } from "../../generated/prisma";
+import { Service } from "@prisma/client";
 import { prisma } from "../../databases/client";
 
 // Service

@@ -24,7 +24,6 @@ export {
   useEdgeDiff,
   NodeTypeKind,
 } from './context/dg-store.context';
-export type { ViewConfig, ViewConfigPermission } from './context/dg-store.context';
 export { NodeColor } from './nodes/specifications/colors';
 
 export type {

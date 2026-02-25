@@ -38,7 +38,6 @@ export function EditorArea({
 }: EditorAreaProps) {
   const { appliedTheme } = useTheme();
   const [jsonViewMode, setJsonViewMode] = useState<JsonViewMode>("jdm");
-  const [businessMode, setBusinessMode] = useState(false);
   const monacoTheme = appliedTheme === "light" ? "vs" : "vs-dark";
   const handleEditorDidMount = useCallback(() => {}, []);
 
@@ -80,17 +79,6 @@ export function EditorArea({
                 Raw JSON
               </button>
             </div>
-            {jsonViewMode === "jdm" && (
-              <label className="editor-business-mode-toggle">
-                <input
-                  type="checkbox"
-                  checked={businessMode}
-                  onChange={(e) => setBusinessMode(e.target.checked)}
-                  aria-label="Business mode: show node list and restrict editing to rule values"
-                />
-                <span>Business mode</span>
-              </label>
-            )}
           </>
         )}
         {dirty && <span className="editor-dirty">Modified</span>}
@@ -114,7 +102,6 @@ export function EditorArea({
             repositoryId={repositoryId}
             branch={branch}
             getDecisionsForSimulation={getDecisionsForSimulation}
-            businessMode={businessMode}
           />
         ) : (
           <Editor

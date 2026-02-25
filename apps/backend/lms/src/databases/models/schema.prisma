@@ -1,0 +1,68 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model lead_master {
+  lead_id         String   @id @default(uuid())
+  product_id      Int
+  customer_id     String
+  name            String
+  email           String   @unique
+  mobile_no       String   @unique
+  pincode         Int
+  employment_type Int
+  income          Int
+  city            String
+  segment         String
+  visit_id        String   @default(uuid())
+  utm_source      String?
+  is_active       Boolean  @default(true)
+  optional_info   Json
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  lead_stage lead_stage[]
+  offers     offer[]
+
+  @@unique([product_id, customer_id])
+}
+
+model lead_stage {
+  id                Int         @id @default(autoincrement())
+  lead_id           String
+  lead              lead_master @relation(fields: [lead_id], references: [lead_id])
+  stage_name        String
+  stage_description String?
+  journey_details   Json
+  is_active         Boolean     @default(true)
+  created_at        DateTime    @default(now())
+  updated_at        DateTime    @updatedAt
+
+  @@index([lead_id, stage_name])
+}
+
+model offer {
+  id                     Int         @id @default(autoincrement())
+  product_id             Int
+  lead_id                String
+  lead                   lead_master @relation(fields: [lead_id], references: [lead_id])
+  partner_id             Int
+  rejection_reason       String?
+  is_application_created Boolean     @default(false)
+  is_active              Boolean     @default(true)
+  created_at             DateTime    @default(now())
+  updated_at             DateTime    @updatedAt
+
+  @@unique([product_id, lead_id])
+}

@@ -21,7 +21,7 @@
   "keywords": [],
   "author": "Saurabh Kumar Maurya",
   "license": "ISC",
-  "packageManager": "pnpm@10.29.3",
+  "packageManager": "pnpm@10.30.1",
   "pnpm": {
     "overrides": {
       "axios@<0.30.0": ">=0.30.0",

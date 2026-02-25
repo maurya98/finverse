@@ -34,11 +34,10 @@ export const DecisionGraphWrapper = React.memo(
     ref,
   ) {
     const [disableTabs, setDisableTabs] = useState(false);
-    const { hasActiveNode, viewConfig, hideLeftToolbar } = useDecisionGraphState(
-      ({ decisionGraph, activeTab, viewConfig, hideLeftToolbar }) => {
+    const { hasActiveNode, hideLeftToolbar } = useDecisionGraphState(
+      ({ decisionGraph, activeTab, hideLeftToolbar }) => {
         return {
           hasActiveNode: (decisionGraph?.nodes ?? []).some((node) => node.id === activeTab),
-          viewConfig,
           hideLeftToolbar,
         };
       },
@@ -52,11 +51,11 @@ export const DecisionGraphWrapper = React.memo(
 
           <Graph
             ref={ref}
-            className={clsx([!hasActiveNode && !viewConfig?.enabled && 'active'])}
+            className={clsx([!hasActiveNode && 'active'])}
             reactFlowProOptions={reactFlowProOptions}
             onDisableTabs={setDisableTabs}
           />
-          <GraphNodes className={clsx([!hasActiveNode && viewConfig?.enabled && 'active'])} />
+          <GraphNodes />
           <TabContents />
         </div>
         <GraphPanel />

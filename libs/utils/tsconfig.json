@@ -1,0 +1,15 @@
+{
+  "extends": "../../tooling/tsconfig/node.json",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist"
+  },
+  "include": [
+    "src/index.ts",
+    "src/request.validator.ts",
+    "src/response.handler.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

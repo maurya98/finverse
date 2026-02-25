@@ -46,12 +46,6 @@ type JdmEditorViewProps = {
    * Use this so simulation runs against current UI state (including uncommitted changes), not repo state.
    */
   getDecisionsForSimulation?: () => Promise<Record<string, unknown>>;
-  /**
-   * When true, enables "business mode": shows node list view instead of graph canvas,
-   * and gives assistance to create rules. Decision Table nodes use edit:rules (add/remove
-   * rule rows, edit cells, add/reorder input columns); other nodes use edit:values.
-   */
-  businessMode?: boolean;
 };
 
 export function JdmEditorView({
@@ -61,7 +55,6 @@ export function JdmEditorView({
   repositoryId,
   branch,
   getDecisionsForSimulation,
-  businessMode = false,
 }: JdmEditorViewProps) {
   const { appliedTheme } = useTheme();
   const graphRef = useRef<DecisionGraphRef>(null);
@@ -173,24 +166,6 @@ export function JdmEditorView({
     });
   }, []);
 
-  const viewConfig = useMemo(() => {
-    if (!businessMode) return undefined;
-    const graph = latestGraphRef.current ?? parseGraph(content);
-    const nodes = graph?.nodes ?? [];
-    const permissions: Record<string, "edit:values" | "edit:rules" | "edit:full"> = {};
-    for (const node of nodes) {
-      const type = node.type as string;
-      // Decision Table: edit:rules so users can add/remove rule rows and edit cells (assistance to create rules)
-      permissions[node.id] =
-        type === "decisionTableNode" ? ("edit:rules" as const) : ("edit:values" as const);
-    }
-    return {
-      enabled: true,
-      description: "Configure business rules for your decision model",
-      permissions,
-    };
-  }, [businessMode, content, externalKey]);
-
   return (
     <div className="jdm-editor-view">
       <JdmConfigProvider theme={{ mode: appliedTheme as "light" | "dark" }}>
@@ -203,7 +178,6 @@ export function JdmEditorView({
           simulate={simulate}
           onReactFlowInit={handleReactFlowInit}
           decisionKeyOptions={decisionKeyOptions}
-          viewConfig={viewConfig}
         />
       </JdmConfigProvider>
     </div>

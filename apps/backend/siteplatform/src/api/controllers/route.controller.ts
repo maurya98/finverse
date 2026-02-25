@@ -1,5 +1,5 @@
 import { logger } from "@finverse/logger";
-import { sendError, sendSuccess } from "@finverse/validator";
+import { sendError, sendSuccess } from "@finverse/utils";
 import { Request, Response, Router } from "express";
 import { RouteService } from "../services";
 
