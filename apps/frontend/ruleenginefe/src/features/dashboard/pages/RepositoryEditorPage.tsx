@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { useParams, useSearchParams, useNavigate } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { getUser } from "../../auth/services/auth";
 import {
   getRepository,
@@ -30,13 +30,14 @@ import { EditorArea } from "../components/EditorArea";
 import { BranchFooter } from "../components/BranchFooter";
 import { CommitMessageModal } from "../components/CommitMessageModal";
 import { NameInputModal } from "../components/NameInputModal";
-import { ThemePicker } from "../../../components/ThemePicker";
+import { AppButton } from "../../../components/ui/AppButton";
+import Box from "@mui/material/Box";
+import { useKeyboardShortcuts } from "../../../hooks/useKeyboardShortcuts";
 import "./RepositoryEditorPage.css";
 
 export function RepositoryEditorPage() {
   const { repositoryId } = useParams<{ repositoryId: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
   const user = getUser();
   const branchName = searchParams.get("branch") || "main";
 
@@ -293,6 +294,18 @@ export function RepositoryEditorPage() {
 
   const contextMenuStateRef: ContextMenuStateRef = useRef(null);
 
+  const openCommitModal = useCallback(() => {
+    setCommitError(null);
+    setCommitModalOpen(true);
+  }, []);
+
+  useKeyboardShortcuts([
+    { key: "s", ctrlKey: true, triggerInInput: true, handler: handleSave },
+    { key: "s", metaKey: true, triggerInInput: true, handler: handleSave },
+    { key: "c", ctrlKey: true, shiftKey: true, triggerInInput: true, handler: openCommitModal },
+    { key: "c", metaKey: true, shiftKey: true, triggerInInput: true, handler: openCommitModal },
+  ]);
+
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
@@ -451,35 +464,14 @@ export function RepositoryEditorPage() {
 
   if (!repo) {
     return (
-      <div className="repo-editor-page">
-        <div className="repo-editor-loading">Loading repository…</div>
-      </div>
+      <Box className="repo-editor-page" sx={{ height: "100%", display: "flex", alignItems: "center", p: 2 }}>
+        Loading repository…
+      </Box>
     );
   }
 
   return (
-    <div className="repo-editor-page">
-      <header className="repo-editor-header">
-        <button
-          type="button"
-          className="repo-editor-back"
-          onClick={() => navigate("/dashboard")}
-        >
-          ← Dashboard
-        </button>
-        <button
-          type="button"
-          className="repo-editor-sidebar-toggle"
-          onClick={toggleSidebar}
-          title={sidebarOpen ? "Hide file explorer" : "Show file explorer"}
-          aria-label={sidebarOpen ? "Hide file explorer" : "Show file explorer"}
-        >
-          {sidebarOpen ? "◀" : "▶"}
-        </button>
-        <h1 className="repo-editor-title">{repo.name} <span className="repo-editor-repo-id">({repo.id})</span></h1>
-        <ThemePicker />
-      </header>
-
+    <Box className="repo-editor-page" sx={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
       <div className={`repo-editor-body ${sidebarOpen ? "" : "repo-editor-sidebar-hidden"}`}>
         <div className="repo-editor-sidebar-wrap">
           <FileTreeSidebar
@@ -494,6 +486,7 @@ export function RepositoryEditorPage() {
             onMoveNode={handleMoveNode}
             onNewFile={(parentFolder) => setCreateModal({ type: "file", parentFolder })}
             onNewFolder={(parentFolder) => setCreateModal({ type: "folder", parentFolder })}
+            onCollapseClick={toggleSidebar}
             repoName={repo.name}
           />
         </div>
@@ -505,7 +498,8 @@ export function RepositoryEditorPage() {
             title="Show file explorer"
             aria-label="Show file explorer"
           >
-            ▶
+            <span className="repo-editor-sidebar-show-icon" aria-hidden>▶</span>
+            <span className="repo-editor-sidebar-show-label">Explorer</span>
           </button>
         )}
         <EditorArea
@@ -528,40 +522,18 @@ export function RepositoryEditorPage() {
 
       <footer className="repo-editor-footer">
         <div className="repo-editor-footer-actions">
-          <button type="button" className="footer-btn" onClick={() => setCreateModal({ type: "file", parentFolder: null })}>
-            New file
-          </button>
-          <button type="button" className="footer-btn" onClick={() => setCreateModal({ type: "folder", parentFolder: null })}>
-            New folder
-          </button>
-          <button
-            type="button"
-            className="footer-btn footer-btn-commit"
+          <AppButton
+            variant="primary"
+            size="small"
             onClick={() => {
               setCommitError(null);
               setCommitModalOpen(true);
             }}
             disabled={!hasPending}
-            title={!hasPending ? "No changes to commit" : "Commit all changes"}
+            title={!hasPending ? "No changes to commit" : "Commit all changes (Ctrl+Shift+C / ⌘+Shift+C)"}
           >
             Commit
-          </button>
-          <button
-            type="button"
-            className="footer-btn"
-            onClick={() => navigate(`/dashboard/repo/${repo.id}/branches?branch=${encodeURIComponent(branchName)}`)}
-          >
-            Branches
-          </button>
-          {(repo.currentUserRole === "ADMIN" || repo.currentUserRole === "MAINTAINER") && (
-            <button
-              type="button"
-              className="footer-btn"
-              onClick={() => navigate(`/dashboard/repo/${repo.id}/settings`)}
-            >
-              Settings
-            </button>
-          )}
+          </AppButton>
         </div>
         <BranchFooter
           repositoryId={repo.id}
@@ -617,16 +589,11 @@ export function RepositoryEditorPage() {
       {storageQuotaExceeded && (
         <div className="repo-editor-error repo-editor-error-warning" role="alert">
           Storage limit reached. Your changes are kept in memory only—commit soon or they will be lost on refresh.
-          <button
-            type="button"
-            className="repo-editor-error-dismiss"
-            onClick={clearStorageQuotaError}
-            aria-label="Dismiss"
-          >
+          <AppButton variant="ghost" size="small" sx={{ color: "white", minWidth: 0, px: 1 }} onClick={clearStorageQuotaError} aria-label="Dismiss">
             ×
-          </button>
+          </AppButton>
         </div>
       )}
-    </div>
+    </Box>
   );
 }

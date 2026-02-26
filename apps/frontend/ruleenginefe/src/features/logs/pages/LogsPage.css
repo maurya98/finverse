@@ -10,8 +10,9 @@
   --logs-4xx: #fbbf24;
   --logs-5xx: #f87171;
 
+  flex: 1;
+  min-height: 0;
   width: 100%;
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
   background: var(--logs-bg);

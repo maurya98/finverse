@@ -164,6 +164,138 @@
   color: #0f172a;
 }
 
+[data-theme="light"] .branch-mgmt-page .MuiButton-containedPrimary {
+  background-color: #0d9488;
+  color: #fff;
+}
+
+[data-theme="light"] .branch-mgmt-page .MuiButton-containedPrimary:hover {
+  background-color: #0f766e;
+}
+
+[data-theme="light"] .branch-mgmt-page .MuiButton-outlined {
+  border-color: rgba(0, 0, 0, 0.23);
+  color: #334155;
+}
+
+[data-theme="light"] .branch-mgmt-page .MuiButton-outlined:hover {
+  border-color: #0d9488;
+  color: #0d9488;
+  background-color: rgba(13, 148, 136, 0.04);
+}
+
+[data-theme="light"] .branch-mgmt-page .MuiButton-text {
+  color: #334155;
+}
+
+[data-theme="light"] .branch-mgmt-page .MuiButton-text:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+  color: #0f172a;
+}
+
+[data-theme="light"] .branch-mgmt-diff-dialog .MuiDialog-paper {
+  background: #fff;
+  color: #0f172a;
+}
+
+[data-theme="light"] .branch-mgmt-diff-dialog .MuiDialogActions-root .MuiButton-outlined {
+  border-color: rgba(0, 0, 0, 0.23);
+  color: #334155;
+}
+
+[data-theme="light"] .branch-mgmt-diff-dialog .MuiDialogActions-root .MuiButton-contained {
+  background-color: #0d9488;
+  color: #fff;
+}
+
+/* Repository settings page */
+[data-theme="light"] .repo-settings-page {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+[data-theme="light"] .repo-settings-page .MuiPaper-root {
+  background: #fff;
+  border-color: rgba(0, 0, 0, 0.12);
+  color: #0f172a;
+}
+
+[data-theme="light"] .repo-settings-page .MuiButton-containedPrimary {
+  background-color: #0d9488;
+  color: #fff;
+}
+
+[data-theme="light"] .repo-settings-page .MuiButton-containedPrimary:hover {
+  background-color: #0f766e;
+}
+
+[data-theme="light"] .repo-settings-page .MuiButton-outlined {
+  border-color: rgba(0, 0, 0, 0.23);
+  color: #334155;
+}
+
+[data-theme="light"] .repo-settings-page .MuiButton-outlined:hover {
+  border-color: #0d9488;
+  color: #0d9488;
+  background-color: rgba(13, 148, 136, 0.04);
+}
+
+[data-theme="light"] .repo-settings-page .MuiButton-containedError {
+  background-color: #dc2626;
+  color: #fff;
+}
+
+[data-theme="light"] .repo-settings-page .MuiButton-containedError:hover {
+  background-color: #b91c1c;
+}
+
+[data-theme="light"] .repo-settings-page .MuiListItem-root {
+  background: #fff;
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .repo-settings-page .MuiList-root {
+  border-color: rgba(0, 0, 0, 0.12);
+  background: #fff;
+}
+
+[data-theme="light"] .repo-settings-page .MuiFormControl-root .MuiOutlinedInput-root,
+[data-theme="light"] .repo-settings-page .MuiSelect-select {
+  background: #fff;
+  border-color: rgba(0, 0, 0, 0.23);
+  color: #0f172a;
+}
+
+[data-theme="light"] .repo-settings-page .MuiFormControl-root .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline,
+[data-theme="light"] .repo-settings-page .MuiFormControl-root .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: #0d9488;
+}
+
+[data-theme="light"] .repo-settings-modal .MuiDialog-paper {
+  background: #fff;
+  color: #0f172a;
+}
+
+[data-theme="light"] .repo-settings-modal .MuiDialogContent-root {
+  color: #0f172a;
+}
+
+[data-theme="light"] .repo-settings-modal .MuiDialogActions-root .MuiButton-outlined {
+  border-color: rgba(0, 0, 0, 0.23);
+  color: #334155;
+}
+
+[data-theme="light"] .repo-settings-modal .MuiDialogActions-root .MuiButton-contained {
+  background-color: #0d9488;
+  color: #fff;
+}
+
+[data-theme="light"] .repo-settings-modal .MuiFormControl-root .MuiOutlinedInput-root {
+  background: #f8fafc;
+  border-color: rgba(0, 0, 0, 0.23);
+  color: #0f172a;
+}
+
 /* Logs page */
 [data-theme="light"] .logs-page {
   --logs-bg: #f1f5f9;
@@ -354,6 +486,83 @@
 }
 
 [data-theme="light"] .file-diff-line-context .file-diff-line-content {
+  color: #64748b;
+}
+
+/* Side-by-side diff viewer (branch page compare) */
+[data-theme="light"] .side-by-side-diff {
+  border-color: rgba(0, 0, 0, 0.12);
+  background: #f8fafc;
+}
+
+[data-theme="light"] .side-by-side-diff-header {
+  color: #64748b;
+  background: #e2e8f0;
+  border-bottom-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .side-by-side-diff-panel {
+  border-right-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .side-by-side-diff-panel-title {
+  color: #64748b;
+  background: #e2e8f0;
+  border-bottom-color: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="light"] .side-by-side-diff-old .side-by-side-diff-panel-title {
+  color: #dc2626;
+}
+
+[data-theme="light"] .side-by-side-diff-new .side-by-side-diff-panel-title {
+  color: #16a34a;
+}
+
+[data-theme="light"] .side-by-side-diff-content,
+[data-theme="light"] .side-by-side-diff-content code {
+  color: #0f172a;
+}
+
+[data-theme="light"] .side-by-side-diff-line:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] .side-by-side-diff-num {
+  color: #64748b;
+  border-right-color: rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .side-by-side-diff-text {
+  color: #334155;
+}
+
+[data-theme="light"] .side-by-side-diff-empty {
+  color: #64748b;
+}
+
+/* Branch page — MR diff dialog list (light) */
+[data-theme="light"] .branch-mgmt-diff-dialog .branch-mgmt-diff-section strong {
+  color: inherit;
+}
+
+[data-theme="light"] .branch-mgmt-diff-added {
+  color: #16a34a;
+}
+
+[data-theme="light"] .branch-mgmt-diff-removed {
+  color: #dc2626;
+}
+
+[data-theme="light"] .branch-mgmt-diff-modified {
+  color: #ca8a04;
+}
+
+[data-theme="light"] .branch-mgmt-diff-section ul {
+  color: #64748b;
+}
+
+[data-theme="light"] .branch-mgmt-diff-empty {
   color: #64748b;
 }
 

@@ -5,6 +5,8 @@ import apiRouter from "./api/routes/api";
 
 const app = express();
 
+process.env.DB_URL = process.env.DATABASE_URL;
+
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
 app.use(...securityMiddleware);

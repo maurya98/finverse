@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import {
   getRepository,
   listRepositoryMembers,
@@ -14,12 +14,24 @@ import {
   type User,
 } from "../services/api";
 import { getUser } from "../../auth/services/auth";
-import { ThemePicker } from "../../../components/ThemePicker";
+import { getTokenRole } from "../../auth/services/auth";
+import { AppButton } from "../../../components/ui/AppButton";
+import { AppModal } from "../../../components/ui/AppModal";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import Paper from "@mui/material/Paper";
+import FormControl from "@mui/material/FormControl";
+import InputLabel from "@mui/material/InputLabel";
+import Select from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
+import ListItemText from "@mui/material/ListItemText";
+import Alert from "@mui/material/Alert";
 import "./RepositorySettingsPage.css";
 
 export function RepositorySettingsPage() {
   const { repositoryId } = useParams<{ repositoryId: string }>();
-  const navigate = useNavigate();
   const user = getUser();
   const [repo, setRepo] = useState<{ id: string; name: string } | null>(null);
   const [myRole, setMyRole] = useState<RepositoryMemberRole | null>(null);
@@ -34,6 +46,7 @@ export function RepositorySettingsPage() {
   const [removingUserId, setRemovingUserId] = useState<string | null>(null);
 
   const canManage = myRole === "ADMIN" || myRole === "MAINTAINER";
+  const tokenRole = getTokenRole();
 
   const loadRepoAndRole = useCallback(async () => {
     if (!repositoryId) return;
@@ -128,155 +141,155 @@ export function RepositorySettingsPage() {
 
   if (!repo) {
     return (
-      <div className="repo-settings-page">
-        <div className="repo-settings-loading">{error || "Loading…"}</div>
-      </div>
+      <Box sx={{ display: "flex", alignItems: "center", minHeight: 200, p: 2 }}>
+        <Typography color="text.secondary">{error || "Loading…"}</Typography>
+      </Box>
     );
   }
 
   if (!myRole || myRole === null) {
     return (
-      <div className="repo-settings-page">
-        <header className="repo-settings-header">
-          <button type="button" className="repo-settings-back" onClick={() => navigate(`/dashboard/repo/${repositoryId}`)}>
-            ← Editor
-          </button>
-          <h1 className="repo-settings-title">{repo.name} — Settings</h1>
-          <ThemePicker />
-        </header>
-        <div className="repo-settings-forbidden">You are not a member of this repository or you do not have access.</div>
-      </div>
+      <Box sx={{ p: 2 }}>
+        <Alert severity="warning">
+          You are not a member of this repository or you do not have access.
+        </Alert>
+      </Box>
     );
   }
 
   return (
-    <div className="repo-settings-page">
-      <header className="repo-settings-header">
-        <button type="button" className="repo-settings-back" onClick={() => navigate(`/dashboard/repo/${repositoryId}`)}>
-          ← Editor
-        </button>
-        <h1 className="repo-settings-title">
-          {repo.name} <span className="repo-settings-repo-id">({repo.id})</span> — Settings
-        </h1>
-        <ThemePicker />
-      </header>
-
-      <main className="repo-settings-main">
-        <nav className="repo-settings-breadcrumb">
-          <button type="button" className="repo-settings-breadcrumb-link" onClick={() => navigate("/dashboard")}>
-            Dashboard
-          </button>
-          <span className="repo-settings-breadcrumb-sep">/</span>
-          <button type="button" className="repo-settings-breadcrumb-link" onClick={() => navigate(`/dashboard/repo/${repositoryId}`)}>
-            {repo.name}
-          </button>
-          <span className="repo-settings-breadcrumb-sep">/</span>
-          <span className="repo-settings-breadcrumb-current">Members</span>
-        </nav>
-
-        <section className="repo-settings-section">
-          <h2 className="repo-settings-section-title">Repository members</h2>
-          {!canManage && (
-            <p className="repo-settings-muted">Only admins and maintainers can manage members. Your role: {myRole}.</p>
-          )}
-          {canManage && (
-            <button type="button" className="repo-settings-btn primary" onClick={() => setAddModal(true)}>
-              Add member
-            </button>
-          )}
-          {error && <div className="repo-settings-error">{error}</div>}
-          <div className="repo-settings-members">
-            {members.length === 0 ? (
-              <p className="repo-settings-empty">No members yet.</p>
-            ) : (
-              <ul className="repo-settings-member-list">
-                {members.map((m) => (
-                  <li key={m.id} className="repo-settings-member-item">
-                    <span className="repo-settings-member-email">{m.userEmail ?? m.userId}</span>
-                    {m.userName && <span className="repo-settings-member-name">{m.userName}</span>}
-                    {canManage ? (
-                      <select
-                        className="repo-settings-member-role-select"
-                        value={m.role}
-                        onChange={(e) => handleUpdateRole(m, e.target.value as RepositoryMemberRole)}
-                        disabled={updatingUserId !== null || isLastAdmin(m)}
-                        title={isLastAdmin(m) ? "Cannot demote the last admin" : ""}
-                      >
-                        <option value="VIEWER">VIEWER</option>
-                        <option value="CONTRIBUTOR">CONTRIBUTOR</option>
-                        <option value="MAINTAINER">MAINTAINER</option>
-                        <option value="ADMIN">ADMIN</option>
-                      </select>
-                    ) : (
-                      <span className="repo-settings-member-role-badge">{m.role}</span>
-                    )}
-                    {canManage && m.userId !== user?.id && !isLastAdmin(m) && (
-                      <button
-                        type="button"
-                        className="repo-settings-btn danger small"
-                        disabled={removingUserId !== null}
-                        onClick={() => handleRemoveMember(m)}
-                      >
-                        {removingUserId === m.userId ? "Removing…" : "Remove"}
-                      </button>
-                    )}
-                    {m.userId === user?.id && <span className="repo-settings-member-you">(you)</span>}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </section>
-      </main>
+      <Box className="repo-settings-page" sx={{ flex: 1, minHeight: 0, overflow: "auto" }}>
+      <Box sx={{ width: "100%", boxSizing: "border-box", p: 2 }}>
+      <Paper variant="outlined" sx={{ p: 2 }}>
+        <Typography variant="h6" sx={{ fontWeight: 600, mb: 1 }}>
+          Repository members
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          Account role: <strong>{tokenRole ?? "—"}</strong>. Your role in this repository: <strong>{myRole}</strong>.
+          Only repository <strong>ADMIN</strong> and <strong>MAINTAINER</strong> can add or manage members.
+        </Typography>
+        {!canManage && (
+          <Alert severity="info" sx={{ mb: 2 }}>
+            You cannot add or manage members because your repository role is {myRole}. Only ADMIN and MAINTAINER can.
+          </Alert>
+        )}
+        {canManage && (
+          <AppButton variant="primary" size="small" onClick={() => setAddModal(true)} sx={{ mb: 2 }}>
+            Add member
+          </AppButton>
+        )}
+        {error && (
+          <Alert severity="error" onClose={() => setError(null)} sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
+        {members.length === 0 ? (
+          <Typography color="text.secondary" variant="body2">
+            No members yet.
+          </Typography>
+        ) : (
+          <List disablePadding sx={{ border: 1, borderColor: "divider", borderRadius: 1 }}>
+            {members.map((m) => (
+              <ListItem
+                key={m.id}
+                divider
+                sx={{ flexWrap: "wrap", gap: 1, alignItems: "center" }}
+              >
+                <ListItemText
+                  primary={m.userEmail ?? m.userId}
+                  secondary={m.userName}
+                  primaryTypographyProps={{ fontWeight: 500 }}
+                  secondaryTypographyProps={{ variant: "caption" }}
+                />
+                {canManage ? (
+                  <FormControl size="small" sx={{ minWidth: 120 }}>
+                    <Select
+                      value={m.role}
+                      onChange={(e) => handleUpdateRole(m, e.target.value as RepositoryMemberRole)}
+                      disabled={updatingUserId !== null || isLastAdmin(m)}
+                      title={isLastAdmin(m) ? "Cannot demote the last admin" : ""}
+                      displayEmpty
+                    >
+                      <MenuItem value="VIEWER">VIEWER</MenuItem>
+                      <MenuItem value="CONTRIBUTOR">CONTRIBUTOR</MenuItem>
+                      <MenuItem value="MAINTAINER">MAINTAINER</MenuItem>
+                      <MenuItem value="ADMIN">ADMIN</MenuItem>
+                    </Select>
+                  </FormControl>
+                ) : (
+                  <Typography variant="caption" sx={{ px: 1, py: 0.5, bgcolor: "action.hover", borderRadius: 1 }}>
+                    {m.role}
+                  </Typography>
+                )}
+                {canManage && m.userId !== user?.id && !isLastAdmin(m) && (
+                  <AppButton
+                    variant="danger"
+                    size="small"
+                    disabled={removingUserId !== null}
+                    onClick={() => handleRemoveMember(m)}
+                  >
+                    {removingUserId === m.userId ? "Removing…" : "Remove"}
+                  </AppButton>
+                )}
+                {m.userId === user?.id && (
+                  <Typography variant="caption" color="primary.main">
+                    (you)
+                  </Typography>
+                )}
+              </ListItem>
+            ))}
+          </List>
+        )}
+      </Paper>
 
       {addModal && (
-        <div className="repo-settings-modal-backdrop" onClick={() => setAddModal(false)} role="presentation">
-          <div className="repo-settings-modal" onClick={(e) => e.stopPropagation()}>
-            <h3 className="repo-settings-modal-title">Add member</h3>
-            <label className="repo-settings-modal-label">User</label>
-            <select
-              className="repo-settings-modal-select"
-              value={selectedUserId}
-              onChange={(e) => setSelectedUserId(e.target.value)}
-              disabled={adding}
-            >
-              <option value="">Select a user</option>
-              {users
-                .filter((u) => !members.some((m) => m.userId === u.id))
-                .map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.email} {u.name ? `(${u.name})` : ""}
-                  </option>
-                ))}
-            </select>
-            <label className="repo-settings-modal-label">Role</label>
-            <select
-              className="repo-settings-modal-select"
-              value={selectedRole}
-              onChange={(e) => setSelectedRole(e.target.value as RepositoryMemberRole)}
-              disabled={adding}
-            >
-              <option value="VIEWER">VIEWER</option>
-              <option value="CONTRIBUTOR">CONTRIBUTOR</option>
-              <option value="MAINTAINER">MAINTAINER</option>
-              <option value="ADMIN">ADMIN</option>
-            </select>
-            <div className="repo-settings-modal-actions">
-              <button type="button" className="repo-settings-modal-btn secondary" onClick={() => setAddModal(false)} disabled={adding}>
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="repo-settings-modal-btn primary"
-                disabled={adding || !selectedUserId}
-                onClick={handleAddMember}
+        <AppModal
+          className="repo-settings-modal"
+          open={addModal}
+          onClose={() => setAddModal(false)}
+          title="Add member"
+          submitLabel={adding ? "Adding…" : "Add"}
+          onSubmit={handleAddMember}
+          submitDisabled={adding || !selectedUserId}
+        >
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 0.5 }}>
+            <FormControl fullWidth size="small">
+              <InputLabel>User</InputLabel>
+              <Select
+                value={selectedUserId}
+                label="User"
+                onChange={(e) => setSelectedUserId(e.target.value)}
+                disabled={adding}
+                displayEmpty
               >
-                {adding ? "Adding…" : "Add"}
-              </button>
-            </div>
-          </div>
-        </div>
+                <MenuItem value="">Select a user</MenuItem>
+                {users
+                  .filter((u) => !members.some((m) => m.userId === u.id))
+                  .map((u) => (
+                    <MenuItem key={u.id} value={u.id}>
+                      {u.email} {u.name ? `(${u.name})` : ""}
+                    </MenuItem>
+                  ))}
+              </Select>
+            </FormControl>
+            <FormControl fullWidth size="small">
+              <InputLabel>Role</InputLabel>
+              <Select
+                value={selectedRole}
+                label="Role"
+                onChange={(e) => setSelectedRole(e.target.value as RepositoryMemberRole)}
+                disabled={adding}
+              >
+                <MenuItem value="VIEWER">VIEWER</MenuItem>
+                <MenuItem value="CONTRIBUTOR">CONTRIBUTOR</MenuItem>
+                <MenuItem value="MAINTAINER">MAINTAINER</MenuItem>
+                <MenuItem value="ADMIN">ADMIN</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+        </AppModal>
       )}
-    </div>
+    </Box>
+    </Box>
   );
 }

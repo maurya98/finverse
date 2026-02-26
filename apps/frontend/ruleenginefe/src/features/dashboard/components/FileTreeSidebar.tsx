@@ -43,6 +43,8 @@ type FileTreeSidebarProps = {
   onMoveNode?: (draggedNode: FileTreeNode, targetFolder: FileTreeNode) => void;
   onNewFile?: (parentFolder: FileTreeNode | null) => void;
   onNewFolder?: (parentFolder: FileTreeNode | null) => void;
+  /** When provided, shows a collapse button in the header to hide the sidebar. */
+  onCollapseClick?: () => void;
   repoName: string;
 };
 
@@ -192,6 +194,7 @@ export function FileTreeSidebar({
   onMoveNode,
   onNewFile,
   onNewFolder,
+  onCollapseClick,
   repoName,
 }: FileTreeSidebarProps) {
   const [contextMenu, setContextMenu] = useState<ContextMenuState>(null);
@@ -239,8 +242,21 @@ export function FileTreeSidebar({
   return (
     <aside className="file-tree-sidebar" onContextMenu={handleContextMenuOnSidebar}>
       <div className="file-tree-header" onContextMenu={handleContextMenuOnSidebar}>
-        <span className="file-tree-title">Explorer</span>
-        <span className="file-tree-repo">{repoName}</span>
+        <div className="file-tree-header-main">
+          <span className="file-tree-title">Explorer</span>
+          <span className="file-tree-repo">{repoName}</span>
+        </div>
+        {onCollapseClick && (
+          <button
+            type="button"
+            className="file-tree-collapse-btn"
+            onClick={onCollapseClick}
+            title="Hide file explorer"
+            aria-label="Hide file explorer"
+          >
+            <span className="file-tree-collapse-icon" aria-hidden>◀</span>
+          </button>
+        )}
       </div>
       <div className="file-tree-content">
         {loading ? (

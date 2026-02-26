@@ -1,8 +1,4 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useNavigate } from "react-router-dom";
-import { getUser } from "../../auth/services/auth";
-import { logout } from "../../auth/services/authApi";
-import { ThemePicker } from "../../../components/ThemePicker";
 import {
   searchLogs,
   getLiveLogsUrl,
@@ -10,6 +6,7 @@ import {
   type LogSearchFilters,
   type LogsApiError,
 } from "../services/logsApi";
+import Skeleton from "@mui/material/Skeleton";
 import "./LogsPage.css";
 
 type ViewMode = "live" | "search";
@@ -36,8 +33,6 @@ function LogRow({ log: row, onSelect }: { log: RequestLogEntry; onSelect: () => 
 }
 
 export function LogsPage() {
-  const navigate = useNavigate();
-  const user = getUser();
   const [viewMode, setViewMode] = useState<ViewMode>("search");
   const [liveLogs, setLiveLogs] = useState<RequestLogEntry[]>([]);
   const [liveConnected, setLiveConnected] = useState(false);
@@ -53,11 +48,6 @@ export function LogsPage() {
   const [selectedLog, setSelectedLog] = useState<RequestLogEntry | null>(null);
   const liveRef = useRef<EventSource | null>(null);
   const liveContainerRef = useRef<HTMLDivElement | null>(null);
-
-  const handleLogout = () => {
-    logout();
-    navigate("/login", { replace: true });
-  };
 
   const fetchSearch = useCallback(async () => {
     setSearchLoading(true);
@@ -122,22 +112,6 @@ export function LogsPage() {
 
   return (
     <div className="logs-page">
-      <header className="logs-header">
-        <div className="logs-header-left">
-          <button type="button" className="logs-back" onClick={() => navigate("/dashboard")}>
-            ← Dashboard
-          </button>
-          <h1>Request logs</h1>
-        </div>
-        <div className="logs-header-right">
-          <ThemePicker />
-          {user && <span className="logs-user">{user.email}</span>}
-          <button type="button" onClick={handleLogout}>
-            Log out
-          </button>
-        </div>
-      </header>
-
       <div className="logs-tabs">
         <button
           type="button"
@@ -275,14 +249,25 @@ export function LogsPage() {
             </tr>
           </thead>
           <tbody>
-            {logs.length === 0 && !searchLoading && (
+            {viewMode === "search" && searchLoading && (
+              <>
+                {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                  <tr key={i}>
+                    <td colSpan={6} style={{ padding: 8 }}>
+                      <Skeleton variant="text" width="100%" height={24} />
+                    </td>
+                  </tr>
+                ))}
+              </>
+            )}
+            {!searchLoading && logs.length === 0 && (
               <tr>
                 <td colSpan={6} className="logs-empty">
                   {viewMode === "live" ? "Waiting for new logs…" : "No logs match the filters."}
                 </td>
               </tr>
             )}
-            {logs.map((log) => (
+            {!searchLoading && logs.map((log) => (
               <LogRow key={`${log.id}-${log.timestamp}`} log={log} onSelect={() => setSelectedLog(log)} />
             ))}
           </tbody>

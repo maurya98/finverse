@@ -1,0 +1,19 @@
+/* Design tokens — MUI theme covers most; these are for non-MUI overrides and theme.css */
+:root,
+[data-theme="dark"] {
+  --color-accent: #0d9488;
+  --color-danger: #f87171;
+  --color-success: #22c55e;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+}
+
+[data-theme="light"] {
+  --color-danger: #dc2626;
+  --color-success: #16a34a;
+}

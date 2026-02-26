@@ -5,17 +5,20 @@ import { requireAuth } from "../middlewares/auth.middleware";
 import { requireRepoAccess } from "../middlewares/repo-access.middleware";
 import { RepositoryService } from "../../modules/repositories/repository.service";
 import { WorkspaceService } from "../../modules/workspaces/workspace.service";
+import { RepositoryMembersService } from "../../modules/repository-members/repository-members.service";
 import { createRepositorySchema, listRepositoriesQuerySchema } from "../validations/repository.validator";
 
 export class RepositoriesController {
   public router: Router;
   private repositoryService: RepositoryService;
   private workspaceService: WorkspaceService;
+  private membersService: RepositoryMembersService;
 
   constructor() {
     this.router = Router();
     this.repositoryService = new RepositoryService();
     this.workspaceService = new WorkspaceService();
+    this.membersService = new RepositoryMembersService();
     this.initRoutes();
   }
 
@@ -77,7 +80,15 @@ export class RepositoriesController {
         return sendError(res, "You do not have access to this workspace", 403);
       }
       const list = await this.repositoryService.listByWorkspace(workspaceId, skip ?? 0, take ?? 50);
-      return sendSuccess(res, list);
+      const repoIds = list.map((r) => r.id);
+      const rolesByRepo = await this.membersService.getRolesForUserInRepositories(req.user!.id, repoIds);
+      const data = list.map((repo) => {
+        const out = { ...repo } as Record<string, unknown>;
+        const role = rolesByRepo[repo.id];
+        if (role) out.currentUserRole = role;
+        return out;
+      });
+      return sendSuccess(res, data);
     } catch {
       return sendError(res, "Failed to list repositories", 500);
     }

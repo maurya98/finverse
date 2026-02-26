@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useParams, useSearchParams, useNavigate } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import {
   getRepository,
   listBranches,
@@ -20,13 +20,37 @@ import {
 import { getUser } from "../../auth/services/auth";
 import { TrashIcon } from "../components/icons/TrashIcon";
 import { FileDiffViewer } from "../components/FileDiffViewer";
-import { ThemePicker } from "../../../components/ThemePicker";
+import { SideBySideDiffViewer } from "../components/SideBySideDiffViewer";
+import { useRepoRole } from "../contexts/RepoRoleContext";
+import { AppButton } from "../../../components/ui/AppButton";
+import { AppModal } from "../../../components/ui/AppModal";
+import Box from "@mui/material/Box";
+import Typography from "@mui/material/Typography";
+import Paper from "@mui/material/Paper";
+import FormControl from "@mui/material/FormControl";
+import InputLabel from "@mui/material/InputLabel";
+import Select from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
+import TextField from "@mui/material/TextField";
+import List from "@mui/material/List";
+import ListItem from "@mui/material/ListItem";
+import ListItemButton from "@mui/material/ListItemButton";
+import ListItemText from "@mui/material/ListItemText";
+import Skeleton from "@mui/material/Skeleton";
+import Dialog from "@mui/material/Dialog";
+import DialogTitle from "@mui/material/DialogTitle";
+import DialogContent from "@mui/material/DialogContent";
+import DialogActions from "@mui/material/DialogActions";
+import Alert from "@mui/material/Alert";
+import Accordion from "@mui/material/Accordion";
+import AccordionSummary from "@mui/material/AccordionSummary";
+import AccordionDetails from "@mui/material/AccordionDetails";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import "./BranchManagementPage.css";
 
 export function BranchManagementPage() {
   const { repositoryId } = useParams<{ repositoryId: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
-  const navigate = useNavigate();
   const user = getUser();
   const branchParam = searchParams.get("branch") || "main";
 
@@ -43,6 +67,7 @@ export function BranchManagementPage() {
   const [deleteConfirm, setDeleteConfirm] = useState<Branch | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [commitDiff, setCommitDiff] = useState<{ commit: Commit; diff: DiffResult } | null>(null);
+  const [selectedDiffFilePath, setSelectedDiffFilePath] = useState<string | null>(null);
   const [loadingDiff, setLoadingDiff] = useState(false);
   const [mergeRequests, setMergeRequests] = useState<MergeRequest[]>([]);
   const [loadingMRs, setLoadingMRs] = useState(false);
@@ -57,7 +82,8 @@ export function BranchManagementPage() {
   const [loadingMRDiff, setLoadingMRDiff] = useState(false);
 
   const currentBranch = branches.find((b) => b.name === branchParam) ?? null;
-  const canMergeMR = repo?.currentUserRole === "ADMIN" || repo?.currentUserRole === "MAINTAINER";
+  const { currentUserRole } = useRepoRole();
+  const canMergeMR = currentUserRole === "ADMIN" || currentUserRole === "MAINTAINER";
 
   useEffect(() => {
     if (!repositoryId) return;
@@ -139,11 +165,6 @@ export function BranchManagementPage() {
       if (!mrTargetBranchId) setMrTargetBranchId(defaultTarget?.id ?? branches[0].id);
     }
   }, [createMRModal, branches, branchParam, repo?.defaultBranch, mrSourceBranchId, mrTargetBranchId]);
-
-  function handleBranchSelect(e: React.ChangeEvent<HTMLSelectElement>) {
-    const name = e.target.value;
-    setSearchParams({ branch: name });
-  }
 
   async function handleCreateBranch(name: string) {
     const trimmed = name?.trim();
@@ -254,6 +275,7 @@ export function BranchManagementPage() {
   async function handleCommitIdClick(c: Commit) {
     setLoadingDiff(true);
     setCommitDiff(null);
+    setSelectedDiffFilePath(null);
     const res = await getCommitDiff(c.id, { includeContent: true });
     setLoadingDiff(false);
     if (isApiError(res) || !res.data) {
@@ -261,314 +283,508 @@ export function BranchManagementPage() {
       return;
     }
     setError(null);
-    setCommitDiff({ commit: c, diff: res.data });
+    const diff = res.data;
+    setCommitDiff({ commit: c, diff });
+
+    const firstPath =
+      diff.added[0]?.path ?? diff.removed[0]?.path ?? diff.modified[0]?.path ?? null;
+    setSelectedDiffFilePath(firstPath);
   }
 
   if (!repo) {
     return (
-      <div className="branch-mgmt-page">
-        <div className="branch-mgmt-loading">Loading repository…</div>
-      </div>
+      <Box sx={{ display: "flex", alignItems: "center", minHeight: 200, p: 2 }}>
+        <Typography color="text.secondary">Loading repository…</Typography>
+      </Box>
     );
   }
 
   return (
-    <div className="branch-mgmt-page">
-      <header className="branch-mgmt-header">
-        <button
-          type="button"
-          className="branch-mgmt-back"
-          onClick={() => navigate(`/dashboard/repo/${repositoryId}?branch=${encodeURIComponent(branchParam)}`)}
-        >
-          ← Editor
-        </button>
-        {canMergeMR && (
-          <button
-            type="button"
-            className="branch-mgmt-back"
-            onClick={() => navigate(`/dashboard/repo/${repositoryId}/settings`)}
-          >
-            Settings
-          </button>
-        )}
-        <h1 className="branch-mgmt-title">{repo.name} <span className="branch-mgmt-repo-id">({repo.id})</span> — Branches</h1>
-        <ThemePicker />
-      </header>
-
-      <div className="branch-mgmt-toolbar">
-        <label className="branch-mgmt-label">
-          Branch
-          <select
-            className="branch-mgmt-select"
+    <Box className="branch-mgmt-page" sx={{ flex: 1, minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column", width: "100%", overflowX: "hidden" }}>
+      <Box sx={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, overflow: "hidden", p: 2, width: "100%", boxSizing: "border-box", overflowX: "hidden" }}>
+      <Paper variant="outlined" sx={{ flexShrink: 0, p: 2, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 2 }}>
+        <FormControl size="small" sx={{ minWidth: 200 }}>
+          <InputLabel id="branch-select-label">Branch</InputLabel>
+          <Select
+            labelId="branch-select-label"
+            label="Branch"
             value={branchParam}
-            onChange={handleBranchSelect}
+            onChange={(e) => setSearchParams({ branch: e.target.value })}
             disabled={loadingBranches}
           >
             {branches.map((b) => (
-              <option key={b.id} value={b.name}>
+              <MenuItem key={b.id} value={b.name}>
                 {b.name}
                 {b.name === repo.defaultBranch ? " (default)" : ""}
-              </option>
+              </MenuItem>
             ))}
-          </select>
-        </label>
-        <div className="branch-mgmt-actions">
-          <button type="button" className="branch-mgmt-btn primary" onClick={() => setCreateMRModal(true)}>
+          </Select>
+        </FormControl>
+        <Box sx={{ display: "flex", gap: 1, ml: "auto", flexWrap: "wrap" }}>
+          <AppButton size="small" variant="primary" onClick={() => setCreateMRModal(true)}>
             Create merge request
-          </button>
-          <button type="button" className="branch-mgmt-btn primary" onClick={() => setCreateModal(true)}>
+          </AppButton>
+          <AppButton size="small" variant="primary" onClick={() => setCreateModal(true)}>
             Create branch
-          </button>
+          </AppButton>
           {currentBranch && (
-            <button
-              type="button"
-              className="branch-mgmt-btn danger"
+            <AppButton
+              size="small"
+              variant="danger"
+              startIcon={<TrashIcon size={16} />}
               onClick={() => setDeleteConfirm(currentBranch)}
               disabled={branches.length <= 1}
               title={branches.length <= 1 ? "Cannot delete the only branch" : "Delete this branch"}
             >
-              <TrashIcon size={16} className="branch-mgmt-btn-icon" />
               Delete branch
-            </button>
+            </AppButton>
           )}
-        </div>
-      </div>
+        </Box>
+      </Paper>
 
-      {error && <div className="branch-mgmt-error">{error}</div>}
+      {error && (
+        <Alert severity="error" onClose={() => setError(null)} sx={{ flexShrink: 0 }}>
+          {error}
+        </Alert>
+      )}
 
-      <section className="branch-mgmt-mrs">
-        <h2 className="branch-mgmt-section-title">Merge requests (open)</h2>
-        {loadingMRs ? (
-          <div className="branch-mgmt-loading-inline">Loading merge requests…</div>
-        ) : mergeRequests.length === 0 ? (
-          <div className="branch-mgmt-empty">No open merge requests.</div>
-        ) : (
-          <ul className="branch-mgmt-mr-list">
-            {mergeRequests.map((mr) => {
-              const sourceName = branches.find((b) => b.id === mr.sourceBranchId)?.name ?? mr.sourceBranchId.slice(0, 7);
-              const targetName = branches.find((b) => b.id === mr.targetBranchId)?.name ?? mr.targetBranchId.slice(0, 7);
-              return (
-                <li key={mr.id} className="branch-mgmt-mr-item">
-                  <button
-                    type="button"
-                    className="branch-mgmt-mr-title-btn"
-                    onClick={() => handleViewMR(mr)}
-                    disabled={loadingMRDiff}
+      <Accordion
+        disableGutters
+        elevation={0}
+        sx={{
+          flexShrink: 0,
+          border: 1,
+          borderColor: "divider",
+          "&:before": { display: "none" },
+          "& .MuiAccordionSummary-content": { my: 0.5 },
+        }}
+      >
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Typography variant="subtitle2" fontWeight={600}>
+            Merge requests (open){mergeRequests.length > 0 ? ` — ${mergeRequests.length}` : ""}
+          </Typography>
+        </AccordionSummary>
+        <AccordionDetails sx={{ p: 0, pt: 0 }}>
+          <Paper variant="outlined" sx={{ overflow: "hidden", border: 0, borderRadius: 0 }}>
+          {loadingMRs ? (
+            <Box sx={{ p: 2, display: "flex", flexDirection: "column", gap: 1 }}>
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} variant="rounded" height={44} />
+              ))}
+            </Box>
+          ) : mergeRequests.length === 0 ? (
+            <Box sx={{ p: 2 }}>
+              <Typography color="text.secondary" variant="body2">No open merge requests.</Typography>
+            </Box>
+          ) : (
+            <List disablePadding dense>
+              {mergeRequests.map((mr) => {
+                const sourceName = branches.find((b) => b.id === mr.sourceBranchId)?.name ?? mr.sourceBranchId.slice(0, 7);
+                const targetName = branches.find((b) => b.id === mr.targetBranchId)?.name ?? mr.targetBranchId.slice(0, 7);
+                return (
+                  <ListItem
+                    key={mr.id}
+                    divider
+                    sx={{ flexWrap: "wrap", gap: 1, alignItems: "center", py: 0.5 }}
                   >
-                    {mr.title}
-                  </button>
-                  <span className="branch-mgmt-mr-branches">
-                    {sourceName} → {targetName}
-                  </span>
-                  <span className="branch-mgmt-mr-date">{formatDate(mr.createdAt)}</span>
-                  <div className="branch-mgmt-mr-row-actions">
-                    <button
-                      type="button"
-                      className="branch-mgmt-btn secondary branch-mgmt-mr-view-btn"
-                      disabled={loadingMRDiff}
-                      onClick={() => handleViewMR(mr)}
-                    >
-                      View
-                    </button>
-                    {canMergeMR && (
-                      <button
-                        type="button"
-                        className="branch-mgmt-btn primary branch-mgmt-mr-merge-btn"
-                        disabled={mergingMRId !== null}
-                        onClick={() => handlePerformMerge(mr)}
+                    <ListItemText
+                      primary={
+                        <AppButton
+                          variant="ghost"
+                          size="small"
+                          sx={{ textTransform: "none", fontWeight: 600, p: 0, minWidth: 0, fontSize: "0.8125rem" }}
+                          onClick={() => handleViewMR(mr)}
+                          disabled={loadingMRDiff}
+                        >
+                          {mr.title}
+                        </AppButton>
+                      }
+                      secondary={`${sourceName} → ${targetName} · ${formatDate(mr.createdAt)}`}
+                      primaryTypographyProps={{ variant: "body2" }}
+                      secondaryTypographyProps={{ variant: "caption" }}
+                    />
+                    <Box sx={{ display: "flex", gap: 0.5 }}>
+                      <AppButton
+                        size="small"
+                        variant="secondary"
+                        disabled={loadingMRDiff}
+                        onClick={() => handleViewMR(mr)}
                       >
-                        {mergingMRId === mr.id ? "Merging…" : "Merge"}
-                      </button>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-      </section>
+                        View
+                      </AppButton>
+                      {canMergeMR && (
+                        <AppButton
+                          size="small"
+                          variant="primary"
+                          disabled={mergingMRId !== null}
+                          onClick={() => handlePerformMerge(mr)}
+                        >
+                          {mergingMRId === mr.id ? "Merging…" : "Merge"}
+                        </AppButton>
+                      )}
+                    </Box>
+                  </ListItem>
+                );
+              })}
+            </List>
+          )}
+          </Paper>
+        </AccordionDetails>
+      </Accordion>
 
-      <section className="branch-mgmt-commits">
-        <h2 className="branch-mgmt-section-title">Commits</h2>
-        {loadingCommits ? (
-          <div className="branch-mgmt-loading-inline">Loading commits…</div>
-        ) : commits.length === 0 ? (
-          <div className="branch-mgmt-empty">No commits in this branch yet.</div>
-        ) : (
-          <ul className="branch-mgmt-commit-list">
-            {commits.map((c) => (
-              <li key={c.id} className="branch-mgmt-commit-item">
-                <button
-                  type="button"
-                  className="branch-mgmt-commit-id-btn"
-                  title={`${c.id}\nClick to see changes`}
-                  onClick={() => handleCommitIdClick(c)}
-                  disabled={loadingDiff}
-                >
-                  {c.id.slice(0, 7)}
-                </button>
-                <span className="branch-mgmt-commit-message">{c.message || "(no message)"}</span>
-                <span className="branch-mgmt-commit-author">{c.authorName ?? "—"}</span>
-                <span className="branch-mgmt-commit-date">{formatDate(c.createdAt)}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      <Box component="section" sx={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 0.5 }}>
+          Commits
+        </Typography>
+        <Box sx={{ flex: 1, minHeight: 200, display: "flex", border: 1, borderColor: "divider", borderRadius: 1, overflow: "hidden", bgcolor: "background.paper", minWidth: 0 }}>
+          {/* Left sidebar: commits list */}
+          <Box
+            sx={{
+              width: 280,
+              flexShrink: 0,
+              borderRight: 1,
+              borderColor: "divider",
+              overflow: "auto",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            {loadingCommits ? (
+              <Box sx={{ p: 2, display: "flex", flexDirection: "column", gap: 1 }}>
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <Skeleton key={i} variant="rounded" height={52} />
+                ))}
+              </Box>
+            ) : commits.length === 0 ? (
+              <Box sx={{ p: 2 }}>
+                <Typography color="text.secondary" variant="body2">No commits in this branch yet.</Typography>
+              </Box>
+            ) : (
+              <List disablePadding>
+                {commits.map((c) => {
+                  const isSelected = commitDiff?.commit.id === c.id;
+                  return (
+                    <ListItem key={c.id} disablePadding>
+                      <ListItemButton
+                        selected={isSelected}
+                        onClick={() => handleCommitIdClick(c)}
+                        disabled={loadingDiff}
+                        sx={{
+                          flexDirection: "column",
+                          alignItems: "flex-start",
+                          py: 1,
+                          borderBottom: 1,
+                          borderColor: "divider",
+                        }}
+                      >
+                        <Typography variant="body2" fontFamily="monospace" fontWeight={600} color={isSelected ? "primary.main" : "text.primary"}>
+                          {c.id.slice(0, 7)}
+                        </Typography>
+                        <Typography variant="body2" noWrap sx={{ width: "100%", mt: 0.25 }} title={c.message || "(no message)"}>
+                          {c.message || "(no message)"}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {c.authorName ?? "—"} · {formatDate(c.createdAt)}
+                        </Typography>
+                      </ListItemButton>
+                    </ListItem>
+                  );
+                })}
+              </List>
+            )}
+          </Box>
+
+          {/* Right: comparison view (file list + side-by-side diff) */}
+          <Box sx={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+            {!commitDiff && !loadingDiff && (
+              <Box sx={{ flex: 1, display: "flex", alignItems: "flex-start", p: 3 }}>
+                <Typography color="text.secondary">Select a commit to view changes</Typography>
+              </Box>
+            )}
+            {loadingDiff && (
+              <Box sx={{ flex: 1, display: "flex", alignItems: "flex-start", p: 3 }}>
+                <Typography color="text.secondary">Loading changes…</Typography>
+              </Box>
+            )}
+            {commitDiff && !loadingDiff && (() => {
+              const diff = commitDiff.diff;
+              const added = diff.added.map((a) => ({ path: a.path, mode: "added" as const, oldContent: undefined, newContent: a.content }));
+              const removed = diff.removed.map((r) => ({ path: r.path, mode: "removed" as const, oldContent: r.content, newContent: undefined }));
+              const modified = diff.modified.map((m) => ({
+                path: m.path,
+                mode: "modified" as const,
+                oldContent: m.base.content,
+                newContent: m.target.content,
+              }));
+              const fileList = [...added, ...removed, ...modified];
+              const selectedFile = fileList.find((f) => f.path === selectedDiffFilePath) ?? fileList[0];
+
+              if (fileList.length === 0) {
+                return (
+                  <Box sx={{ flex: 1, display: "flex", alignItems: "flex-start", p: 3 }}>
+                    <Typography color="text.secondary">No file changes in this commit</Typography>
+                  </Box>
+                );
+              }
+
+              return (
+                <>
+                  <Box sx={{ borderBottom: 1, borderColor: "divider", p: 1, bgcolor: "action.hover" }}>
+                    <Typography variant="caption" color="text.secondary">
+                      {commitDiff.commit.message || "(no message)"} — {commitDiff.commit.authorName ?? "—"} · {formatDate(commitDiff.commit.createdAt)}
+                    </Typography>
+                  </Box>
+                  <Box sx={{ flex: 1, minHeight: 0, display: "flex" }}>
+                    <Box
+                      sx={{
+                        width: 220,
+                        flexShrink: 0,
+                        borderRight: 1,
+                        borderColor: "divider",
+                        overflow: "auto",
+                        py: 0.5,
+                      }}
+                    >
+                      {added.length > 0 && (
+                        <>
+                          <Typography variant="caption" sx={{ px: 1.5, py: 0.5, color: "success.main", fontWeight: 600 }}>Added</Typography>
+                          {added.map((f) => (
+                            <Box
+                              key={f.path}
+                              onClick={() => setSelectedDiffFilePath(f.path)}
+                              sx={{
+                                px: 1.5,
+                                py: 0.5,
+                                cursor: "pointer",
+                                fontFamily: "monospace",
+                                fontSize: "0.75rem",
+                                bgcolor: selectedDiffFilePath === f.path ? "action.selected" : "transparent",
+                                "&:hover": { bgcolor: "action.hover" },
+                              }}
+                            >
+                              {f.path}
+                            </Box>
+                          ))}
+                        </>
+                      )}
+                      {removed.length > 0 && (
+                        <>
+                          <Typography variant="caption" sx={{ px: 1.5, py: 0.5, color: "error.main", fontWeight: 600 }}>Removed</Typography>
+                          {removed.map((f) => (
+                            <Box
+                              key={f.path}
+                              onClick={() => setSelectedDiffFilePath(f.path)}
+                              sx={{
+                                px: 1.5,
+                                py: 0.5,
+                                cursor: "pointer",
+                                fontFamily: "monospace",
+                                fontSize: "0.75rem",
+                                bgcolor: selectedDiffFilePath === f.path ? "action.selected" : "transparent",
+                                "&:hover": { bgcolor: "action.hover" },
+                              }}
+                            >
+                              {f.path}
+                            </Box>
+                          ))}
+                        </>
+                      )}
+                      {modified.length > 0 && (
+                        <>
+                          <Typography variant="caption" sx={{ px: 1.5, py: 0.5, color: "warning.main", fontWeight: 600 }}>Modified</Typography>
+                          {modified.map((f) => (
+                            <Box
+                              key={f.path}
+                              onClick={() => setSelectedDiffFilePath(f.path)}
+                              sx={{
+                                px: 1.5,
+                                py: 0.5,
+                                cursor: "pointer",
+                                fontFamily: "monospace",
+                                fontSize: "0.75rem",
+                                bgcolor: selectedDiffFilePath === f.path ? "action.selected" : "transparent",
+                                "&:hover": { bgcolor: "action.hover" },
+                              }}
+                            >
+                              {f.path}
+                            </Box>
+                          ))}
+                        </>
+                      )}
+                    </Box>
+                    <Box sx={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflow: "hidden", p: 1 }}>
+                      {selectedFile && (
+                        <SideBySideDiffViewer
+                          path={selectedFile.path}
+                          oldContent={selectedFile.oldContent}
+                          newContent={selectedFile.newContent}
+                          mode={selectedFile.mode}
+                        />
+                      )}
+                    </Box>
+                  </Box>
+                </>
+              );
+            })()}
+          </Box>
+        </Box>
+      </Box>
 
       {createMRModal && (
-        <div className="branch-mgmt-modal-backdrop" onClick={() => setCreateMRModal(false)} role="presentation">
-          <div className="branch-mgmt-modal" onClick={(e) => e.stopPropagation()}>
-            <h2 className="branch-mgmt-modal-title">Create merge request</h2>
-            <label className="branch-mgmt-modal-label">Source branch (to merge from)</label>
-            <select
-              className="branch-mgmt-modal-select"
-              value={mrSourceBranchId}
-              onChange={(e) => setMrSourceBranchId(e.target.value)}
-              disabled={creatingMR}
-            >
-              {branches.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.name}
-                </option>
-              ))}
-            </select>
-            <label className="branch-mgmt-modal-label">Target branch (to merge into)</label>
-            <select
-              className="branch-mgmt-modal-select"
-              value={mrTargetBranchId}
-              onChange={(e) => setMrTargetBranchId(e.target.value)}
-              disabled={creatingMR}
-            >
-              {branches.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.name}
-                </option>
-              ))}
-            </select>
-            <label className="branch-mgmt-modal-label">Title</label>
-            <input
-              type="text"
-              className="branch-mgmt-modal-input"
+        <AppModal
+          open={createMRModal}
+          onClose={() => setCreateMRModal(false)}
+          title="Create merge request"
+          submitLabel={creatingMR ? "Creating…" : "Create merge request"}
+          onSubmit={handleCreateMergeRequest}
+          submitDisabled={creatingMR || !mrTitle.trim() || mrSourceBranchId === mrTargetBranchId}
+        >
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 0.5 }}>
+            <FormControl fullWidth size="small">
+              <InputLabel>Source branch (to merge from)</InputLabel>
+              <Select
+                value={mrSourceBranchId}
+                label="Source branch (to merge from)"
+                onChange={(e) => setMrSourceBranchId(e.target.value)}
+                disabled={creatingMR}
+              >
+                {branches.map((b) => (
+                  <MenuItem key={b.id} value={b.id}>
+                    {b.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl fullWidth size="small">
+              <InputLabel>Target branch (to merge into)</InputLabel>
+              <Select
+                value={mrTargetBranchId}
+                label="Target branch (to merge into)"
+                onChange={(e) => setMrTargetBranchId(e.target.value)}
+                disabled={creatingMR}
+              >
+                {branches.map((b) => (
+                  <MenuItem key={b.id} value={b.id}>
+                    {b.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <TextField
+              size="small"
+              label="Title"
               placeholder="e.g. Add new rules for X"
               value={mrTitle}
               onChange={(e) => setMrTitle(e.target.value)}
               disabled={creatingMR}
+              fullWidth
+              required
             />
-            <label className="branch-mgmt-modal-label">Description (optional)</label>
-            <textarea
-              className="branch-mgmt-modal-input branch-mgmt-modal-textarea"
+            <TextField
+              size="small"
+              label="Description (optional)"
               placeholder="Describe the changes..."
               value={mrDescription}
               onChange={(e) => setMrDescription(e.target.value)}
               disabled={creatingMR}
+              fullWidth
+              multiline
               rows={3}
             />
-            <div className="branch-mgmt-modal-actions">
-              <button type="button" className="branch-mgmt-modal-btn secondary" onClick={() => setCreateMRModal(false)}>
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="branch-mgmt-modal-btn primary"
-                disabled={creatingMR || !mrTitle.trim() || mrSourceBranchId === mrTargetBranchId}
-                onClick={handleCreateMergeRequest}
-              >
-                {creatingMR ? "Creating…" : "Create merge request"}
-              </button>
-            </div>
-          </div>
-        </div>
+          </Box>
+        </AppModal>
       )}
 
       {createModal && (
-        <div className="branch-mgmt-modal-backdrop" onClick={() => setCreateModal(false)} role="presentation">
-          <div className="branch-mgmt-modal" onClick={(e) => e.stopPropagation()}>
-            <h2 className="branch-mgmt-modal-title">Create new branch</h2>
-            <label className="branch-mgmt-modal-label">Source branch</label>
-            <select
-              className="branch-mgmt-modal-select"
-              value={sourceBranchId}
-              onChange={(e) => setSourceBranchId(e.target.value)}
-              disabled={creating}
-            >
-              {branches.map((b) => (
-                <option key={b.id} value={b.id}>
-                  {b.name}
-                </option>
-              ))}
-            </select>
-            <label className="branch-mgmt-modal-label">New branch name</label>
-            <input
-              type="text"
-              className="branch-mgmt-modal-input"
+        <AppModal
+          open={createModal}
+          onClose={() => setCreateModal(false)}
+          title="Create new branch"
+          submitLabel={creating ? "Creating…" : "Create"}
+          onSubmit={() => handleCreateBranch(newBranchName)}
+          submitDisabled={creating || !newBranchName.trim()}
+        >
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 0.5 }}>
+            <FormControl fullWidth size="small">
+              <InputLabel>Source branch</InputLabel>
+              <Select
+                value={sourceBranchId}
+                label="Source branch"
+                onChange={(e) => setSourceBranchId(e.target.value)}
+                disabled={creating}
+              >
+                {branches.map((b) => (
+                  <MenuItem key={b.id} value={b.id}>
+                    {b.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <TextField
+              size="small"
+              label="New branch name"
               placeholder="e.g. feature/my-feature"
               value={newBranchName}
               onChange={(e) => setNewBranchName(e.target.value)}
               disabled={creating}
+              fullWidth
             />
-            <div className="branch-mgmt-modal-actions">
-              <button type="button" className="branch-mgmt-modal-btn secondary" onClick={() => setCreateModal(false)}>
-                Cancel
-              </button>
-              <button
-                type="button"
-                className="branch-mgmt-modal-btn primary"
-                disabled={creating || !newBranchName.trim()}
-                onClick={() => handleCreateBranch(newBranchName)}
-              >
-                {creating ? "Creating…" : "Create"}
-              </button>
-            </div>
-          </div>
-        </div>
+          </Box>
+        </AppModal>
       )}
 
       {deleteConfirm && (
-        <div className="branch-mgmt-modal-backdrop" onClick={() => setDeleteConfirm(null)} role="presentation">
-          <div className="branch-mgmt-modal" onClick={(e) => e.stopPropagation()}>
-            <h2 className="branch-mgmt-modal-title">Delete branch</h2>
-            <p className="branch-mgmt-modal-text">
-              Are you sure you want to delete the branch <strong>{deleteConfirm.name}</strong>? This cannot be undone.
-            </p>
-            <div className="branch-mgmt-modal-actions">
-              <button type="button" className="branch-mgmt-modal-btn secondary" onClick={() => setDeleteConfirm(null)}>
+        <AppModal
+          open={!!deleteConfirm}
+          onClose={() => setDeleteConfirm(null)}
+          title="Delete branch"
+          submitLabel={deleting ? "Deleting…" : "Delete"}
+          onSubmit={() => deleteConfirm && handleDeleteBranch(deleteConfirm)}
+          submitDisabled={deleting}
+          actions={
+            <>
+              <AppButton variant="secondary" onClick={() => setDeleteConfirm(null)}>
                 Cancel
-              </button>
-              <button
-                type="button"
-                className="branch-mgmt-modal-btn danger"
+              </AppButton>
+              <AppButton
+                variant="danger"
+                onClick={() => deleteConfirm && handleDeleteBranch(deleteConfirm)}
                 disabled={deleting}
-                onClick={() => handleDeleteBranch(deleteConfirm)}
               >
                 {deleting ? "Deleting…" : "Delete"}
-              </button>
-            </div>
-          </div>
-        </div>
+              </AppButton>
+            </>
+          }
+        >
+          <Typography>
+            Are you sure you want to delete the branch <strong>{deleteConfirm?.name}</strong>? This cannot be undone.
+          </Typography>
+        </AppModal>
       )}
 
       {loadingMRDiff && (
-        <div className="branch-mgmt-modal-backdrop" role="presentation">
-          <div className="branch-mgmt-modal branch-mgmt-modal-loading">
-            <p className="branch-mgmt-modal-text">Loading file changes…</p>
-          </div>
-        </div>
+        <Dialog open disableEscapeKeyDown>
+          <DialogContent>
+            <Typography>Loading file changes…</Typography>
+          </DialogContent>
+        </Dialog>
       )}
 
       {viewMR && (
-        <div
-          className="branch-mgmt-modal-backdrop"
-          onClick={() => setViewMR(null)}
-          role="presentation"
+        <Dialog
+          open
+          onClose={() => setViewMR(null)}
+          maxWidth="md"
+          fullWidth
+          className="branch-mgmt-diff-dialog"
         >
-          <div className="branch-mgmt-modal branch-mgmt-modal-diff" onClick={(e) => e.stopPropagation()}>
-            <h2 className="branch-mgmt-modal-title">{viewMR.mr.title}</h2>
-            <p className="branch-mgmt-modal-text branch-mgmt-commit-meta">
+          <DialogTitle>{viewMR.mr.title}</DialogTitle>
+          <DialogContent>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
               {branches.find((b) => b.id === viewMR.mr.sourceBranchId)?.name ?? "source"} →{" "}
               {branches.find((b) => b.id === viewMR.mr.targetBranchId)?.name ?? "target"}
               {viewMR.mr.description && ` · ${viewMR.mr.description}`}
-            </p>
+            </Typography>
             <div className="branch-mgmt-diff-list">
               {viewMR.diff.added.length > 0 && (
                 <div className="branch-mgmt-diff-section">
@@ -636,122 +852,24 @@ export function BranchManagementPage() {
                   <p className="branch-mgmt-diff-empty">No file changes.</p>
                 )}
             </div>
-            <div className="branch-mgmt-modal-actions">
-              <button
-                type="button"
-                className="branch-mgmt-modal-btn secondary"
-                onClick={() => setViewMR(null)}
+          </DialogContent>
+          <DialogActions sx={{ px: 2, pb: 2 }}>
+            <AppButton variant="secondary" onClick={() => setViewMR(null)}>
+              Close
+            </AppButton>
+            {canMergeMR && (
+              <AppButton
+                variant="primary"
+                disabled={mergingMRId !== null}
+                onClick={() => handlePerformMerge(viewMR.mr)}
               >
-                Close
-              </button>
-              {canMergeMR && (
-                <button
-                  type="button"
-                  className="branch-mgmt-modal-btn primary"
-                  disabled={mergingMRId !== null}
-                  onClick={() => handlePerformMerge(viewMR.mr)}
-                >
-                  {mergingMRId === viewMR.mr.id ? "Merging…" : "Merge"}
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
+                {mergingMRId === viewMR.mr.id ? "Merging…" : "Merge"}
+              </AppButton>
+            )}
+          </DialogActions>
+        </Dialog>
       )}
-
-      {commitDiff && (
-        <div
-          className="branch-mgmt-modal-backdrop"
-          onClick={() => setCommitDiff(null)}
-          role="presentation"
-        >
-          <div className="branch-mgmt-modal branch-mgmt-modal-diff" onClick={(e) => e.stopPropagation()}>
-            <h2 className="branch-mgmt-modal-title">
-              Changes in commit {commitDiff.commit.id.slice(0, 7)}
-            </h2>
-            <p className="branch-mgmt-modal-text branch-mgmt-commit-meta">
-              {commitDiff.commit.message || "(no message)"} — {commitDiff.commit.authorName ?? "—"} —{" "}
-              {formatDate(commitDiff.commit.createdAt)}
-            </p>
-            <div className="branch-mgmt-diff-list">
-              {commitDiff.diff.added.length > 0 && (
-                <div className="branch-mgmt-diff-section">
-                  <strong className="branch-mgmt-diff-added">Added</strong>
-                  {commitDiff.diff.added.map((a) =>
-                    a.content !== undefined ? (
-                      <FileDiffViewer
-                        key={a.path}
-                        path={a.path}
-                        oldContent={null}
-                        newContent={a.content}
-                        mode="added"
-                      />
-                    ) : (
-                      <ul key={a.path}>
-                        <li>{a.path}</li>
-                      </ul>
-                    )
-                  )}
-                </div>
-              )}
-              {commitDiff.diff.removed.length > 0 && (
-                <div className="branch-mgmt-diff-section">
-                  <strong className="branch-mgmt-diff-removed">Removed</strong>
-                  {commitDiff.diff.removed.map((r) =>
-                    r.content !== undefined ? (
-                      <FileDiffViewer
-                        key={r.path}
-                        path={r.path}
-                        oldContent={r.content}
-                        newContent={null}
-                        mode="removed"
-                      />
-                    ) : (
-                      <ul key={r.path}>
-                        <li>{r.path}</li>
-                      </ul>
-                    )
-                  )}
-                </div>
-              )}
-              {commitDiff.diff.modified.length > 0 && (
-                <div className="branch-mgmt-diff-section">
-                  <strong className="branch-mgmt-diff-modified">Modified</strong>
-                  {commitDiff.diff.modified.map((m) =>
-                    m.base.content !== undefined && m.target.content !== undefined ? (
-                      <FileDiffViewer
-                        key={m.path}
-                        path={m.path}
-                        oldContent={m.base.content}
-                        newContent={m.target.content}
-                        mode="modified"
-                      />
-                    ) : (
-                      <ul key={m.path}>
-                        <li>{m.path}</li>
-                      </ul>
-                    )
-                  )}
-                </div>
-              )}
-              {commitDiff.diff.added.length === 0 &&
-                commitDiff.diff.removed.length === 0 &&
-                commitDiff.diff.modified.length === 0 && (
-                  <p className="branch-mgmt-diff-empty">No file changes.</p>
-                )}
-            </div>
-            <div className="branch-mgmt-modal-actions">
-              <button
-                type="button"
-                className="branch-mgmt-modal-btn secondary"
-                onClick={() => setCommitDiff(null)}
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+    </Box>
+    </Box>
   );
 }

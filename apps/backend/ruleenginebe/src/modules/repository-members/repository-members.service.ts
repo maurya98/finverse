@@ -37,6 +37,16 @@ export class RepositoryMembersService {
     return member ? { role: member.role } : null;
   }
 
+  /** Returns a map of repositoryId -> role for the given user in the given repositories. */
+  async getRolesForUserInRepositories(userId: string, repositoryIds: string[]): Promise<Record<string, string>> {
+    if (repositoryIds.length === 0) return {};
+    const members = await prisma.repositoryMember.findMany({
+      where: { userId, repositoryId: { in: repositoryIds } },
+      select: { repositoryId: true, role: true },
+    });
+    return Object.fromEntries(members.map((m) => [m.repositoryId, m.role]));
+  }
+
   async add(
     repositoryId: string,
     userId: string,

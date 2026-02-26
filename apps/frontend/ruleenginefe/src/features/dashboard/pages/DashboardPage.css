@@ -158,7 +158,8 @@
 }
 
 .workspace-card-delete,
-.repo-card-delete {
+.repo-card-delete,
+.repo-card-settings {
   flex-shrink: 0;
   padding: 0.5rem 0.6rem;
   border: none;
@@ -170,10 +171,24 @@
   line-height: 1;
 }
 
+.repo-card-settings {
+  font-size: 0.85rem;
+}
+
 .workspace-card-delete:hover,
 .repo-card-delete:hover {
   color: var(--dash-error);
   background: rgba(248, 113, 113, 0.1);
+}
+
+.repo-card-settings:hover {
+  color: var(--dash-accent);
+  background: rgba(13, 148, 136, 0.12);
+}
+
+.repo-card-settings:focus-visible {
+  outline: 2px solid var(--dash-accent);
+  outline-offset: -2px;
 }
 
 .workspace-name,
