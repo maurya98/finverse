@@ -40,7 +40,7 @@ export function RepositoryEditorPage() {
   const user = getUser();
   const branchName = searchParams.get("branch") || "main";
 
-  const [repo, setRepo] = useState<{ id: string; name: string } | null>(null);
+  const [repo, setRepo] = useState<{ id: string; name: string; currentUserRole?: string } | null>(null);
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
   const [editorContent, setEditorContent] = useState("");
   const [editorDirty, setEditorDirty] = useState(false);
@@ -95,7 +95,7 @@ export function RepositoryEditorPage() {
     if (!repositoryId) return;
     getRepository(repositoryId).then((res) => {
       if (isApiError(res)) return;
-      if (res.data) setRepo({ id: res.data.id, name: res.data.name });
+      if (res.data) setRepo({ id: res.data.id, name: res.data.name, currentUserRole: res.data.currentUserRole });
     });
   }, [repositoryId]);
 
@@ -553,6 +553,15 @@ export function RepositoryEditorPage() {
           >
             Branches
           </button>
+          {(repo.currentUserRole === "ADMIN" || repo.currentUserRole === "MAINTAINER") && (
+            <button
+              type="button"
+              className="footer-btn"
+              onClick={() => navigate(`/dashboard/repo/${repo.id}/settings`)}
+            >
+              Settings
+            </button>
+          )}
         </div>
         <BranchFooter
           repositoryId={repo.id}

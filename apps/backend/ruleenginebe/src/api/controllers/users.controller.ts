@@ -1,6 +1,7 @@
 import { Request, Response, Router } from "express";
 import { validateBody } from "@finverse/utils";
 import { sendSuccess, sendError } from "@finverse/utils";
+import { requireAuth } from "../middlewares/auth.middleware";
 import { UserService } from "../../modules/users/user.service";
 import { createUserSchema, updateUserSchema } from "../validations/user.validator";
 
@@ -15,11 +16,11 @@ export class UsersController {
   }
 
   private initRoutes(): void {
-    this.router.get("/", this.list.bind(this));
-    this.router.get("/:id", this.getById.bind(this));
-    this.router.post("/", validateBody(createUserSchema), this.create.bind(this));
-    this.router.patch("/:id", validateBody(updateUserSchema), this.update.bind(this));
-    this.router.delete("/:id", this.delete.bind(this));
+    this.router.get("/", requireAuth, this.list.bind(this));
+    this.router.get("/:id", requireAuth, this.getById.bind(this));
+    this.router.post("/", requireAuth, validateBody(createUserSchema), this.create.bind(this));
+    this.router.patch("/:id", requireAuth, validateBody(updateUserSchema), this.update.bind(this));
+    this.router.delete("/:id", requireAuth, this.delete.bind(this));
   }
 
   private async list(req: Request, res: Response): Promise<Response> {

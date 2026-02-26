@@ -4,7 +4,8 @@ import { sendSuccess, sendError } from "@finverse/utils";
 import { MergeRequestService } from "../../modules/vcs-engine/merge.service";
 import { DiffService } from "../../modules/vcs-engine/diff.service";
 import { BlobService } from "../../modules/vcs-engine/blob.service";
-import { requireAuth, requireMergePermission } from "../middlewares/auth.middleware";
+import { requireAuth } from "../middlewares/auth.middleware";
+import { requireRepoAccess, setRepositoryIdFromMergeRequestId, getRepoAccessFromMergeRequestId } from "../middlewares/repo-access.middleware";
 import {
   createMergeRequestSchema,
   updateMergeRequestStatusSchema,
@@ -28,28 +29,26 @@ export class MergeRequestsController {
   }
 
   private initRoutes(): void {
-    this.router.post("/", validateBody(createMergeRequestSchema), this.create.bind(this));
-    this.router.get("/list", this.list.bind(this));
-    this.router.get("/diff", this.diffBranches.bind(this));
-    this.router.get("/diff/commits", this.diffCommits.bind(this));
-    this.router.get("/:id", this.getById.bind(this));
-    this.router.get("/:id/diff", this.getMrDiff.bind(this));
-    this.router.patch("/:id/status", validateBody(updateMergeRequestStatusSchema), this.updateStatus.bind(this));
+    this.router.post("/", requireAuth, requireRepoAccess("CONTRIBUTOR"), validateBody(createMergeRequestSchema), this.create.bind(this));
+    this.router.get("/list", requireAuth, requireRepoAccess("VIEWER"), this.list.bind(this));
+    this.router.get("/diff", requireAuth, requireRepoAccess("VIEWER"), this.diffBranches.bind(this));
+    this.router.get("/diff/commits", requireAuth, this.diffCommits.bind(this));
+    this.router.get("/:id", requireAuth, setRepositoryIdFromMergeRequestId, requireRepoAccess("VIEWER"), this.getById.bind(this));
+    this.router.get("/:id/diff", requireAuth, setRepositoryIdFromMergeRequestId, requireRepoAccess("VIEWER"), this.getMrDiff.bind(this));
+    this.router.patch("/:id/status", requireAuth, setRepositoryIdFromMergeRequestId, requireRepoAccess("CONTRIBUTOR"), validateBody(updateMergeRequestStatusSchema), this.updateStatus.bind(this));
     this.router.post(
       "/:id/perform-merge",
       requireAuth,
-      requireMergePermission,
       this.performMerge.bind(this)
     );
     this.router.post(
       "/:id/merge",
       requireAuth,
-      requireMergePermission,
       validateBody(mergeMergeRequestSchema),
       this.merge.bind(this)
     );
-    this.router.get("/:id/comments", this.listComments.bind(this));
-    this.router.post("/:id/comments", validateBody(addMergeRequestCommentSchema), this.addComment.bind(this));
+    this.router.get("/:id/comments", requireAuth, setRepositoryIdFromMergeRequestId, requireRepoAccess("VIEWER"), this.listComments.bind(this));
+    this.router.post("/:id/comments", requireAuth, setRepositoryIdFromMergeRequestId, requireRepoAccess("CONTRIBUTOR"), validateBody(addMergeRequestCommentSchema), this.addComment.bind(this));
   }
 
   private async create(req: Request, res: Response): Promise<Response> {
@@ -209,11 +208,15 @@ export class MergeRequestsController {
 
   /**
    * POST /merge-requests/:id/perform-merge — Create merge commit, update target branch, mark MR merged.
-   * Requires auth; only ADMIN or MAINTAINER can call.
+   * Requires repo MAINTAINER or ADMIN (repository-scoped).
    */
   private async performMerge(req: Request, res: Response): Promise<Response> {
     try {
       const id = typeof req.params.id === "string" ? req.params.id : req.params.id?.[0] ?? "";
+      const access = await getRepoAccessFromMergeRequestId(id, req.user!.id, "MAINTAINER");
+      if (!access) {
+        return sendError(res, "Merge request not found or you do not have permission to merge", 403);
+      }
       const userId = req.user!.id;
       const mr = await this.mergeRequestService.performMerge(id, userId);
       if (!mr) {
@@ -232,6 +235,10 @@ export class MergeRequestsController {
   private async merge(req: Request, res: Response): Promise<Response> {
     try {
       const id = typeof req.params.id === "string" ? req.params.id : req.params.id?.[0] ?? "";
+      const access = await getRepoAccessFromMergeRequestId(id, req.user!.id, "MAINTAINER");
+      if (!access) {
+        return sendError(res, "Merge request not found or you do not have permission to merge", 403);
+      }
       const { mergedCommitId } = req.body as { mergedBy?: string; mergedCommitId: string };
       const mergedBy = req.user!.id;
       const mr = await this.mergeRequestService.merge(id, mergedBy, mergedCommitId);

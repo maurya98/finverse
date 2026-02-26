@@ -18,21 +18,31 @@ export class RepositoryService {
     createdBy: string,
     defaultBranch = "main"
   ): Promise<RepositoryOut> {
-    const repo = await prisma.repository.create({
-      data: {
-        name,
-        workspaceId,
-        createdBy,
-        defaultBranch,
-      },
-    });
-    await prisma.branch.create({
-      data: {
-        repositoryId: repo.id,
-        name: defaultBranch,
-        createdBy,
-        headCommitId: null,
-      },
+    const repo = await prisma.$transaction(async (tx) => {
+      const created = await tx.repository.create({
+        data: {
+          name,
+          workspaceId,
+          createdBy,
+          defaultBranch,
+        },
+      });
+      await tx.branch.create({
+        data: {
+          repositoryId: created.id,
+          name: defaultBranch,
+          createdBy,
+          headCommitId: null,
+        },
+      });
+      await tx.repositoryMember.create({
+        data: {
+          repositoryId: created.id,
+          userId: createdBy,
+          role: "ADMIN",
+        },
+      });
+      return created;
     });
     return this.toOut(repo);
   }

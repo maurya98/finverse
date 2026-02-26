@@ -30,7 +30,7 @@ export function BranchManagementPage() {
   const user = getUser();
   const branchParam = searchParams.get("branch") || "main";
 
-  const [repo, setRepo] = useState<{ id: string; name: string; defaultBranch: string } | null>(null);
+  const [repo, setRepo] = useState<{ id: string; name: string; defaultBranch: string; currentUserRole?: string } | null>(null);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [commits, setCommits] = useState<Commit[]>([]);
   const [loadingBranches, setLoadingBranches] = useState(false);
@@ -57,13 +57,19 @@ export function BranchManagementPage() {
   const [loadingMRDiff, setLoadingMRDiff] = useState(false);
 
   const currentBranch = branches.find((b) => b.name === branchParam) ?? null;
-  const canMergeMR = user?.role === "ADMIN" || user?.role === "MAINTAINER";
+  const canMergeMR = repo?.currentUserRole === "ADMIN" || repo?.currentUserRole === "MAINTAINER";
 
   useEffect(() => {
     if (!repositoryId) return;
     getRepository(repositoryId).then((res) => {
       if (isApiError(res)) return;
-      if (res.data) setRepo({ id: res.data.id, name: res.data.name, defaultBranch: res.data.defaultBranch });
+      if (res.data)
+        setRepo({
+          id: res.data.id,
+          name: res.data.name,
+          defaultBranch: res.data.defaultBranch,
+          currentUserRole: res.data.currentUserRole,
+        });
     });
   }, [repositoryId]);
 
@@ -276,6 +282,15 @@ export function BranchManagementPage() {
         >
           ← Editor
         </button>
+        {canMergeMR && (
+          <button
+            type="button"
+            className="branch-mgmt-back"
+            onClick={() => navigate(`/dashboard/repo/${repositoryId}/settings`)}
+          >
+            Settings
+          </button>
+        )}
         <h1 className="branch-mgmt-title">{repo.name} <span className="branch-mgmt-repo-id">({repo.id})</span> — Branches</h1>
         <ThemePicker />
       </header>

@@ -1,6 +1,8 @@
 import { Request, Response, Router } from "express";
 import { validateBody } from "@finverse/utils";
 import { sendSuccess, sendError } from "@finverse/utils";
+import { requireAuth } from "../middlewares/auth.middleware";
+import { requireRepoAccess, setRepositoryIdFromTreeId } from "../middlewares/repo-access.middleware";
 import { TreeService } from "../../modules/vcs-engine/tree.service";
 import {
   createTreeSchema,
@@ -19,12 +21,12 @@ export class TreesController {
   }
 
   private initRoutes(): void {
-    this.router.post("/", validateBody(createTreeSchema), this.create.bind(this));
-    this.router.get("/list", this.list.bind(this));
-    this.router.get("/:id", this.getById.bind(this));
-    this.router.post("/:id/entries", validateBody(addTreeEntrySchema), this.addEntry.bind(this));
-    this.router.delete("/:id/entries/:entryId", this.removeEntry.bind(this));
-    this.router.patch("/:id/entries/:entryId", this.updateEntry.bind(this));
+    this.router.post("/", requireAuth, requireRepoAccess("CONTRIBUTOR"), validateBody(createTreeSchema), this.create.bind(this));
+    this.router.get("/list", requireAuth, requireRepoAccess("VIEWER"), this.list.bind(this));
+    this.router.get("/:id", requireAuth, setRepositoryIdFromTreeId, requireRepoAccess("VIEWER"), this.getById.bind(this));
+    this.router.post("/:id/entries", requireAuth, setRepositoryIdFromTreeId, requireRepoAccess("CONTRIBUTOR"), validateBody(addTreeEntrySchema), this.addEntry.bind(this));
+    this.router.delete("/:id/entries/:entryId", requireAuth, setRepositoryIdFromTreeId, requireRepoAccess("CONTRIBUTOR"), this.removeEntry.bind(this));
+    this.router.patch("/:id/entries/:entryId", requireAuth, setRepositoryIdFromTreeId, requireRepoAccess("CONTRIBUTOR"), this.updateEntry.bind(this));
   }
 
   private async create(req: Request, res: Response): Promise<Response> {

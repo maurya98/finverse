@@ -8,6 +8,7 @@ This folder contains comprehensive documentation for the **ruleenginebe** servic
 |----------|-------------|
 | [**API.md**](./API.md) | Full REST API reference: endpoints, request/response shapes, status codes, and examples. |
 | [**VCS.md**](./VCS.md) | Version Control System (VCS) explanation: architecture, concepts (blob, tree, commit, branch), diff, and merge requests. |
+| [**ACL.md**](./ACL.md) | Access control: authentication, workspace/repository roles, who can assign access, and request flow through middleware. |
 
 ## Overview
 

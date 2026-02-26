@@ -1,6 +1,8 @@
 import { Request, Response, Router } from "express";
 import { validateBody } from "@finverse/utils";
 import { sendSuccess, sendError } from "@finverse/utils";
+import { requireAuth } from "../middlewares/auth.middleware";
+import { requireRepoAccess, setRepositoryIdFromBlobId } from "../middlewares/repo-access.middleware";
 import { BlobService } from "../../modules/vcs-engine/blob.service";
 import { createBlobSchema, listBlobsQuerySchema } from "../validations/blob.validator";
 
@@ -15,10 +17,10 @@ export class BlobsController {
   }
 
   private initRoutes(): void {
-    this.router.post("/", validateBody(createBlobSchema), this.create.bind(this));
-    this.router.get("/by-hash", this.getByHash.bind(this));
-    this.router.get("/list", this.list.bind(this));
-    this.router.get("/:id", this.getById.bind(this));
+    this.router.post("/", requireAuth, requireRepoAccess("CONTRIBUTOR"), validateBody(createBlobSchema), this.create.bind(this));
+    this.router.get("/by-hash", requireAuth, requireRepoAccess("VIEWER"), this.getByHash.bind(this));
+    this.router.get("/list", requireAuth, requireRepoAccess("VIEWER"), this.list.bind(this));
+    this.router.get("/:id", requireAuth, setRepositoryIdFromBlobId, requireRepoAccess("VIEWER"), this.getById.bind(this));
   }
 
   private async create(req: Request, res: Response): Promise<Response> {

@@ -1,6 +1,8 @@
 import { Request, Response, Router } from "express";
 import { validateBody } from "@finverse/utils";
 import { sendSuccess, sendError } from "@finverse/utils";
+import { requireAuth } from "../middlewares/auth.middleware";
+import { requireRepoAccess, setRepositoryIdFromBranchId } from "../middlewares/repo-access.middleware";
 import { BranchService } from "../../modules/vcs-engine/branch.service";
 import {
   createBranchSchema,
@@ -19,12 +21,12 @@ export class BranchesController {
   }
 
   private initRoutes(): void {
-    this.router.post("/", validateBody(createBranchSchema), this.create.bind(this));
-    this.router.get("/list", this.list.bind(this));
-    this.router.get("/by-name", this.getByName.bind(this));
-    this.router.get("/:id", this.getById.bind(this));
-    this.router.patch("/:id/head", validateBody(updateBranchHeadSchema), this.updateHead.bind(this));
-    this.router.delete("/:id", this.delete.bind(this));
+    this.router.post("/", requireAuth, requireRepoAccess("CONTRIBUTOR"), validateBody(createBranchSchema), this.create.bind(this));
+    this.router.get("/list", requireAuth, requireRepoAccess("VIEWER"), this.list.bind(this));
+    this.router.get("/by-name", requireAuth, requireRepoAccess("VIEWER"), this.getByName.bind(this));
+    this.router.get("/:id", requireAuth, setRepositoryIdFromBranchId, requireRepoAccess("VIEWER"), this.getById.bind(this));
+    this.router.patch("/:id/head", requireAuth, setRepositoryIdFromBranchId, requireRepoAccess("CONTRIBUTOR"), validateBody(updateBranchHeadSchema), this.updateHead.bind(this));
+    this.router.delete("/:id", requireAuth, setRepositoryIdFromBranchId, requireRepoAccess("CONTRIBUTOR"), this.delete.bind(this));
   }
 
   private async delete(req: Request, res: Response): Promise<Response> {

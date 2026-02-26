@@ -3,6 +3,7 @@ import { LoginPage } from "./features/auth/pages/LoginPage";
 import { ProtectedRoute } from "./features/auth/pages/ProtectedRoute";
 import { DashboardPage } from "./features/dashboard/pages/DashboardPage";
 import { RepositoryEditorPage } from "./features/dashboard/pages/RepositoryEditorPage";
+import { RepositorySettingsPage } from "./features/dashboard/pages/RepositorySettingsPage";
 import { BranchManagementPage } from "./features/dashboard/pages/BranchManagementPage";
 import { LogsPage } from "./features/logs/pages/LogsPage";
 
@@ -40,6 +41,14 @@ function App() {
           element={
             <ProtectedRoute>
               <BranchManagementPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/dashboard/repo/:repositoryId/settings"
+          element={
+            <ProtectedRoute>
+              <RepositorySettingsPage />
             </ProtectedRoute>
           }
         />
