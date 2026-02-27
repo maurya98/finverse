@@ -591,6 +591,7 @@ export function BranchManagementPage() {
                           selectedFile.mode
                         ) ? (
                           <JdmDiffViewer
+                            key={selectedFile.path}
                             path={selectedFile.path}
                             oldContent={selectedFile.oldContent}
                             newContent={selectedFile.newContent}
@@ -598,6 +599,7 @@ export function BranchManagementPage() {
                           />
                         ) : (
                           <SideBySideDiffViewer
+                            key={selectedFile.path}
                             path={selectedFile.path}
                             oldContent={selectedFile.oldContent}
                             newContent={selectedFile.newContent}
@@ -882,6 +884,7 @@ export function BranchManagementPage() {
                         selectedFile.mode
                       ) ? (
                         <JdmDiffViewer
+                          key={selectedFile.path}
                           path={selectedFile.path}
                           oldContent={selectedFile.oldContent}
                           newContent={selectedFile.newContent}
@@ -889,6 +892,7 @@ export function BranchManagementPage() {
                         />
                       ) : (
                         <SideBySideDiffViewer
+                          key={selectedFile.path}
                           path={selectedFile.path}
                           oldContent={selectedFile.oldContent}
                           newContent={selectedFile.newContent}
