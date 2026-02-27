@@ -19,14 +19,13 @@ import {
 } from "../services/api";
 import { getUser } from "../../auth/services/auth";
 import { TrashIcon } from "../components/icons/TrashIcon";
-import { FileDiffViewer } from "../components/FileDiffViewer";
 import { SideBySideDiffViewer } from "../components/SideBySideDiffViewer";
+import { JdmDiffViewer, canShowJdmDiff } from "../components/JdmDiffViewer";
 import { useRepoRole } from "../contexts/RepoRoleContext";
 import { AppButton } from "../../../components/ui/AppButton";
 import { AppModal } from "../../../components/ui/AppModal";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import Paper from "@mui/material/Paper";
 import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
 import Select from "@mui/material/Select";
@@ -42,10 +41,6 @@ import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import Alert from "@mui/material/Alert";
-import Accordion from "@mui/material/Accordion";
-import AccordionSummary from "@mui/material/AccordionSummary";
-import AccordionDetails from "@mui/material/AccordionDetails";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import "./BranchManagementPage.css";
 
 export function BranchManagementPage() {
@@ -80,6 +75,7 @@ export function BranchManagementPage() {
   const [mergingMRId, setMergingMRId] = useState<string | null>(null);
   const [viewMR, setViewMR] = useState<{ mr: MergeRequest; diff: DiffResult } | null>(null);
   const [loadingMRDiff, setLoadingMRDiff] = useState(false);
+  const [selectedMRFilePath, setSelectedMRFilePath] = useState<string | null>(null);
 
   const currentBranch = branches.find((b) => b.name === branchParam) ?? null;
   const { currentUserRole } = useRepoRole();
@@ -254,7 +250,13 @@ export function BranchManagementPage() {
       setError(res.success === false ? (res as { message: string }).message : "Failed to load changes");
       return;
     }
-    setViewMR({ mr, diff: res.data });
+    const diff = res.data;
+    setViewMR({ mr, diff });
+    const added = diff.added.map((a) => a.path);
+    const removed = diff.removed.map((r) => r.path);
+    const modified = diff.modified.map((m) => m.path);
+    const firstPath = added[0] ?? removed[0] ?? modified[0] ?? null;
+    setSelectedMRFilePath(firstPath);
   }
 
   async function handlePerformMerge(mr: MergeRequest) {
@@ -301,136 +303,104 @@ export function BranchManagementPage() {
 
   return (
     <Box className="branch-mgmt-page" sx={{ flex: 1, minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column", width: "100%", overflowX: "hidden" }}>
-      <Box sx={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, overflow: "hidden", p: 2, width: "100%", boxSizing: "border-box", overflowX: "hidden" }}>
-      <Paper variant="outlined" sx={{ flexShrink: 0, p: 2, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 2 }}>
-        <FormControl size="small" sx={{ minWidth: 200 }}>
-          <InputLabel id="branch-select-label">Branch</InputLabel>
-          <Select
-            labelId="branch-select-label"
-            label="Branch"
-            value={branchParam}
-            onChange={(e) => setSearchParams({ branch: e.target.value })}
-            disabled={loadingBranches}
-          >
-            {branches.map((b) => (
-              <MenuItem key={b.id} value={b.name}>
-                {b.name}
-                {b.name === repo.defaultBranch ? " (default)" : ""}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        <Box sx={{ display: "flex", gap: 1, ml: "auto", flexWrap: "wrap" }}>
-          <AppButton size="small" variant="primary" onClick={() => setCreateMRModal(true)}>
-            Create merge request
-          </AppButton>
-          <AppButton size="small" variant="primary" onClick={() => setCreateModal(true)}>
-            Create branch
-          </AppButton>
-          {currentBranch && (
-            <AppButton
-              size="small"
-              variant="danger"
-              startIcon={<TrashIcon size={16} />}
-              onClick={() => setDeleteConfirm(currentBranch)}
-              disabled={branches.length <= 1}
-              title={branches.length <= 1 ? "Cannot delete the only branch" : "Delete this branch"}
+      <Box className="branch-mgmt-body" sx={{ display: "flex", flex: 1, minHeight: 0, overflow: "hidden", width: "100%", boxSizing: "border-box" }}>
+        <aside className="branch-mgmt-sidebar">
+          <div className="branch-mgmt-sidebar-header">Branches</div>
+          <FormControl size="small" fullWidth sx={{ mt: 0.5 }}>
+            <InputLabel id="branch-select-label">Branch</InputLabel>
+            <Select
+              labelId="branch-select-label"
+              label="Branch"
+              value={branchParam}
+              onChange={(e) => setSearchParams({ branch: e.target.value })}
+              disabled={loadingBranches}
             >
-              Delete branch
+              {branches.map((b) => (
+                <MenuItem key={b.id} value={b.name}>
+                  {b.name}
+                  {b.name === repo.defaultBranch ? " (default)" : ""}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <div className="branch-mgmt-sidebar-actions">
+            <AppButton size="small" variant="primary" fullWidth onClick={() => setCreateMRModal(true)}>
+              Create merge request
             </AppButton>
-          )}
-        </Box>
-      </Paper>
+            <AppButton size="small" variant="primary" fullWidth onClick={() => setCreateModal(true)}>
+              Create branch
+            </AppButton>
+            {currentBranch && (
+              <AppButton
+                size="small"
+                variant="danger"
+                fullWidth
+                startIcon={<TrashIcon size={16} />}
+                onClick={() => setDeleteConfirm(currentBranch)}
+                disabled={branches.length <= 1}
+                title={branches.length <= 1 ? "Cannot delete the only branch" : "Delete this branch"}
+              >
+                Delete branch
+              </AppButton>
+            )}
+          </div>
+          <div className="branch-mgmt-sidebar-mr">
+            <div className="branch-mgmt-sidebar-header">Merge requests (open)</div>
+            {loadingMRs ? (
+              <Box sx={{ py: 1 }}>
+                {[1, 2].map((i) => (
+                  <Skeleton key={i} variant="rounded" height={36} sx={{ mb: 0.5 }} />
+                ))}
+              </Box>
+            ) : mergeRequests.length === 0 ? (
+              <Typography variant="caption" color="text.secondary" sx={{ display: "block", py: 1 }}>
+                No open merge requests.
+              </Typography>
+            ) : (
+              <ul className="branch-mgmt-sidebar-mr-list">
+                {mergeRequests.map((mr) => {
+                  const sourceName = branches.find((b) => b.id === mr.sourceBranchId)?.name ?? mr.sourceBranchId.slice(0, 7);
+                  const targetName = branches.find((b) => b.id === mr.targetBranchId)?.name ?? mr.targetBranchId.slice(0, 7);
+                  return (
+                    <li key={mr.id} className="branch-mgmt-sidebar-mr-item">
+                      <button
+                        type="button"
+                        className="branch-mgmt-sidebar-mr-title"
+                        onClick={() => handleViewMR(mr)}
+                        disabled={loadingMRDiff}
+                      >
+                        {mr.title}
+                      </button>
+                      <span className="branch-mgmt-sidebar-mr-meta">{sourceName} → {targetName}</span>
+                      <div className="branch-mgmt-sidebar-mr-actions">
+                        <AppButton size="small" variant="secondary" disabled={loadingMRDiff} onClick={() => handleViewMR(mr)}>
+                          View
+                        </AppButton>
+                        {canMergeMR && (
+                          <AppButton
+                            size="small"
+                            variant="primary"
+                            disabled={mergingMRId !== null}
+                            onClick={(e) => { e.stopPropagation(); handlePerformMerge(mr); }}
+                          >
+                            {mergingMRId === mr.id ? "Merging…" : "Merge"}
+                          </AppButton>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </div>
+        </aside>
 
+        <Box sx={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0, overflow: "hidden", p: 2, width: "100%", boxSizing: "border-box", overflowX: "hidden" }}>
       {error && (
         <Alert severity="error" onClose={() => setError(null)} sx={{ flexShrink: 0 }}>
           {error}
         </Alert>
       )}
-
-      <Accordion
-        disableGutters
-        elevation={0}
-        sx={{
-          flexShrink: 0,
-          border: 1,
-          borderColor: "divider",
-          "&:before": { display: "none" },
-          "& .MuiAccordionSummary-content": { my: 0.5 },
-        }}
-      >
-        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-          <Typography variant="subtitle2" fontWeight={600}>
-            Merge requests (open){mergeRequests.length > 0 ? ` — ${mergeRequests.length}` : ""}
-          </Typography>
-        </AccordionSummary>
-        <AccordionDetails sx={{ p: 0, pt: 0 }}>
-          <Paper variant="outlined" sx={{ overflow: "hidden", border: 0, borderRadius: 0 }}>
-          {loadingMRs ? (
-            <Box sx={{ p: 2, display: "flex", flexDirection: "column", gap: 1 }}>
-              {[1, 2, 3].map((i) => (
-                <Skeleton key={i} variant="rounded" height={44} />
-              ))}
-            </Box>
-          ) : mergeRequests.length === 0 ? (
-            <Box sx={{ p: 2 }}>
-              <Typography color="text.secondary" variant="body2">No open merge requests.</Typography>
-            </Box>
-          ) : (
-            <List disablePadding dense>
-              {mergeRequests.map((mr) => {
-                const sourceName = branches.find((b) => b.id === mr.sourceBranchId)?.name ?? mr.sourceBranchId.slice(0, 7);
-                const targetName = branches.find((b) => b.id === mr.targetBranchId)?.name ?? mr.targetBranchId.slice(0, 7);
-                return (
-                  <ListItem
-                    key={mr.id}
-                    divider
-                    sx={{ flexWrap: "wrap", gap: 1, alignItems: "center", py: 0.5 }}
-                  >
-                    <ListItemText
-                      primary={
-                        <AppButton
-                          variant="ghost"
-                          size="small"
-                          sx={{ textTransform: "none", fontWeight: 600, p: 0, minWidth: 0, fontSize: "0.8125rem" }}
-                          onClick={() => handleViewMR(mr)}
-                          disabled={loadingMRDiff}
-                        >
-                          {mr.title}
-                        </AppButton>
-                      }
-                      secondary={`${sourceName} → ${targetName} · ${formatDate(mr.createdAt)}`}
-                      primaryTypographyProps={{ variant: "body2" }}
-                      secondaryTypographyProps={{ variant: "caption" }}
-                    />
-                    <Box sx={{ display: "flex", gap: 0.5 }}>
-                      <AppButton
-                        size="small"
-                        variant="secondary"
-                        disabled={loadingMRDiff}
-                        onClick={() => handleViewMR(mr)}
-                      >
-                        View
-                      </AppButton>
-                      {canMergeMR && (
-                        <AppButton
-                          size="small"
-                          variant="primary"
-                          disabled={mergingMRId !== null}
-                          onClick={() => handlePerformMerge(mr)}
-                        >
-                          {mergingMRId === mr.id ? "Merging…" : "Merge"}
-                        </AppButton>
-                      )}
-                    </Box>
-                  </ListItem>
-                );
-              })}
-            </List>
-          )}
-          </Paper>
-        </AccordionDetails>
-      </Accordion>
 
       <Box component="section" sx={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 0.5 }}>
@@ -614,12 +584,26 @@ export function BranchManagementPage() {
                     </Box>
                     <Box sx={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflow: "hidden", p: 1 }}>
                       {selectedFile && (
-                        <SideBySideDiffViewer
-                          path={selectedFile.path}
-                          oldContent={selectedFile.oldContent}
-                          newContent={selectedFile.newContent}
-                          mode={selectedFile.mode}
-                        />
+                        canShowJdmDiff(
+                          selectedFile.path,
+                          selectedFile.oldContent,
+                          selectedFile.newContent,
+                          selectedFile.mode
+                        ) ? (
+                          <JdmDiffViewer
+                            path={selectedFile.path}
+                            oldContent={selectedFile.oldContent}
+                            newContent={selectedFile.newContent}
+                            mode={selectedFile.mode}
+                          />
+                        ) : (
+                          <SideBySideDiffViewer
+                            path={selectedFile.path}
+                            oldContent={selectedFile.oldContent}
+                            newContent={selectedFile.newContent}
+                            mode={selectedFile.mode}
+                          />
+                        )
                       )}
                     </Box>
                   </Box>
@@ -627,6 +611,9 @@ export function BranchManagementPage() {
               );
             })()}
           </Box>
+        </Box>
+      </Box>
+
         </Box>
       </Box>
 
@@ -773,88 +760,148 @@ export function BranchManagementPage() {
       {viewMR && (
         <Dialog
           open
-          onClose={() => setViewMR(null)}
-          maxWidth="md"
+          onClose={() => { setViewMR(null); setSelectedMRFilePath(null); }}
+          maxWidth="lg"
           fullWidth
           className="branch-mgmt-diff-dialog"
+          PaperProps={{ sx: { minHeight: "70vh", maxHeight: "90vh" } }}
         >
           <DialogTitle>{viewMR.mr.title}</DialogTitle>
-          <DialogContent>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          <DialogContent sx={{ p: 0, display: "flex", flexDirection: "column", minHeight: 0 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ px: 2, py: 1, borderBottom: 1, borderColor: "divider" }}>
               {branches.find((b) => b.id === viewMR.mr.sourceBranchId)?.name ?? "source"} →{" "}
               {branches.find((b) => b.id === viewMR.mr.targetBranchId)?.name ?? "target"}
               {viewMR.mr.description && ` · ${viewMR.mr.description}`}
             </Typography>
-            <div className="branch-mgmt-diff-list">
-              {viewMR.diff.added.length > 0 && (
-                <div className="branch-mgmt-diff-section">
-                  <strong className="branch-mgmt-diff-added">Added</strong>
-                  {viewMR.diff.added.map((a) =>
-                    a.content !== undefined ? (
-                      <FileDiffViewer
-                        key={a.path}
-                        path={a.path}
-                        oldContent={null}
-                        newContent={a.content}
-                        mode="added"
-                      />
-                    ) : (
-                      <ul key={a.path}>
-                        <li>{a.path}</li>
-                      </ul>
-                    )
-                  )}
-                </div>
-              )}
-              {viewMR.diff.removed.length > 0 && (
-                <div className="branch-mgmt-diff-section">
-                  <strong className="branch-mgmt-diff-removed">Removed</strong>
-                  {viewMR.diff.removed.map((r) =>
-                    r.content !== undefined ? (
-                      <FileDiffViewer
-                        key={r.path}
-                        path={r.path}
-                        oldContent={r.content}
-                        newContent={null}
-                        mode="removed"
-                      />
-                    ) : (
-                      <ul key={r.path}>
-                        <li>{r.path}</li>
-                      </ul>
-                    )
-                  )}
-                </div>
-              )}
-              {viewMR.diff.modified.length > 0 && (
-                <div className="branch-mgmt-diff-section">
-                  <strong className="branch-mgmt-diff-modified">Modified</strong>
-                  {viewMR.diff.modified.map((m) =>
-                    m.base.content !== undefined && m.target.content !== undefined ? (
-                      <FileDiffViewer
-                        key={m.path}
-                        path={m.path}
-                        oldContent={m.base.content}
-                        newContent={m.target.content}
-                        mode="modified"
-                      />
-                    ) : (
-                      <ul key={m.path}>
-                        <li>{m.path}</li>
-                      </ul>
-                    )
-                  )}
-                </div>
-              )}
-              {viewMR.diff.added.length === 0 &&
-                viewMR.diff.removed.length === 0 &&
-                viewMR.diff.modified.length === 0 && (
-                  <p className="branch-mgmt-diff-empty">No file changes.</p>
-                )}
-            </div>
+            {(() => {
+              const d = viewMR.diff;
+              const added = d.added.map((a) => ({ path: a.path, mode: "added" as const, oldContent: undefined, newContent: a.content }));
+              const removed = d.removed.map((r) => ({ path: r.path, mode: "removed" as const, oldContent: r.content, newContent: undefined }));
+              const modified = d.modified.map((m) => ({
+                path: m.path,
+                mode: "modified" as const,
+                oldContent: m.base.content,
+                newContent: m.target.content,
+              }));
+              const fileList = [...added, ...removed, ...modified];
+              const selectedFile = fileList.find((f) => f.path === selectedMRFilePath) ?? fileList[0];
+
+              if (fileList.length === 0) {
+                return (
+                  <Box sx={{ p: 2 }}>
+                    <Typography color="text.secondary">No file changes.</Typography>
+                  </Box>
+                );
+              }
+
+              return (
+                <Box sx={{ flex: 1, minHeight: 0, display: "flex" }}>
+                  <Box
+                    sx={{
+                      width: 220,
+                      flexShrink: 0,
+                      borderRight: 1,
+                      borderColor: "divider",
+                      overflow: "auto",
+                      py: 0.5,
+                    }}
+                  >
+                    {added.length > 0 && (
+                      <>
+                        <Typography variant="caption" sx={{ px: 1.5, py: 0.5, color: "success.main", fontWeight: 600 }}>Added</Typography>
+                        {added.map((f) => (
+                          <Box
+                            key={f.path}
+                            onClick={() => setSelectedMRFilePath(f.path)}
+                            sx={{
+                              px: 1.5,
+                              py: 0.5,
+                              cursor: "pointer",
+                              fontFamily: "monospace",
+                              fontSize: "0.75rem",
+                              bgcolor: selectedMRFilePath === f.path ? "action.selected" : "transparent",
+                              "&:hover": { bgcolor: "action.hover" },
+                            }}
+                          >
+                            {f.path}
+                          </Box>
+                        ))}
+                      </>
+                    )}
+                    {removed.length > 0 && (
+                      <>
+                        <Typography variant="caption" sx={{ px: 1.5, py: 0.5, color: "error.main", fontWeight: 600 }}>Removed</Typography>
+                        {removed.map((f) => (
+                          <Box
+                            key={f.path}
+                            onClick={() => setSelectedMRFilePath(f.path)}
+                            sx={{
+                              px: 1.5,
+                              py: 0.5,
+                              cursor: "pointer",
+                              fontFamily: "monospace",
+                              fontSize: "0.75rem",
+                              bgcolor: selectedMRFilePath === f.path ? "action.selected" : "transparent",
+                              "&:hover": { bgcolor: "action.hover" },
+                            }}
+                          >
+                            {f.path}
+                          </Box>
+                        ))}
+                      </>
+                    )}
+                    {modified.length > 0 && (
+                      <>
+                        <Typography variant="caption" sx={{ px: 1.5, py: 0.5, color: "warning.main", fontWeight: 600 }}>Modified</Typography>
+                        {modified.map((f) => (
+                          <Box
+                            key={f.path}
+                            onClick={() => setSelectedMRFilePath(f.path)}
+                            sx={{
+                              px: 1.5,
+                              py: 0.5,
+                              cursor: "pointer",
+                              fontFamily: "monospace",
+                              fontSize: "0.75rem",
+                              bgcolor: selectedMRFilePath === f.path ? "action.selected" : "transparent",
+                              "&:hover": { bgcolor: "action.hover" },
+                            }}
+                          >
+                            {f.path}
+                          </Box>
+                        ))}
+                      </>
+                    )}
+                  </Box>
+                  <Box sx={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflow: "hidden", p: 1 }}>
+                    {selectedFile &&
+                      (canShowJdmDiff(
+                        selectedFile.path,
+                        selectedFile.oldContent,
+                        selectedFile.newContent,
+                        selectedFile.mode
+                      ) ? (
+                        <JdmDiffViewer
+                          path={selectedFile.path}
+                          oldContent={selectedFile.oldContent}
+                          newContent={selectedFile.newContent}
+                          mode={selectedFile.mode}
+                        />
+                      ) : (
+                        <SideBySideDiffViewer
+                          path={selectedFile.path}
+                          oldContent={selectedFile.oldContent}
+                          newContent={selectedFile.newContent}
+                          mode={selectedFile.mode}
+                        />
+                      ))}
+                  </Box>
+                </Box>
+              );
+            })()}
           </DialogContent>
           <DialogActions sx={{ px: 2, pb: 2 }}>
-            <AppButton variant="secondary" onClick={() => setViewMR(null)}>
+            <AppButton variant="secondary" onClick={() => { setViewMR(null); setSelectedMRFilePath(null); }}>
               Close
             </AppButton>
             {canMergeMR && (
@@ -869,7 +916,6 @@ export function BranchManagementPage() {
           </DialogActions>
         </Dialog>
       )}
-    </Box>
     </Box>
   );
 }

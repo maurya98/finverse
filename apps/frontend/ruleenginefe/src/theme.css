@@ -80,6 +80,45 @@
   color: #0f172a;
 }
 
+[data-theme="light"] .branch-mgmt-sidebar {
+  background: #e2e8f0;
+  border-right-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .branch-mgmt-sidebar-header {
+  color: #64748b;
+}
+
+[data-theme="light"] .branch-mgmt-sidebar .MuiInputLabel-root,
+[data-theme="light"] .branch-mgmt-sidebar .MuiSelect-select,
+[data-theme="light"] .branch-mgmt-sidebar .MuiInputBase-root {
+  color: #0f172a;
+}
+
+[data-theme="light"] .branch-mgmt-sidebar .MuiOutlinedInput-notchedOutline {
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="light"] .branch-mgmt-sidebar-mr {
+  border-top-color: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .branch-mgmt-sidebar-mr-title {
+  color: #334155;
+}
+
+[data-theme="light"] .branch-mgmt-sidebar-mr-title:hover:not(:disabled) {
+  color: #0d9488;
+}
+
+[data-theme="light"] .branch-mgmt-sidebar-mr-meta {
+  color: #64748b;
+}
+
+[data-theme="light"] .branch-mgmt-sidebar-mr-item {
+  border-bottom-color: rgba(0, 0, 0, 0.06);
+}
+
 [data-theme="light"] .branch-mgmt-loading {
   color: #64748b;
 }

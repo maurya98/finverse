@@ -1,0 +1,30 @@
+.jdm-diff-viewer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.jdm-diff-viewer-header {
+  flex-shrink: 0;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: inherit;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.jdm-diff-viewer-graph {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.jdm-diff-viewer-graph .grl-dg {
+  height: 100%;
+}
+
+.jdm-diff-viewer-graph .grl-dg__graph {
+  height: 100%;
+}

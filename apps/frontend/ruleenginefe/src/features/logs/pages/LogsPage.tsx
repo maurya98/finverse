@@ -208,6 +208,7 @@ export function LogsPage() {
             <label>
               Limit
               <select
+                className="logs-select-limit"
                 value={filters.limit ?? 50}
                 onChange={(e) => setFilter("limit", Number(e.target.value))}
               >
