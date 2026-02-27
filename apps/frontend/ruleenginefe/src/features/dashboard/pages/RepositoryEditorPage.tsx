@@ -87,6 +87,12 @@ export function RepositoryEditorPage() {
   const deletedPathsRef = useRef(deletedPaths);
   deletedPathsRef.current = deletedPaths;
 
+  /** Only auto-open index.json once when repo/branch is first loaded. */
+  const hasAutoOpenedIndexJsonRef = useRef(false);
+  useEffect(() => {
+    if (repositoryId && branchName) hasAutoOpenedIndexJsonRef.current = false;
+  }, [repositoryId, branchName]);
+
   const displayTree = useMemo(
     () => mergeTreeWithPending(tree, pending, deletedPaths),
     [tree, pending, deletedPaths]
@@ -156,6 +162,31 @@ export function RepositoryEditorPage() {
     }
     return null;
   }
+
+  /** Find first file node with the given name in the tree (e.g. "index.json"). */
+  function findFileByName(
+    nodes: FileTreeNode[],
+    name: string
+  ): FileTreeNode | null {
+    for (const n of nodes) {
+      if (n.type === "file" && n.name === name) return n;
+      if (n.children?.length) {
+        const found = findFileByName(n.children, name);
+        if (found) return found;
+      }
+    }
+    return null;
+  }
+
+  /** When repo page opens and tree is loaded, open index.json if it exists. */
+  useEffect(() => {
+    if (loading || selectedPath !== null || hasAutoOpenedIndexJsonRef.current) return;
+    const indexNode = findFileByName(displayTree, "index.json");
+    if (!indexNode) return;
+    hasAutoOpenedIndexJsonRef.current = true;
+    loadFile(indexNode.path, indexNode.blobId, indexNode.id, indexNode.parentTreeId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- findFileByName is stable in behavior
+  }, [loading, selectedPath, displayTree, loadFile]);
 
   function handleSave() {
     if (!selectedPath || !repositoryId || !branchName) return;
