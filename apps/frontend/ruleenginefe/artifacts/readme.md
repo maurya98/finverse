@@ -5,6 +5,8 @@ folder inside the `src` directory.
 It is intended for both developers and AI agents to correctly organize
 files and maintain scalability.
 
+For **access control (ACL)** — how roles and permissions are used in the UI (repository members, Settings, Merge) — see [ACL.md](./ACL.md).
+
 ---
 
 # 📁 Root Structure

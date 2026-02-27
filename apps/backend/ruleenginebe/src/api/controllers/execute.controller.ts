@@ -1,6 +1,8 @@
 import { Request, Response, Router } from "express";
 import { validateBody } from "@finverse/utils";
 import { sendSuccess, sendError } from "@finverse/utils";
+import { requireAuth } from "../middlewares/auth.middleware";
+import { requireRepoAccess } from "../middlewares/repo-access.middleware";
 import { SimulateService } from "../../modules/simulate/simulate.service";
 import { RepositoryService } from "../../modules/repositories/repository.service";
 import { BlobService, BranchService, CommitService, TreeService } from "../../modules/vcs-engine/index";
@@ -23,7 +25,7 @@ export class ExecuteController {
   }
 
   private initRoutes(): void {
-    this.router.post("/", validateBody(executeBodySchema), this.execute.bind(this));
+    this.router.post("/", requireAuth, requireRepoAccess("VIEWER"), validateBody(executeBodySchema), this.execute.bind(this));
   }
 
   private async execute(req: Request, res: Response): Promise<Response> {

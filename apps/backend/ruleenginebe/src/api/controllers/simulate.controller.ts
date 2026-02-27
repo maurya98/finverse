@@ -1,9 +1,13 @@
 import { Request, Response, Router } from "express";
 import { validateBody } from "@finverse/utils";
 import { sendSuccess, sendError } from "@finverse/utils";
+import { requireAuth } from "../middlewares/auth.middleware";
 import { SimulateService } from "../../modules/simulate/simulate.service";
+import { RepositoryMembersService } from "../../modules/repository-members/repository-members.service";
 import { BlobService, BranchService, CommitService, TreeService } from "../../modules/vcs-engine/index";
 import { simulateBodySchema } from "../validations/simulate.validator";
+
+const repoMembersService = new RepositoryMembersService();
 
 export class SimulateController {
   public router: Router;
@@ -21,7 +25,7 @@ export class SimulateController {
   }
 
   private initRoutes(): void {
-    this.router.post("/", validateBody(simulateBodySchema), this.simulate.bind(this));
+    this.router.post("/", requireAuth, validateBody(simulateBodySchema), this.simulate.bind(this));
   }
 
   private async simulate(req: Request, res: Response): Promise<Response> {
@@ -33,6 +37,12 @@ export class SimulateController {
         branch?: string;
         decisions?: Record<string, unknown>;
       };
+      if (repositoryId) {
+        const member = await repoMembersService.getMember(repositoryId, req.user!.id);
+        if (!member) {
+          return sendError(res, "You do not have access to this repository", 403);
+        }
+      }
       const output = await this.simulateService.simulate({
         content,
         context: context ?? {},

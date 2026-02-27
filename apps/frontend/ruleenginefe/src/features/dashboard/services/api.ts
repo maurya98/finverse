@@ -76,6 +76,7 @@ export type Repository = {
   createdBy: string;
   createdAt: string;
   updatedAt: string;
+  currentUserRole?: "ADMIN" | "MAINTAINER" | "CONTRIBUTOR" | "VIEWER";
 };
 export async function listRepositories(workspaceId: string, skip = 0, take = 50): Promise<ApiResponse<Repository[]>> {
   return request(`/repositories/list?workspaceId=${encodeURIComponent(workspaceId)}&skip=${skip}&take=${take}`);
@@ -96,6 +97,52 @@ export async function getRepository(id: string): Promise<ApiResponse<Repository>
 }
 export async function deleteRepository(id: string): Promise<ApiResponse<unknown>> {
   return request(`/repositories/${id}`, { method: "DELETE" });
+}
+
+// --- Repository members ---
+export type RepositoryMemberRole = "ADMIN" | "MAINTAINER" | "CONTRIBUTOR" | "VIEWER";
+export type RepositoryMember = {
+  id: string;
+  repositoryId: string;
+  userId: string;
+  role: RepositoryMemberRole;
+  userEmail: string | null;
+  userName: string | null;
+};
+export async function listRepositoryMembers(repositoryId: string): Promise<ApiResponse<RepositoryMember[]>> {
+  return request(`/repositories/${repositoryId}/members`);
+}
+export async function getMyRepositoryRole(repositoryId: string): Promise<ApiResponse<{ role: RepositoryMemberRole }>> {
+  return request(`/repositories/${repositoryId}/members/me`);
+}
+export async function addRepositoryMember(
+  repositoryId: string,
+  userId: string,
+  role: RepositoryMemberRole
+): Promise<ApiResponse<RepositoryMember>> {
+  return request(`/repositories/${repositoryId}/members`, {
+    method: "POST",
+    body: JSON.stringify({ userId, role }),
+  });
+}
+export async function updateRepositoryMemberRole(
+  repositoryId: string,
+  userId: string,
+  role: RepositoryMemberRole
+): Promise<ApiResponse<RepositoryMember>> {
+  return request(`/repositories/${repositoryId}/members/${userId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ role }),
+  });
+}
+export async function removeRepositoryMember(repositoryId: string, userId: string): Promise<ApiResponse<unknown>> {
+  return request(`/repositories/${repositoryId}/members/${userId}`, { method: "DELETE" });
+}
+
+// --- Users (for member picker) ---
+export type User = { id: string; email: string; name: string | null; role?: string };
+export async function listUsers(skip = 0, take = 100): Promise<ApiResponse<User[]>> {
+  return request(`/users/?skip=${skip}&take=${take}`);
 }
 
 // --- Blobs ---

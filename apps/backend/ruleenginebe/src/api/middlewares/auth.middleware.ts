@@ -9,6 +9,10 @@ declare global {
   namespace Express {
     interface Request {
       user?: AuthUser;
+      /** Set by requireRepoAccess: current user's role on the repository. */
+      repoRole?: string;
+      /** Set by a middleware (e.g. from branch/commit) for requireRepoAccess. */
+      repositoryIdForAccess?: string;
     }
   }
 }

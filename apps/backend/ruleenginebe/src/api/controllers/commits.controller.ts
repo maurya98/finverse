@@ -1,6 +1,8 @@
 import { Request, Response, Router } from "express";
 import { validateBody } from "@finverse/utils";
 import { sendSuccess, sendError } from "@finverse/utils";
+import { requireAuth } from "../middlewares/auth.middleware";
+import { requireRepoAccess, setRepositoryIdFromCommitId } from "../middlewares/repo-access.middleware";
 import { CommitService } from "../../modules/vcs-engine/commit.service";
 import { DiffService } from "../../modules/vcs-engine/diff.service";
 import { BlobService } from "../../modules/vcs-engine/blob.service";
@@ -21,10 +23,10 @@ export class CommitsController {
   }
 
   private initRoutes(): void {
-    this.router.post("/", validateBody(createCommitSchema), this.create.bind(this));
-    this.router.get("/list", this.list.bind(this));
-    this.router.get("/:id/diff", this.getDiff.bind(this));
-    this.router.get("/:id", this.getById.bind(this));
+    this.router.post("/", requireAuth, requireRepoAccess("CONTRIBUTOR"), validateBody(createCommitSchema), this.create.bind(this));
+    this.router.get("/list", requireAuth, requireRepoAccess("VIEWER"), this.list.bind(this));
+    this.router.get("/:id/diff", requireAuth, setRepositoryIdFromCommitId, requireRepoAccess("VIEWER"), this.getDiff.bind(this));
+    this.router.get("/:id", requireAuth, setRepositoryIdFromCommitId, requireRepoAccess("VIEWER"), this.getById.bind(this));
   }
 
   private async create(req: Request, res: Response): Promise<Response> {

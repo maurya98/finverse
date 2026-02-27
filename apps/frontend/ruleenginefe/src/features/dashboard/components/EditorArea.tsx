@@ -88,6 +88,8 @@ export function EditorArea({
             className="editor-save-btn"
             onClick={onSave}
             disabled={!dirty}
+            title="Save (Ctrl+S / ⌘+S)"
+            aria-label="Save file"
           >
             Save
           </button>

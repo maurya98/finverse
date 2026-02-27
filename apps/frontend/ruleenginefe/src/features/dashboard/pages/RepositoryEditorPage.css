@@ -7,7 +7,7 @@
 
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  min-height: 0;
   background: var(--editor-bg);
   color: var(--editor-text);
 }
@@ -45,22 +45,6 @@
   color: var(--editor-accent);
 }
 
-.repo-editor-sidebar-toggle {
-  padding: 4px 8px;
-  background: transparent;
-  border: 1px solid var(--editor-border);
-  color: var(--editor-text);
-  border-radius: 4px;
-  font-size: 12px;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-.repo-editor-sidebar-toggle:hover {
-  border-color: var(--editor-accent);
-  color: var(--editor-accent);
-}
-
 .repo-editor-title {
   margin: 0;
   font-size: 14px;
@@ -91,6 +75,7 @@
   flex-shrink: 0;
   overflow: hidden;
   transition: width 0.2s ease, min-width 0.2s ease;
+  display: flex;
 }
 
 .repo-editor-body.repo-editor-sidebar-hidden .repo-editor-sidebar-wrap {
@@ -103,26 +88,44 @@
   left: 0;
   top: 50%;
   transform: translateY(-50%);
-  width: 24px;
-  height: 48px;
-  padding: 0;
+  width: 36px;
+  min-height: 80px;
+  padding: 12px 6px;
   background: var(--editor-header);
   border: 1px solid var(--editor-border);
   border-left: none;
-  border-radius: 0 6px 6px 0;
+  border-radius: 0 8px 8px 0;
   color: var(--editor-text);
-  font-size: 10px;
   cursor: pointer;
   z-index: 10;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.2);
+  gap: 6px;
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.25);
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .repo-editor-sidebar-show-btn:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.08);
   color: var(--editor-accent);
+}
+
+.repo-editor-sidebar-show-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.repo-editor-sidebar-show-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: rotate(180deg);
+  line-height: 1.2;
 }
 
 .repo-editor-footer {
@@ -138,6 +141,7 @@
 .repo-editor-footer-actions {
   display: flex;
   gap: 8px;
+  align-items: center;
 }
 
 .footer-btn {

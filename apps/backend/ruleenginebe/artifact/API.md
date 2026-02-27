@@ -100,6 +100,18 @@ Invalidate the current session/token.
 
 ---
 
+## Access control
+
+All endpoints except `POST auth/login` and `POST auth/logout` require a valid JWT in the `Authorization: Bearer <token>` header. Unauthenticated requests receive `401`.
+
+- **Workspaces:** Created and listed for the authenticated user only (they are the owner). Get/delete require the user to be the workspace owner.
+- **Repositories:** Create requires the user to be the **workspace owner**. List requires access to the workspace (owner). Get repository requires the user to be a **repository member** with at least **VIEWER** role. Delete requires **ADMIN** on the repository.
+- **Repository members:** Each repository has a list of members with roles: **ADMIN**, **MAINTAINER**, **CONTRIBUTOR**, **VIEWER**. The repository creator is auto-added as **ADMIN**. Only **ADMIN** or **MAINTAINER** can add, update, or remove members. At least one **ADMIN** must remain.
+- **VCS (blobs, trees, commits, branches, merge requests):** All operations require the user to be a repository member with at least **VIEWER** (read) or **CONTRIBUTOR** (write). Merging merge requests requires **MAINTAINER** or **ADMIN** on that repository.
+- **Execute / Simulate:** Require repository access (VIEWER) when a `repositoryId` is used.
+
+---
+
 ## Users
 
 ### GET `users/`
@@ -180,25 +192,41 @@ Delete a user.
 
 ### POST `workspaces/`
 
-Create a workspace.
+Create a workspace. The authenticated user becomes the owner.
 
-**Request body:** `{ "name": string, "ownerId": string }` (UUID)
+**Request body:** `{ "name": string, "ownerId"?: string }` — `ownerId` is optional; the authenticated user is always set as owner.
 
 **Success (201)** — `data`: `{ id, name, ownerId, createdAt }`.
 
-### GET `workspaces/list?ownerId=...&skip=&take=`
+**Requires:** Authentication.
 
-List workspaces by owner.
+### GET `workspaces/list?skip=&take=`
+
+List workspaces owned by the authenticated user. `ownerId` query is no longer required; the server uses the current user.
 
 **Success (200)** — `data`: array of workspaces.
 
+**Requires:** Authentication.
+
 ### GET `workspaces/:id`
 
-Get workspace by ID.
+Get workspace by ID. Only the workspace owner can access.
 
 **Success (200)** — `data`: workspace.
 
-**Errors** — `404` if not found.
+**Errors** — `404` if not found; `403` if not the owner.
+
+**Requires:** Authentication.
+
+### DELETE `workspaces/:id`
+
+Delete a workspace and all its repositories. Only the workspace owner can delete.
+
+**Success (200)** — No `data`; optional `message`.
+
+**Errors** — `404` if not found; `403` if not the owner.
+
+**Requires:** Authentication.
 
 ---
 
@@ -206,27 +234,118 @@ Get workspace by ID.
 
 ### POST `repositories/`
 
-Create a repository. Creates a default branch (e.g. `main`) with no head commit.
+Create a repository. Creates a default branch (e.g. `main`) with no head commit and adds the creator as a repository member with role **ADMIN**.
 
-**Request body:** `{ "name": string, "workspaceId": string (UUID), "createdBy": string (UUID), "defaultBranch"?: string }`
+**Request body:** `{ "name": string, "workspaceId": string (UUID), "createdBy"?: string (UUID), "defaultBranch"?: string }` — `createdBy` is optional; the authenticated user is used.
 
 **Success (201)** — `data`: repository.
 
-**Errors** — `409` if name already exists in workspace.
+**Errors** — `403` if the user is not the workspace owner; `409` if name already exists in workspace.
+
+**Requires:** Authentication; user must be the workspace owner.
 
 ### GET `repositories/list?workspaceId=...&skip=&take=`
 
-List repositories in a workspace.
+List repositories in a workspace. Only allowed if the user is the workspace owner.
 
 **Success (200)** — `data`: array of repositories.
 
+**Errors** — `403` if the user does not have access to the workspace.
+
+**Requires:** Authentication.
+
 ### GET `repositories/:id`
 
-Get repository by ID.
+Get repository by ID. When authenticated and the user is a repository member, the response includes `currentUserRole` (VIEWER, CONTRIBUTOR, MAINTAINER, or ADMIN).
 
-**Success (200)** — `data`: repository.
+**Success (200)** — `data`: repository (and optionally `currentUserRole`).
 
-**Errors** — `404` if not found.
+**Errors** — `404` if not found; `403` if the user is not a repository member.
+
+**Requires:** Authentication; repository membership with at least VIEWER.
+
+### DELETE `repositories/:id`
+
+Delete a repository and all its data. Only a repository **ADMIN** can delete.
+
+**Success (200)** — No `data`; optional `message`.
+
+**Errors** — `404` if not found; `403` if not ADMIN.
+
+**Requires:** Authentication; repository role ADMIN.
+
+---
+
+## Repository members
+
+Manage who has access to a repository and their role. Only **ADMIN** or **MAINTAINER** on the repository can add, update, or remove members. At least one ADMIN must remain.
+
+### GET `repositories/:repositoryId/members`
+
+List all members of the repository. Response includes user id, email, name, and role.
+
+**Path** — `repositoryId`: repository UUID.
+
+**Success (200)** — `data`: array of `{ id, repositoryId, userId, role, userEmail, userName }`.
+
+**Requires:** Authentication; repository role VIEWER or higher.
+
+### GET `repositories/:repositoryId/members/me`
+
+Get the current user's role on the repository. Use this to show/hide "Settings" or merge actions in the UI.
+
+**Path** — `repositoryId`: repository UUID.
+
+**Success (200)** — `data`: `{ role: "ADMIN" | "MAINTAINER" | "CONTRIBUTOR" | "VIEWER" }`.
+
+**Errors** — `404` if the user is not a member.
+
+**Requires:** Authentication.
+
+### POST `repositories/:repositoryId/members`
+
+Add a user to the repository with the given role.
+
+**Path** — `repositoryId`: repository UUID.
+
+**Request body**
+
+| Field   | Type   | Required | Description                          |
+|---------|--------|----------|--------------------------------------|
+| userId  | string | Yes      | User UUID                            |
+| role    | string | Yes      | ADMIN, MAINTAINER, CONTRIBUTOR, VIEWER |
+
+**Success (201)** — `data`: created member with `id`, `repositoryId`, `userId`, `role`, `userEmail`, `userName`.
+
+**Errors** — `403` if caller is not ADMIN or MAINTAINER; `404` if user not found; `409` if user is already a member.
+
+**Requires:** Authentication; repository role MAINTAINER or ADMIN.
+
+### PATCH `repositories/:repositoryId/members/:userId`
+
+Update a member's role. Cannot demote the last ADMIN.
+
+**Path** — `repositoryId`, `userId`: UUIDs.
+
+**Request body** — `{ "role": "ADMIN" | "MAINTAINER" | "CONTRIBUTOR" | "VIEWER" }`.
+
+**Success (200)** — `data`: updated member.
+
+**Errors** — `400` if attempting to demote the last admin; `403` if caller is not ADMIN or MAINTAINER; `404` if member not found.
+
+**Requires:** Authentication; repository role MAINTAINER or ADMIN.
+
+### DELETE `repositories/:repositoryId/members/:userId`
+
+Remove a member from the repository. Cannot remove the last ADMIN.
+
+**Path** — `repositoryId`, `userId`: UUIDs.
+
+**Success (200)** — No `data`; optional `message`.
+
+**Errors** — `400` if attempting to remove the last admin; `403` if caller is not ADMIN or MAINTAINER; `404` if member not found.
+
+**Requires:** Authentication; repository role MAINTAINER or ADMIN.
 
 ---
 

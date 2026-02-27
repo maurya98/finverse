@@ -3,7 +3,7 @@ import { z } from "zod";
 export const createRepositorySchema = z.object({
   name: z.string().min(1),
   workspaceId: z.string().uuid(),
-  createdBy: z.string().uuid(),
+  createdBy: z.string().uuid().optional(),
   defaultBranch: z.string().min(1).optional(),
 });
 
