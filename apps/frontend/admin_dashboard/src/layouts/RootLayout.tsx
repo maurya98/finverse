@@ -7,6 +7,7 @@ import {
   RightDrawerProvider,
   useRightDrawer,
 } from "../contexts/RightDrawerContext";
+import { ViewToggleProvider } from "../contexts/ViewToggleContext";
 
 const RootLayoutContent = () => {
   const { isVisible, isExpanded, content, toggleExpand, closeDrawer } =
@@ -67,9 +68,11 @@ const RootLayoutContent = () => {
 
 const RootLayout = () => {
   return (
-    <RightDrawerProvider>
-      <RootLayoutContent />
-    </RightDrawerProvider>
+    <ViewToggleProvider>
+      <RightDrawerProvider>
+        <RootLayoutContent />
+      </RightDrawerProvider>
+    </ViewToggleProvider>
   );
 };
 

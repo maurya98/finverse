@@ -1,6 +1,5 @@
 generator client {
     provider = "prisma-client-js"
-    output   = "../generated/prisma"
 }
 
 datasource db {
@@ -30,7 +29,7 @@ model Service {
     baseUrl     String
     createdAt   DateTime       @default(now())
     description String         @default("")
-    isActive    Boolean        @default(true)
+    isActive    Boolean        @default(false)
     routes      ServiceRoute[]
 }
 
@@ -44,7 +43,7 @@ model ServiceRoute {
 
     name        String // e.g. "Get User Profile"
     description String     @default("")
-    isActive    Boolean    @default(true)
+    isActive    Boolean    @default(false)
     method      HttpMethod
     actualPath  String // actual service path
     exposedPath String // exposed path
@@ -64,7 +63,7 @@ model ClientApp {
     id          String   @id @default(uuid())
     name        String   @unique
     description String   @default("")
-    isActive    Boolean  @default(true)
+    isActive    Boolean  @default(false)
     secret      String // hashed secret
     createdAt   DateTime @default(now())
 
@@ -79,7 +78,7 @@ model ClientPermission {
     clientId    String
     routeId     String
     description String       @default("")
-    isActive    Boolean      @default(true)
+    isActive    Boolean      @default(false)
     client      ClientApp    @relation(fields: [clientId], references: [id], onDelete: Cascade)
     route       ServiceRoute @relation(fields: [routeId], references: [id], onDelete: Cascade)
 

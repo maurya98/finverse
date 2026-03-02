@@ -52,7 +52,10 @@ const GridCard = ({
           <div className="tooltip" data-tip="Toggle Status">
             <button
               type="button"
-              onClick={() => onStatusToggle?.(item.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onStatusToggle?.(item.id);
+              }}
               className={`badge text-xs cursor-pointer transition-all ${item.active ? "badge-success" : "badge-ghost"}`}
             >
               {item.active ? "Active" : "Inactive"}
@@ -65,7 +68,10 @@ const GridCard = ({
             <div key={a.id} className="tooltip" data-tip={a.tooltip}>
               <button
                 type="button"
-                onClick={a.onClick}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  a.onClick?.();
+                }}
                 className={`btn btn-sm ${a.variant === "error" ? "btn-error" : "btn-ghost"} btn-square`}
               >
                 {a.icon}

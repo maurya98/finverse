@@ -1,53 +1,169 @@
 import type { GridItem } from "../components/common/GridCard";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import CreateApplication from "../components/popups/CreateApplication";
+import ConfirmationDialog from "../components/common/ConfirmationDialog";
+import RotateKeyDialog from "../components/dialogs/RotateKeyDialog";
+import TableFilterBar from "../components/common/TableFilterBar";
 import { applicationsCardActions } from "../data/cardActions";
 import GridLayout from "../layouts/GridLayout";
-import { generateGridItems } from "../utils/gridUtils";
+import ListLayout from "../layouts/ListLayout";
 import { useRightDrawer } from "../contexts/RightDrawerContext";
+import { useViewToggle } from "../contexts/ViewToggleContext";
 import EditApplication from "../components/forms/EditApplication";
+import { useTableFilters, type TableFilterConfig } from "../hooks/useTableFilters";
+import { getAllApplications, deleteApplication, updateApplication } from "../services/applicationsApi";
+
+const FILTER_CONFIG: TableFilterConfig = {
+  searchableFields: ["title", "description"],
+  sortableFields: ["title", "active"],
+  filterableFields: ["active"],
+};
 
 const ApplicationsPage = () => {
-  const mapActionsToItem = (item: GridItem) => ({
+  const [items, setItems] = useState<GridItem[]>([]);
+  const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
+  const [rotateKeyItemId, setRotateKeyItemId] = useState<string | null>(null);
+  const { openDrawer } = useRightDrawer();
+  const { currentView } = useViewToggle();
+
+  // Load applications from API
+  useEffect(() => {
+    const loadApplications = async () => {
+      try {
+        const applications = await getAllApplications();
+        const gridItems: GridItem[] = applications.map(app => ({
+          id: app.id,
+          title: app.name,
+          description: app.description,
+          active: app.isActive,
+        }));
+        setItems(gridItems);
+      } catch (error) {
+        console.error('Failed to load applications:', error);
+      }
+    };
+
+    loadApplications();
+  }, []);
+
+  const {
+    filteredData: filteredItems,
+    filterState,
+    setSearchQuery,
+    setSortField,
+    setColumnFilter,
+    clearFilters,
+  } = useTableFilters(items, FILTER_CONFIG);
+
+  const handleStatusToggle = async (itemId: string) => {
+    try {
+      const app = items.find(item => item.id === itemId);
+      if (app) {
+        await updateApplication(itemId, { isActive: !app.active });
+        setItems((prev) =>
+          prev.map((item) =>
+            item.id === itemId ? { ...item, active: !item.active } : item,
+          ),
+        );
+      }
+    } catch (error) {
+      console.error('Failed to update application status:', error);
+      alert('Failed to update application status');
+    }
+  };
+
+  const handleCardClick = (itemId: string) => {
+    openDrawer(<EditApplication itemId={itemId} isEditable={false} />);
+  };
+
+  const handleActionClick = (actionId: string, itemId: string) => {
+    if (actionId === "edit") {
+      openDrawer(<EditApplication itemId={itemId} isEditable={true} />);
+    } else if (actionId === "delete") {
+      setDeleteItemId(itemId);
+      (document.getElementById("delete-app-modal") as HTMLDialogElement)?.showModal();
+    } else if (actionId === "rotate") {
+      setRotateKeyItemId(itemId);
+      (document.getElementById("rotate-key-modal") as HTMLDialogElement)?.showModal();
+    } else {
+      console.log(actionId, itemId);
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (deleteItemId) {
+      try {
+        await deleteApplication(deleteItemId);
+        setItems((prev) => prev.filter((item) => item.id !== deleteItemId));
+        setDeleteItemId(null);
+      } catch (error) {
+        console.error('Failed to delete application:', error);
+        alert('Failed to delete application');
+      }
+    }
+  };
+
+  const itemsWithActions = filteredItems.map((item) => ({
     ...item,
     actions: applicationsCardActions.map((action) => ({
       ...action,
-      onClick: () => console.log(action.id, item.id),
+      onClick: () => handleActionClick(action.id, item.id),
     })),
-  });
+  }));
 
-  const [items, setItems] = useState<GridItem[]>(
-    generateGridItems(6).map(mapActionsToItem),
-  );
-
-  const handleStatusToggle = (itemId: string) => {
-    setItems((prev) =>
-      prev.map((item) =>
-        item.id === itemId ? { ...item, active: !item.active } : item,
-      ),
-    );
-  };
-
-  const { openDrawer } = useRightDrawer();
-
-  const handleCardClick = (itemId: string) => {
-    openDrawer(<EditApplication itemId={itemId} />);
+  const layoutProps = {
+    items: itemsWithActions,
+    onCreate: () =>
+      (
+        document.getElementById("create-app-modal") as HTMLDialogElement
+      )?.showModal(),
+    onStatusToggle: handleStatusToggle,
+    onCardClick: handleCardClick,
   };
 
   return (
     <>
-      <GridLayout
-        items={items}
-        onCreate={() =>
-          (
-            document.getElementById("create-app-modal") as HTMLDialogElement
-          )?.showModal()
-        }
-        onStatusToggle={handleStatusToggle}
-        onCardClick={handleCardClick}
+      <TableFilterBar
+        columns={[
+          { key: "title", label: "Name" },
+          { key: "active", label: "Status" },
+        ]}
+        data={items}
+        searchQuery={filterState.searchQuery}
+        onSearchChange={setSearchQuery}
+        sortField={filterState.sortField}
+        sortDirection={filterState.sortDirection}
+        onSortChange={setSortField}
+        columnFilters={filterState.columnFilters}
+        onColumnFilterChange={setColumnFilter}
+        onClearFilters={clearFilters}
+        searchableFields={FILTER_CONFIG.searchableFields}
+        sortableFields={FILTER_CONFIG.sortableFields}
+        filterableFields={FILTER_CONFIG.filterableFields}
       />
+      {currentView === "grid" ? (
+        <GridLayout {...layoutProps} />
+      ) : (
+        <ListLayout {...layoutProps} />
+      )}
       <CreateApplication />
+      <ConfirmationDialog
+        id="delete-app-modal"
+        title="Delete Application"
+        message="Are you sure you want to delete this application? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        confirmVariant="error"
+        onConfirm={handleDeleteConfirm}
+      />
+      {rotateKeyItemId && (
+        <RotateKeyDialog
+          id="rotate-key-modal"
+          applicationId={rotateKeyItemId}
+          applicationName={items.find((item) => item.id === rotateKeyItemId)?.title || "Application"}
+        />
+      )}
     </>
   );
 };

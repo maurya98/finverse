@@ -15,20 +15,26 @@ export class ClientAppController {
 
     private initRoutes(): void {
         // this.router.post("/", validateBody(loginSchema), this.login.bind(this));
-        this.router.post("/", this.createApplication.bind(this));
+        // Bulk routes must come BEFORE parameterized routes to avoid Express matching /:id first
         this.router.post("/bulk", this.createBulkApplications.bind(this));
-        this.router.get("/:id", this.getApplicationById.bind(this));
-        this.router.get("/", this.getAllApplications.bind(this));
-        this.router.put("/:id", this.updateApplication.bind(this));
         this.router.put("/bulk", this.updateBulkApplications.bind(this));
-        this.router.delete("/:id", this.deleteApplication.bind(this));
         this.router.delete("/bulk", this.deleteBulkApplications.bind(this));
+        
+        // Special param routes (/:id/action)
+        this.router.post("/:id/rotate-key", this.rotateKey.bind(this));
+        
+        // Single item routes
+        this.router.post("/", this.createApplication.bind(this));
+        this.router.get("/", this.getAllApplications.bind(this));
+        this.router.get("/:id", this.getApplicationById.bind(this));
+        this.router.put("/:id", this.updateApplication.bind(this));
+        this.router.delete("/:id", this.deleteApplication.bind(this));
     }
 
     private async createApplication(req: Request, res: Response): Promise<Response> {
         try {
-            const { name } = req.body;
-            const result = await this.clientAppService.createClientApp({ name, createdAt: new Date() });
+            const { name, description = "", isActive = true } = req.body;
+            const result = await this.clientAppService.createClientApp({ name, description, isActive, createdAt: new Date() });
             return sendSuccess(res, result);
         } catch (error) {
             logger.error({ error }, "Error in ClientAppController.createApplication");
@@ -91,6 +97,20 @@ export class ClientAppController {
         }
     }
 
+    private async rotateKey(req: Request, res: Response): Promise<Response> {
+        try {
+            const { id } = req.params;
+            const result = await this.clientAppService.rotateSecret(id as string);
+            return sendSuccess(res, { 
+                message: "Client application secret rotated successfully",
+                secret: result.secret 
+            });
+        } catch (error) {
+            logger.error({ error }, "Error in ClientAppController.rotateKey");
+            return sendError(res, "Failed to rotate client application secret", 500);
+        }
+    }
+
     private async deleteApplication(req: Request, res: Response): Promise<Response> {
         try {
             const { id } = req.params;
@@ -105,7 +125,7 @@ export class ClientAppController {
     private async deleteBulkApplications(req: Request, res: Response): Promise<Response> {
         try {
             const { ids } = req.body;
-            await this.clientAppService.deleteBulkClientApps(ids);
+            await this.clientAppService.deleteBulkClientApps(ids.map((id: string) => ({ id })));
             return sendSuccess(res, { message: "Bulk client applications deleted successfully" });
         } catch (error) {
             logger.error({ error }, "Error in ClientAppController.deleteBulkApplications");

@@ -1,4 +1,4 @@
-import { Service } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import { prisma } from "../../databases/client";
 
 // Service
@@ -13,7 +13,7 @@ export class InternalServiceService {
     }
 
     // Read Operations
-    async getInternalServiceById(id: string): Promise<Service | null> {
+    async getInternalServiceById(id: string): Promise<Prisma.ServiceGetPayload<true> | null> {
         return prisma.service.findUnique({
             where: {
                 id,
@@ -21,25 +21,25 @@ export class InternalServiceService {
         });
     }
 
-    async getAllInternalServices(): Promise<Service[]> {
+    async getAllInternalServices(): Promise<Prisma.ServiceGetPayload<true>[]> {
         return prisma.service.findMany();
     }
 
     // Create Operations
-    async createInternalService(data: Omit<Service, "id">): Promise<Service> {
+    async createInternalService(data: Omit<Prisma.ServiceCreateInput, "id">): Promise<Prisma.ServiceGetPayload<true>> {
         return prisma.service.create({
             data
         });
     }
 
-    async createBulkInternalServices(services: Omit<Service, "id">[]): Promise<{ count: number }> {
+    async createBulkInternalServices(services: Omit<Prisma.ServiceCreateInput, "id">[]): Promise<{ count: number }> {
         return prisma.service.createMany({
             data: services,
         });
     }
 
     // Update Operations
-    async updateInternalService(data: Partial<Omit<Service, "id">> & { id: string }): Promise<Service> {
+    async updateInternalService(data: Partial<Omit<Prisma.ServiceUpdateInput, "id">> & { id: string }): Promise<Prisma.ServiceGetPayload<true>> {
         return prisma.service.update({
             where: {
                 id: data.id,
@@ -48,14 +48,14 @@ export class InternalServiceService {
         });
     }
 
-    async updateBulkInternalServices(services: (Partial<Omit<Service, "id">> & { id: string })[]): Promise<{ count: number }> {
+    async updateBulkInternalServices(services: (Partial<Omit<Prisma.ServiceUpdateInput, "id">> & { id: string })[]): Promise<{ count: number }> {
         const promises = services.map((service) => this.updateInternalService(service));
         await Promise.all(promises);
         return { count: services.length };
     }
     
     // Delete Operations
-    async deleteInternalService(id: string): Promise<Service> {
+    async deleteInternalService(id: string): Promise<Prisma.ServiceGetPayload<true>> {
         return prisma.service.delete({
             where: {
                 id,

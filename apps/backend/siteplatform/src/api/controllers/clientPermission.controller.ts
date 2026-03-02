@@ -15,21 +15,22 @@ export class ClientPermissionController {
 
     private initRoutes(): void {
         // this.router.post("/", validateBody(loginSchema), this.login.bind(this));
-        this.router.post("/", this.createClientPermission.bind(this));
         this.router.post("/bulk", this.createBulkClientPermissions.bind(this));
+        this.router.put("/bulk", this.updateBulkClientPermissions.bind(this));
+        this.router.delete("/bulk", this.deleteBulkClientPermissions.bind(this));
+
+        this.router.post("/", this.createClientPermission.bind(this));
         this.router.get("/:id", this.getClientPermissionById.bind(this));
         this.router.get("/", this.getAllClientPermissions.bind(this));
         this.router.put("/:id", this.updateClientPermission.bind(this));
-        this.router.put("/bulk", this.updateBulkClientPermissions.bind(this));
         this.router.delete("/:id", this.deleteClientPermission.bind(this));
-        this.router.delete("/bulk", this.deleteBulkClientPermissions.bind(this));
     }
 
     private async createClientPermission(req: Request, res: Response): Promise<Response> {
         try {
-            const { clientId, routeId, scope } = req.body;
+            const { clientId, routeId, scope, description = "", isActive = true } = req.body;
             const result = await this.internalServiceService.createClientPermission({
-                clientId, routeId, scope,
+                clientId, routeId, scope, description, isActive,
             });
             return sendSuccess(res, result);
         } catch (error) {
@@ -107,7 +108,7 @@ export class ClientPermissionController {
     private async deleteBulkClientPermissions(req: Request, res: Response): Promise<Response> {
         try {
             const { ids } = req.body;
-            await this.internalServiceService.deleteBulkClientPermissions(ids);
+            await this.internalServiceService.deleteBulkClientPermissions(ids.map((id: string) => ({ id })));
             return sendSuccess(res, { message: "Bulk client permissions deleted successfully" });
         } catch (error) {
             logger.error({ error }, "Error in ClientPermissionController.deleteBulkClientPermissions");

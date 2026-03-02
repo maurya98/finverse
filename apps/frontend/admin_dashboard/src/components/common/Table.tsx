@@ -1,7 +1,9 @@
 import { useMemo } from "react";
 import { type TableProps } from "../../types/table";
+import { getColumnColorConfig, getCellColorRule, badgeColors } from "../../utils/cellColorUtils";
 
-const Table = <T extends object>({
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const Table = <T extends Record<string, any>>({
   columns,
   data,
   rowKey,
@@ -12,6 +14,8 @@ const Table = <T extends object>({
   hover = true,
   compact = false,
   className,
+  renderCell,
+  cellColorConfigs,
 }: TableProps<T>) => {
   // Separate pinned and unpinned columns
   const { pinnedCols, unpinnedCols } = useMemo(
@@ -41,6 +45,34 @@ const Table = <T extends object>({
   }, [pinnedCols]);
 
   const tableSize = compact ? "table-xs" : "table-sm";
+
+  // Helper function to render cell with optional color coding
+  const renderCellContent = (row: T, col: typeof columns[0], rowIndex: number) => {
+    const cellValue = String(row[col.key] ?? "-");
+    
+    // If custom renderCell is provided, use it
+    if (renderCell) {
+      return renderCell(row, col, rowIndex);
+    }
+
+    // Check if there's a color config for this column
+    const colorConfig = getColumnColorConfig(String(col.key), cellColorConfigs);
+    
+    if (colorConfig) {
+      const matchedRule = getCellColorRule(cellValue, colorConfig.rules);
+      
+      if (matchedRule && matchedRule.badgeVariant) {
+        const badgeClass = badgeColors[matchedRule.badgeVariant];
+        return (
+          <div className={`badge ${badgeClass} badge-sm whitespace-nowrap`}>
+            {cellValue}
+          </div>
+        );
+      }
+    }
+
+    return cellValue;
+  };
 
   const tableClassNames = [
     "table",
@@ -123,15 +155,22 @@ const Table = <T extends object>({
                       position: "sticky",
                       left: pinnedColPositions[String(col.key)],
                       zIndex: pinnedColZIndices[String(col.key)] - 40,
+                      wordBreak: col.wrap ? "break-word" : undefined,
                     }}
                     className="bg-base-100"
                   >
-                    {String(row[col.key] ?? "-")}
+                    {renderCellContent(row, col, rowIndex)}
                   </td>
                 ))}
                 {unpinnedCols.map((col) => (
-                  <td key={String(col.key)} style={{ width: col.width }}>
-                    {String(row[col.key] ?? "-")}
+                  <td 
+                    key={String(col.key)} 
+                    style={{ 
+                      width: col.width,
+                      wordBreak: col.wrap ? "break-word" : undefined,
+                    }}
+                  >
+                    {renderCellContent(row, col, rowIndex)}
                   </td>
                 ))}
               </tr>

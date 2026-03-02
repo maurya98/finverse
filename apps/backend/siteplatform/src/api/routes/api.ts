@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { ClientAppController, ClientPermissionController, InternalServiceController, RouteServiceController } from "../controllers";
+import { ClientAppController, ClientPermissionController, DataExportController, InternalServiceController, RouteServiceController } from "../controllers";
 
 const router: Router = Router();
 
@@ -8,5 +8,6 @@ router.use("/applications", new ClientAppController().router);
 router.use("/services", new InternalServiceController().router);
 router.use("/permissions", new ClientPermissionController().router);
 router.use("/routes", new RouteServiceController().router);
+router.use("/export", new DataExportController().router);
 
 export default router;

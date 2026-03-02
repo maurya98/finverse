@@ -16,25 +16,30 @@ export class RouteServiceController {
 
     private initRoutes(): void {
         // this.router.post("/", validateBody(loginSchema), this.login.bind(this));
-        this.router.post("/", this.createRoute.bind(this));
+        // Bulk routes must come BEFORE parameterized routes to avoid Express matching /:id first
         this.router.post("/bulk", this.createBulkRoutes.bind(this));
-        this.router.get("/:id", this.getRouteById.bind(this));
-        this.router.get("/", this.getAllRoutes.bind(this));
-        this.router.put("/:id", this.updateRoute.bind(this));
         this.router.put("/bulk", this.updateBulkRoutes.bind(this));
-        this.router.delete("/:id", this.deleteRoute.bind(this));
         this.router.delete("/bulk", this.deleteBulkRoutes.bind(this));
+        
+        // Single item routes
+        this.router.post("/", this.createRoute.bind(this));
+        this.router.get("/", this.getAllRoutes.bind(this));
+        this.router.get("/:id", this.getRouteById.bind(this));
+        this.router.put("/:id", this.updateRoute.bind(this));
+        this.router.delete("/:id", this.deleteRoute.bind(this));
     }
 
     private async createRoute(req: Request, res: Response): Promise<Response> {
         try {
-            const { name, serviceId, method, actualPath, exposedPath } = req.body;
+            const { name, serviceId, method, actualPath, exposedPath, description = "", isActive = true } = req.body;
             const result = await this.routeService.createRoute({
                 name,
                 serviceId,
                 method,
                 actualPath,
                 exposedPath,
+                description,
+                isActive,
                 createdAt: new Date(),
             });
             return sendSuccess(res, result);
@@ -130,7 +135,7 @@ export class RouteServiceController {
     private async deleteBulkRoutes(req: Request, res: Response): Promise<Response> {
         try {
             const { ids } = req.body;
-            await this.routeService.deleteBulkRoutes(ids);
+            await this.routeService.deleteBulkRoutes(ids.map((id: string) => ({ id })));
             return sendSuccess(res, { message: "Bulk routes deleted successfully" });
         } catch (error) {
             logger.error({ error }, "Error in RouteServiceController.deleteBulkRoutes");

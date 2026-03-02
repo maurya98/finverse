@@ -1,9 +1,25 @@
+export type CellColorMatchType = "exact" | "startsWith" | "endsWith" | "contains";
+
+export interface CellColorRule {
+  matchType: CellColorMatchType;
+  value: string | string[];
+  textColor?: string;
+  backgroundColor?: string;
+  badgeVariant?: "primary" | "secondary" | "success" | "warning" | "error" | "info";
+}
+
+export interface CellColorConfig {
+  columnKey: string | string[];
+  rules: CellColorRule[];
+}
+
 export interface TableColumn<T> {
     key: keyof T;
     label: string;
     width?: string;
     pinned?: boolean;
     sortable?: boolean;
+    wrap?: boolean;
 }
 
 export interface TableProps<T> {
@@ -17,47 +33,22 @@ export interface TableProps<T> {
     hover?: boolean;
     compact?: boolean;
     className?: string;
+    renderCell?: (row: T, col: TableColumn<T>, rowIndex: number) => React.ReactNode;
+    cellColorConfigs?: CellColorConfig[];
 }
 
 export interface ClientPermission {
-    id: string;
+    id?: string;
     routeUrl: string;
     routeMethod: string;
+    scope: 'READ' | 'WRITE' | 'FULL';
     description: string;
     isActive: boolean;
+    routeId: string;
 }
 
-export const clientPermissionColumns: TableColumn<ClientPermission>[] = [
-    {
-        key: "id",
-        label: "ID",
-        width: "90px",
-        pinned: true,
-    },
-    {
-        key: "routeUrl",
-        label: "Route URL",
-        width: "150px",
-    },
-    {
-        key: "routeMethod",
-        label: "Route Method",
-        width: "200px",
-    },
-    {
-        key: "description",
-        label: "Description",
-        width: "250px",
-    },
-    {
-        key: "isActive",
-        label: "Active",
-        width: "150px",
-    },
-];
-
 export interface ServiceRoute {
-    id: string;
+    id?: string;
     name: string;
     description: string;
     isActive: boolean;
@@ -65,32 +56,3 @@ export interface ServiceRoute {
     actualPath: string;
     method: string;
 }
-
-export const serviceRouteColumns: TableColumn<ServiceRoute>[] = [
-    {
-        key: "id",
-        label: "ID",
-        width: "90px",
-        pinned: true,
-    },
-    {
-        key: "exposedPath",
-        label: "Exposed Path",
-        width: "150px",
-    },
-    {
-        key: "method",
-        label: "Method",
-        width: "200px",
-    },
-    {
-        key: "description",
-        label: "Description",
-        width: "250px",
-    },
-    {
-        key: "isActive",
-        label: "Active",
-        width: "150px",
-    },
-];
