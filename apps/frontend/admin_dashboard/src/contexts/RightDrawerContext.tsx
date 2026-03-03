@@ -1,4 +1,5 @@
-import { createContext, useContext, ReactNode, useState, useCallback } from "react";
+import { createContext, useContext, useState, useCallback } from "react";
+import type { ReactNode } from "react";
 
 interface RightDrawerContextType {
   isVisible: boolean;
@@ -17,7 +18,7 @@ export const RightDrawerProvider = ({ children }: { children: ReactNode }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [content, setContent] = useState<ReactNode>(null);
-  const [onCloseCallback, setOnCloseCallback] = useState<(() => void) | null>(null);
+  const [, setOnCloseCallback] = useState<(() => void) | null>(null);
 
   const openDrawer = useCallback(
     (drawerContent: ReactNode, expanded = false, onClose?: () => void) => {

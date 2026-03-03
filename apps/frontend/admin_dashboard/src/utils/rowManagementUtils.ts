@@ -17,6 +17,8 @@ export const createEmptyClientPermission = (id?: string): ClientPermission => ({
   id,
   routeUrl: "",
   routeMethod: "",
+  scope: "READ",
+  routeId: "",
   description: "",
   isActive: true,
 });
