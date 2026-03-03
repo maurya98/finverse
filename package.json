@@ -15,23 +15,13 @@
     "lint": "turbo run lint",
     "test": "turbo run test",
     "test:watch": "turbo run test:watch --parallel",
-    "clean": "turbo clean && pnpm -r exec rm -rf dist tsconfig.tsbuildinfo"
+    "clean": "turbo clean && pnpm -r exec rm -rf dist tsconfig.tsbuildinfo",
+    "postinstall": "node tooling/scripts/slim-workspace-deps.mjs",
+    "slim-deps": "node tooling/scripts/slim-workspace-deps.mjs"
   },
   "engines": {
     "node": ">=22.10.0",
-    "pnpm": ">=10.28.2",
-    "runtime": {
-      "name": "node",
-      "version": "^22.22.0",
-      "onFail": "download"
-    }
-  },
-  "devEngines": {
-    "runtime": {
-      "name": "node",
-      "version": "^22.10.0",
-      "onFail": "download"
-    }
+    "pnpm": ">=10.28.2"
   },
   "keywords": [],
   "author": "Saurabh Kumar Maurya",

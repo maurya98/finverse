@@ -1,7 +1,7 @@
-# Build stage
-FROM node:22-slim AS builder
+FROM node:22-alpine AS builder
 
-RUN corepack enable && corepack prepare pnpm@10.30.3 --activate
+RUN apk add --no-cache libc6-compat python3 make g++ ca-certificates \
+  && corepack enable && corepack prepare pnpm@10.30.3 --activate
 
 WORKDIR /app
 
@@ -12,43 +12,60 @@ COPY libs/logger libs/logger
 COPY libs/middlewares libs/middlewares
 COPY libs/utils libs/utils
 COPY apps/backend/lms apps/backend/lms
+COPY apps/backend/lms apps/backend/lms/
 
-RUN pnpm install --no-frozen-lockfile
-RUN cd apps/backend/lms && pnpm exec prisma generate
-# Build libs (compile only, skip tests — tooling copied for tsconfig extends)
-RUN cd libs/logger && pnpm exec tsc -b
-RUN cd libs/utils && pnpm exec rimraf dist && pnpm exec tsc -b --force
-RUN cd libs/middlewares && pnpm exec rimraf dist tsconfig.tsbuildinfo && pnpm exec tsc -b
+RUN node -e "const fs=require('fs'); const p=JSON.parse(fs.readFileSync('package.json','utf8')); delete p.scripts.postinstall; fs.writeFileSync('package.json', JSON.stringify(p, null, 2));"
 
-# Build app (run from app dir so only this package's build runs)
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --no-frozen-lockfile
+
+RUN (cd /app/apps/backend/lms && pnpm exec prisma generate) & \
+  (cd /app/libs/logger && pnpm exec tsc -b) & \
+  (cd /app/libs/utils && pnpm exec rimraf dist && pnpm exec tsc -b --force) & \
+  (cd /app/libs/middlewares && pnpm exec rimraf dist tsconfig.tsbuildinfo && pnpm exec tsc -b) & \
+  wait
+
 RUN cd apps/backend/lms && pnpm run build
 RUN cp -r /app/apps/backend/lms/src/databases/generated /app/apps/backend/lms/dist/databases/
+RUN rm -rf /app/apps/backend/lms/src
 
-# Production stage
-FROM node:22-slim AS runner
+RUN for lib in logger utils middlewares; do \
+  if [ -d "/app/libs/$lib" ]; then \
+    (cd /app/libs/$lib && rm -rf src config node_modules tsconfig.json tsconfig.*.json *.ts 2>/dev/null; true); \
+  fi; \
+done
 
-RUN corepack enable && corepack prepare pnpm@10.30.3 --activate
+RUN pnpm deploy --filter=lms --prod --legacy /prod/lms
+RUN cp -r /app/apps/backend/lms/dist /prod/lms/dist
+
+RUN find /prod/lms/node_modules -name "*.md" -delete \
+  && find /prod/lms/node_modules -name "*.ts" -delete \
+  && find /prod/lms/node_modules -name "*.tsbuildinfo" -delete \
+  && find /prod/lms/node_modules -name "*.map" -delete \
+  && find /prod/lms/node_modules -name "*.flow" -delete \
+  && find /prod/lms/node_modules -type d -name "test" -exec rm -rf {} + 2>/dev/null || true \
+  && find /prod/lms/node_modules -type d -name "tests" -exec rm -rf {} + 2>/dev/null || true \
+  && find /prod/lms/node_modules -type d -name "docs" -exec rm -rf {} + 2>/dev/null || true \
+  && find /prod/lms/node_modules -type d -name "doc" -exec rm -rf {} + 2>/dev/null || true \
+  && find /prod/lms/node_modules -type d -name "example" -exec rm -rf {} + 2>/dev/null || true \
+  && find /prod/lms/node_modules -type d -name "examples" -exec rm -rf {} + 2>/dev/null || true \
+  && find /prod/lms/node_modules -type d -name "coverage" -exec rm -rf {} + 2>/dev/null || true \
+  && find /prod/lms/dist -name "*.map" -delete \
+  || true
+
+# RUN npm install -g terser \
+#   && find /prod/lms/dist /prod/lms/node_modules/@finverse -name "*.js" -type f 2>/dev/null | while read f; do \
+#   terser "$f" --comments false -o "${f}.tmp" && mv "${f}.tmp" "$f"; \
+# done || true
+
+FROM node:22-alpine AS runner
+
+RUN apk add --no-cache libc6-compat
 
 WORKDIR /app
 
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
-COPY turbo.json ./
-COPY libs/logger libs/logger
-COPY libs/middlewares libs/middlewares
-COPY libs/utils libs/utils
-COPY apps/backend/lms apps/backend/lms
-
-# Copy full app from builder (dist + node_modules with Prisma deps) so symlinks resolve
-COPY --from=builder /app/apps/backend/lms apps/backend/lms
-COPY --from=builder /app/libs/logger/dist libs/logger/dist
-COPY --from=builder /app/libs/middlewares/dist libs/middlewares/dist
-COPY --from=builder /app/libs/utils/dist libs/utils/dist
-COPY --from=builder /app/node_modules node_modules
-
-RUN cp -r /app/apps/backend/lms/node_modules/.prisma /app/node_modules/ 2>/dev/null || true
+COPY --from=builder /prod/lms ./
 
 ENV NODE_ENV=production
-WORKDIR /app/apps/backend/lms
 
 EXPOSE 3002
 

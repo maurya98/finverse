@@ -1,0 +1,12 @@
+# Reduce build context size and upload time
+node_modules
+.git
+**/dist
+**/coverage
+.turbo
+.devcontainer
+*.md
+.pnpm-store
+**/.pnpm-store
+**/.DS_Store
+**/tsconfig.tsbuildinfo

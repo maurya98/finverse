@@ -12,10 +12,6 @@ overrides:
 importers:
 
   .:
-    dependencies:
-      node:
-        specifier: runtime:^22.22.0
-        version: runtime:22.22.0
     devDependencies:
       '@types/node':
         specifier: ^22.19.11
@@ -26,6 +22,12 @@ importers:
 
   apps/backend/lms:
     dependencies:
+      '@finverse/logger':
+        specifier: workspace:*
+        version: link:../../../libs/logger
+      '@finverse/middlewares':
+        specifier: workspace:*
+        version: link:../../../libs/middlewares
       '@finverse/utils':
         specifier: workspace:*
         version: link:../../../libs/utils
@@ -35,6 +37,9 @@ importers:
       '@prisma/client':
         specifier: ^7.4.0
         version: 7.4.0(prisma@7.4.1(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3))(typescript@5.9.3)
+      '@prisma/client-runtime-utils':
+        specifier: ^7.4.1
+        version: 7.4.1
       dotenv:
         specifier: ^17.3.1
         version: 17.3.1
@@ -44,22 +49,13 @@ importers:
       pg:
         specifier: ^8.18.0
         version: 8.18.0
-      rimraf:
-        specifier: ^6.1.3
-        version: 6.1.3
+      prisma:
+        specifier: ^7.4.1
+        version: 7.4.1(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3)
       zod:
         specifier: ^4.3.6
         version: 4.3.6
     devDependencies:
-      '@finverse/logger':
-        specifier: workspace:*
-        version: link:../../../libs/logger
-      '@finverse/middlewares':
-        specifier: workspace:*
-        version: link:../../../libs/middlewares
-      '@prisma/client-runtime-utils':
-        specifier: ^7.4.1
-        version: 7.4.1
       '@types/express':
         specifier: ^5.0.6
         version: 5.0.6
@@ -69,9 +65,9 @@ importers:
       nodemon:
         specifier: ^3.1.11
         version: 3.1.11
-      prisma:
-        specifier: ^7.4.1
-        version: 7.4.1(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3)
+      rimraf:
+        specifier: ^6.1.3
+        version: 6.1.3
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -99,12 +95,24 @@ importers:
       '@prisma/client-runtime-utils':
         specifier: ^7.4.1
         version: 7.4.1
-      nodemon:
-        specifier: ^3.1.13
-        version: 3.1.13
+      bcrypt:
+        specifier: ^6.0.0
+        version: 6.0.0
+      dotenv:
+        specifier: ^17.3.1
+        version: 17.3.1
+      express:
+        specifier: ^5.2.1
+        version: 5.2.1
+      jsonwebtoken:
+        specifier: ^9.0.3
+        version: 9.0.3
       pg:
         specifier: ^8.18.0
         version: 8.18.0
+      prisma:
+        specifier: ^7.4.1
+        version: 7.4.1(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3)
       zod:
         specifier: ^3.25.76
         version: 3.25.76
@@ -124,24 +132,12 @@ importers:
       '@types/node':
         specifier: ^22.19.11
         version: 22.19.11
-      bcrypt:
-        specifier: ^6.0.0
-        version: 6.0.0
-      dotenv:
-        specifier: ^17.3.1
-        version: 17.3.1
       eslint:
         specifier: ^9.39.2
         version: 9.39.2(jiti@2.6.1)
-      express:
-        specifier: ^5.2.1
-        version: 5.2.1
-      jsonwebtoken:
-        specifier: ^9.0.3
-        version: 9.0.3
-      prisma:
-        specifier: ^7.4.1
-        version: 7.4.1(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3)
+      nodemon:
+        specifier: ^3.1.13
+        version: 3.1.13
       rimraf:
         specifier: ^6.1.3
         version: 6.1.3
@@ -169,15 +165,21 @@ importers:
       '@prisma/client':
         specifier: ^7.4.1
         version: 7.4.1(prisma@7.4.1(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3))(typescript@5.9.3)
-      nodemon:
-        specifier: ^3.1.11
-        version: 3.1.11
+      dotenv:
+        specifier: ^17.3.1
+        version: 17.3.1
+      express:
+        specifier: ^5.2.1
+        version: 5.2.1
       path-to-regexp:
         specifier: ^8.3.0
         version: 8.3.0
       pg:
         specifier: ^8.18.0
         version: 8.18.0
+      prisma:
+        specifier: ^7.4.1
+        version: 7.4.1(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3)
       uuid:
         specifier: ^13.0.0
         version: 13.0.0
@@ -194,18 +196,12 @@ importers:
       '@types/node':
         specifier: ^22.19.11
         version: 22.19.11
-      dotenv:
-        specifier: ^17.3.1
-        version: 17.3.1
       eslint:
         specifier: ^9.39.2
         version: 9.39.2(jiti@2.6.1)
-      express:
-        specifier: ^5.2.1
-        version: 5.2.1
-      prisma:
-        specifier: ^7.4.1
-        version: 7.4.1(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@5.9.3)
+      nodemon:
+        specifier: ^3.1.11
+        version: 3.1.11
       rimraf:
         specifier: ^6.1.3
         version: 6.1.3
@@ -718,15 +714,6 @@ importers:
       '@finverse/utils':
         specifier: workspace:*
         version: link:../utils
-      '@types/compression':
-        specifier: ^1.7.5
-        version: 1.8.1
-      '@types/cors':
-        specifier: ^2.8.17
-        version: 2.8.19
-      '@types/express':
-        specifier: ^5.0.6
-        version: 5.0.6
       compression:
         specifier: ^1.8.1
         version: 1.8.1
@@ -746,6 +733,15 @@ importers:
         specifier: ^8.13.0
         version: 8.18.0
     devDependencies:
+      '@types/compression':
+        specifier: ^1.7.5
+        version: 1.8.1
+      '@types/cors':
+        specifier: ^2.8.17
+        version: 2.8.19
+      '@types/express':
+        specifier: ^5.0.6
+        version: 5.0.6
       '@types/pg':
         specifier: ^8.11.10
         version: 8.16.0
@@ -770,9 +766,6 @@ importers:
       express:
         specifier: '>=5.0.0'
         version: 5.2.1
-      rimraf:
-        specifier: ^6.1.3
-        version: 6.1.3
       zod:
         specifier: ^3.24.2
         version: 3.25.76
@@ -786,6 +779,9 @@ importers:
       '@types/node':
         specifier: ^22.10.0
         version: 22.19.11
+      rimraf:
+        specifier: ^6.1.3
+        version: 6.1.3
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -6048,115 +6044,6 @@ packages:
   node-releases@2.0.27:
     resolution: {integrity: sha512-nmh3lCkYZ3grZvqcCH+fjmQ7X+H0OeZgP40OierEaAptX4XofMh5kwNbWh7lBduUzCcV/8kZ+NDLCwm2iorIlA==}
 
-  node@runtime:22.22.0:
-    resolution:
-      type: variations
-      variants:
-        - resolution:
-            archive: tarball
-            bin: bin/node
-            integrity: sha256-tatt7rjVS5c4A5qP/cR4HMS4GykeebINNgD4MNHWacs=
-            type: binary
-            url: https://nodejs.org/download/release/v22.22.0/node-v22.22.0-aix-ppc64.tar.gz
-          targets:
-            - cpu: ppc64
-              os: aix
-        - resolution:
-            archive: tarball
-            bin: bin/node
-            integrity: sha256-XtTbD88er4TZGtEkYmMdc79FdsE3fhktIi5IAmqQJkA=
-            type: binary
-            url: https://nodejs.org/download/release/v22.22.0/node-v22.22.0-darwin-arm64.tar.gz
-          targets:
-            - cpu: arm64
-              os: darwin
-        - resolution:
-            archive: tarball
-            bin: bin/node
-            integrity: sha256-XqUMnW3qPfo6u2ayZW96ThyM7yNDK1WNRftTjHtd7c4=
-            type: binary
-            url: https://nodejs.org/download/release/v22.22.0/node-v22.22.0-darwin-x64.tar.gz
-          targets:
-            - cpu: x64
-              os: darwin
-        - resolution:
-            archive: tarball
-            bin: bin/node
-            integrity: sha256-JbqV37locfou+XfxH5XqkIGMj6FcDyEQdx2wjUukI74=
-            type: binary
-            url: https://nodejs.org/download/release/v22.22.0/node-v22.22.0-linux-arm64.tar.gz
-          targets:
-            - cpu: arm64
-              os: linux
-        - resolution:
-            archive: tarball
-            bin: bin/node
-            integrity: sha256-qSaE2HIFifGXdvsYbFo6TSc8E0NvyMRLYd0+7vgfDTo=
-            type: binary
-            url: https://nodejs.org/download/release/v22.22.0/node-v22.22.0-linux-armv7l.tar.gz
-          targets:
-            - cpu: armv7l
-              os: linux
-        - resolution:
-            archive: tarball
-            bin: bin/node
-            integrity: sha256-VGgO7FmDMLmGOrN62kZFZBW3duRjRZWEdvzSISq98PM=
-            type: binary
-            url: https://nodejs.org/download/release/v22.22.0/node-v22.22.0-linux-ppc64le.tar.gz
-          targets:
-            - cpu: ppc64le
-              os: linux
-        - resolution:
-            archive: tarball
-            bin: bin/node
-            integrity: sha256-myTMbdFxBnJdeWRa3wo7YvozEOTTCqERR90/4tgyXvQ=
-            type: binary
-            url: https://nodejs.org/download/release/v22.22.0/node-v22.22.0-linux-s390x.tar.gz
-          targets:
-            - cpu: s390x
-              os: linux
-        - resolution:
-            archive: tarball
-            bin: bin/node
-            integrity: sha256-wzw57ZyA3t3ed8lg0AEZkYueNSQm/WBLpBY41lJqR0Q=
-            type: binary
-            url: https://nodejs.org/download/release/v22.22.0/node-v22.22.0-linux-x64.tar.gz
-          targets:
-            - cpu: x64
-              os: linux
-        - resolution:
-            archive: zip
-            bin: node.exe
-            integrity: sha256-W0T9QQ33tM0KGJGgWntgb4+32HhqlJl7mWo3LoJHjXo=
-            prefix: node-v22.22.0-win-arm64
-            type: binary
-            url: https://nodejs.org/download/release/v22.22.0/node-v22.22.0-win-arm64.zip
-          targets:
-            - cpu: arm64
-              os: win32
-        - resolution:
-            archive: zip
-            bin: node.exe
-            integrity: sha256-yX+jdtK+zciGP808ot2ag6nzRo7nzPem0HbsZqZFx3o=
-            prefix: node-v22.22.0-win-x64
-            type: binary
-            url: https://nodejs.org/download/release/v22.22.0/node-v22.22.0-win-x64.zip
-          targets:
-            - cpu: x64
-              os: win32
-        - resolution:
-            archive: zip
-            bin: node.exe
-            integrity: sha256-XX9s/FBHTPeEAnzp3av0egGY6ktYgwGrhnXejFYhckc=
-            prefix: node-v22.22.0-win-x86
-            type: binary
-            url: https://nodejs.org/download/release/v22.22.0/node-v22.22.0-win-x86.zip
-          targets:
-            - cpu: x86
-              os: win32
-    version: 22.22.0
-    hasBin: true
-
   nodemon@3.1.11:
     resolution: {integrity: sha512-is96t8F/1//UHAjNPHpbsNY46ELPpftGUoSVNXwUfMk/qdjSylYrWSu1XavVTBOn526kFiOR733ATgNBCQyH0g==}
     engines: {node: '>=10'}
@@ -11223,7 +11110,7 @@ snapshots:
       sirv: 3.0.2
       tinyglobby: 0.2.15
       tinyrainbow: 2.0.0
-      vitest: 3.2.4(@types/node@25.3.0)(@vitest/ui@3.2.4)(jiti@2.6.1)(lightningcss@1.31.1)(sass@1.97.3)(yaml@2.8.2)
+      vitest: 3.2.4(@types/node@22.19.10)(@vitest/ui@3.2.4)(jiti@2.6.1)(lightningcss@1.31.1)(sass@1.97.3)(yaml@2.8.2)
     optional: true
 
   '@vitest/utils@2.0.5':
@@ -14252,8 +14139,6 @@ snapshots:
   node-machine-id@1.1.12: {}
 
   node-releases@2.0.27: {}
-
-  node@runtime:22.22.0: {}
 
   nodemon@3.1.11:
     dependencies:

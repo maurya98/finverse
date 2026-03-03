@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+import type { Prisma } from "../../databases/generated/prisma";
 import { prisma } from "../../databases/client";
 import {
   CACHE_KEYS,

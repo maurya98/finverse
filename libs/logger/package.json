@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Universal pino-based logger for the monorepo",
   "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "files": ["dist"],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -15,7 +15,7 @@
   "scripts": {
     "test": "pnpm exec vitest run --config config/vitest.config.ts",
     "test:watch": "pnpm exec vitest --config config/vitest.config.ts",
-    "build": "pnpm test && tsc -b"
+    "build": "pnpm test && tsc -b --force"
   },
   "keywords": ["logger", "pino", "logging"],
   "author": "Saurabh Kumar Maurya",

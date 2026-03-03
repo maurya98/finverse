@@ -10,6 +10,8 @@ CREATE TABLE "Service" (
     "name" TEXT NOT NULL,
     "baseUrl" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "description" TEXT DEFAULT '',
+    "isActive" BOOLEAN NOT NULL DEFAULT false,
 
     CONSTRAINT "Service_pkey" PRIMARY KEY ("id")
 );
@@ -19,6 +21,8 @@ CREATE TABLE "ServiceRoute" (
     "id" TEXT NOT NULL,
     "serviceId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
+    "description" TEXT DEFAULT '',
+    "isActive" BOOLEAN NOT NULL DEFAULT false,
     "method" "HttpMethod" NOT NULL,
     "actualPath" TEXT NOT NULL,
     "exposedPath" TEXT NOT NULL,
@@ -31,6 +35,8 @@ CREATE TABLE "ServiceRoute" (
 CREATE TABLE "ClientApp" (
     "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
+    "description" TEXT DEFAULT '',
+    "isActive" BOOLEAN NOT NULL DEFAULT false,
     "secret" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -42,6 +48,8 @@ CREATE TABLE "ClientPermission" (
     "id" TEXT NOT NULL,
     "clientId" TEXT NOT NULL,
     "routeId" TEXT NOT NULL,
+    "description" TEXT DEFAULT '',
+    "isActive" BOOLEAN NOT NULL DEFAULT false,
     "scope" "PermissionScope" NOT NULL DEFAULT 'FULL',
 
     CONSTRAINT "ClientPermission_pkey" PRIMARY KEY ("id")

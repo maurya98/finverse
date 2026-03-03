@@ -1,4 +1,4 @@
-import type { Prisma } from "@prisma/client";
+import type { Prisma } from "../../databases/generated/prisma";
 import { prisma } from "../../databases/client";
 import {
   CACHE_KEYS,
@@ -126,8 +126,8 @@ export class ClientPermissionService {
                     clientId: clientId as string,
                     routeId: routeId as string,
                     scope: (updateData.scope as "READ" | "WRITE" | "FULL") || "FULL",
-                    description: data.description as string | undefined,
-                    isActive: data.isActive as boolean | undefined,
+                    description: data.description as string | "",
+                    isActive: data.isActive as boolean | false,
                 },
             });
         }

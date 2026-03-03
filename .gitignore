@@ -13,3 +13,5 @@ infra/deployment/**/*.env
 **/.turbo/**
 **/generated/**
 **/tsconfig.tsbuildinfo
+.turbo
+.vscode
