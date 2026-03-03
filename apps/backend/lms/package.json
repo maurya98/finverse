@@ -5,8 +5,10 @@
   "main": "index.js",
   "scripts": {
     "lint": "eslint .",
-    "build": "rimraf dist && tsc -b --force",
-    "start": "node dist/app.js",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate deploy",
+    "build": "pnpm prisma:generate && rimraf dist && tsc -b --force",
+    "start": "pnpm prisma:migrate && node dist/app.js",
     "dev": "nodemon"
   },
   "keywords": [],

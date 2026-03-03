@@ -1,7 +1,22 @@
 {
   "name": "finverse-monorepo",
   "version": "1.0.0",
-  "scripts": {},
+  "scripts": {
+    "build": "turbo run build",
+    "build:libs": "turbo run build --filter=@finverse/logger --filter=@finverse/cache --filter=@finverse/utils --filter=@finverse/middlewares",
+    "build:backend": "turbo run build --filter='./apps/backend/*'",
+    "build:frontend": "turbo run build --filter='./apps/frontend/*'",
+    "build:lms": "turbo run build --filter=lms",
+    "build:ruleenginebe": "turbo run build --filter=ruleenginebe",
+    "build:siteplatform": "turbo run build --filter=@finverse/site-platform",
+    "build:admin": "turbo run build --filter=admin_dashboard",
+    "build:ruleenginefe": "turbo run build --filter=ruleenginefe",
+    "dev": "turbo run dev --parallel",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "test:watch": "turbo run test:watch --parallel",
+    "clean": "turbo clean && pnpm -r exec rm -rf dist tsconfig.tsbuildinfo"
+  },
   "engines": {
     "node": ">=22.10.0",
     "pnpm": ">=10.28.2",
