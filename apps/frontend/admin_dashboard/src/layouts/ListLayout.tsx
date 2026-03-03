@@ -33,6 +33,7 @@ const ListLayout = ({
         <table className="table table-sm [&_tbody_tr:nth-child(odd)]:bg-base-200">
           <thead>
             <tr>
+              <th className="w-24">ID</th>
               <th className="w-1/3">Title</th>
               <th className="w-1/3">Description</th>
               <th className="w-24">Status</th>
@@ -46,6 +47,7 @@ const ListLayout = ({
                 onClick={() => onCardClick?.(item.id)}
                 className="hover:bg-base-300 cursor-pointer"
               >
+                <td className="text-xs font-mono whitespace-nowrap">{item.id}</td>
                 <td className="font-semibold">{item.title}</td>
                 <td className="text-sm text-gray-600 max-w-xs truncate">
                   {item.description || "-"}

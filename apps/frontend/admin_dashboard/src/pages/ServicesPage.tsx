@@ -6,7 +6,7 @@ import CreateService from "../components/popups/CreateService";
 import ConfirmationDialog from "../components/common/ConfirmationDialog";
 import TableFilterBar from "../components/common/TableFilterBar";
 import { useRightDrawer } from "../contexts/RightDrawerContext";
-import { useViewToggle } from "../contexts/ViewToggleContext";
+import { useViewToggle } from "../hooks/useViewToggle";
 import { servicesCardActions } from "../data/cardActions";
 import GridLayout from "../layouts/GridLayout";
 import ListLayout from "../layouts/ListLayout";
@@ -26,22 +26,22 @@ const ServicesPage = () => {
   const { currentView } = useViewToggle();
 
   // Load services from API
-  useEffect(() => {
-    const loadServices = async () => {
-      try {
-        const services = await getAllServices();
-        const gridItems: GridItem[] = services.map(service => ({
-          id: service.id,
-          title: service.name,
-          description: service.description,
-          active: service.isActive,
-        }));
-        setItems(gridItems);
-      } catch (error) {
-        console.error('Failed to load services:', error);
-      }
-    };
+  const loadServices = async () => {
+    try {
+      const services = await getAllServices();
+      const gridItems: GridItem[] = services.map(service => ({
+        id: service.id,
+        title: service.name,
+        description: service.description,
+        active: service.isActive,
+      }));
+      setItems(gridItems);
+    } catch (error) {
+      console.error('Failed to load services:', error);
+    }
+  };
 
+  useEffect(() => {
     loadServices();
   }, []);
 
@@ -72,12 +72,12 @@ const ServicesPage = () => {
   };
 
   const handleCardClick = (itemId: string) => {
-    openDrawer(<EditService itemId={itemId} isEditable={false} />);
+    openDrawer(<EditService itemId={itemId} isEditable={false} />, false, loadServices);
   };
 
   const handleActionClick = (actionId: string, itemId: string) => {
     if (actionId === "edit") {
-      openDrawer(<EditService itemId={itemId} isEditable={true} />);
+      openDrawer(<EditService itemId={itemId} isEditable={true} />, false, loadServices);
     } else if (actionId === "delete") {
       setDeleteItemId(itemId);
       (document.getElementById("delete-service-modal") as HTMLDialogElement)?.showModal();

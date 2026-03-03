@@ -1,4 +1,4 @@
-import { createContext, useContext, ReactNode, useState, useCallback, useEffect } from "react";
+import { createContext, type ReactNode, useState, useCallback } from "react";
 
 type ViewType = "grid" | "list";
 
@@ -12,22 +12,17 @@ interface ViewToggleContextType {
 
 const ViewToggleContext = createContext<ViewToggleContextType | undefined>(undefined);
 
-export const ViewToggleProvider = ({ children }: { children: ReactNode }) => {
-  const [currentView, setCurrentView] = useState<ViewType>("grid");
-  const [isHydrated, setIsHydrated] = useState(false);
+export { ViewToggleContext };
 
-  // Load from localStorage on mount
-  useEffect(() => {
+export const ViewToggleProvider = ({ children }: { children: ReactNode }) => {
+  const [currentView, setCurrentView] = useState<ViewType>(() => {
     try {
       const savedView = localStorage.getItem(STORAGE_KEY) as ViewType | null;
-      if (savedView === "grid" || savedView === "list") {
-        setCurrentView(savedView);
-      }
-    } catch (error) {
-      console.warn("Failed to load view preference from localStorage:", error);
+      return savedView === "grid" || savedView === "list" ? savedView : "grid";
+    } catch {
+      return "grid";
     }
-    setIsHydrated(true);
-  }, []);
+  });
 
   const toggleView = useCallback(() => {
     setCurrentView((prev) => {
@@ -50,14 +45,6 @@ export const ViewToggleProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  if (!isHydrated) {
-    return (
-      <div className="flex items-center justify-center w-full h-screen">
-        <span className="loading loading-spinner loading-lg"></span>
-      </div>
-    );
-  }
-
   return (
     <ViewToggleContext.Provider
       value={{
@@ -69,12 +56,4 @@ export const ViewToggleProvider = ({ children }: { children: ReactNode }) => {
       {children}
     </ViewToggleContext.Provider>
   );
-};
-
-export const useViewToggle = () => {
-  const context = useContext(ViewToggleContext);
-  if (context === undefined) {
-    throw new Error("useViewToggle must be used within a ViewToggleProvider");
-  }
-  return context;
 };

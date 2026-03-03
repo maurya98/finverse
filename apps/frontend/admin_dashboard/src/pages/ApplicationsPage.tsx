@@ -9,7 +9,7 @@ import { applicationsCardActions } from "../data/cardActions";
 import GridLayout from "../layouts/GridLayout";
 import ListLayout from "../layouts/ListLayout";
 import { useRightDrawer } from "../contexts/RightDrawerContext";
-import { useViewToggle } from "../contexts/ViewToggleContext";
+import { useViewToggle } from "../hooks/useViewToggle";
 import EditApplication from "../components/forms/EditApplication";
 import { useTableFilters, type TableFilterConfig } from "../hooks/useTableFilters";
 import { getAllApplications, deleteApplication, updateApplication } from "../services/applicationsApi";
@@ -28,22 +28,22 @@ const ApplicationsPage = () => {
   const { currentView } = useViewToggle();
 
   // Load applications from API
-  useEffect(() => {
-    const loadApplications = async () => {
-      try {
-        const applications = await getAllApplications();
-        const gridItems: GridItem[] = applications.map(app => ({
-          id: app.id,
-          title: app.name,
-          description: app.description,
-          active: app.isActive,
-        }));
-        setItems(gridItems);
-      } catch (error) {
-        console.error('Failed to load applications:', error);
-      }
-    };
+  const loadApplications = async () => {
+    try {
+      const applications = await getAllApplications();
+      const gridItems: GridItem[] = applications.map(app => ({
+        id: app.id,
+        title: app.name,
+        description: app.description,
+        active: app.isActive,
+      }));
+      setItems(gridItems);
+    } catch (error) {
+      console.error('Failed to load applications:', error);
+    }
+  };
 
+  useEffect(() => {
     loadApplications();
   }, []);
 
@@ -74,12 +74,12 @@ const ApplicationsPage = () => {
   };
 
   const handleCardClick = (itemId: string) => {
-    openDrawer(<EditApplication itemId={itemId} isEditable={false} />);
+    openDrawer(<EditApplication itemId={itemId} isEditable={false} />, false, loadApplications);
   };
 
   const handleActionClick = (actionId: string, itemId: string) => {
     if (actionId === "edit") {
-      openDrawer(<EditApplication itemId={itemId} isEditable={true} />);
+      openDrawer(<EditApplication itemId={itemId} isEditable={true} />, false, loadApplications);
     } else if (actionId === "delete") {
       setDeleteItemId(itemId);
       (document.getElementById("delete-app-modal") as HTMLDialogElement)?.showModal();

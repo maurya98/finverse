@@ -11,13 +11,24 @@ import {
   EDITABLE_CELL_CONFIGS,
 } from "../../utils/editableCellRenderer";
 import TableFilterBar from "../common/TableFilterBar";
-import { useTableFilters, type TableFilterConfig } from "../../hooks/useTableFilters";
+import {
+  useTableFilters,
+  type TableFilterConfig,
+} from "../../hooks/useTableFilters";
 import { getServiceById, updateService } from "../../services/servicesApi";
-import { getAllRoutes, createRoute, updateRoute, type Route } from "../../services/routesApi";
+import {
+  getAllRoutes,
+  createRoute,
+  updateRoute,
+  deleteRoute,
+  type Route,
+} from "../../services/routesApi";
 
 import Input from "../common/Input";
 import Table from "../common/Table";
 import AddRouteDialog from "../common/AddRouteDialog";
+import ConfirmationDialog from "../common/ConfirmationDialog";
+import { Trash2Icon } from "lucide-react";
 
 interface EditServiceProps {
   itemId: string;
@@ -49,6 +60,7 @@ const EditService = ({ itemId, isEditable }: EditServiceProps) => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [routeToDelete, setRouteToDelete] = useState<ServiceRoute | null>(null);
 
   // Load service data on mount
   useEffect(() => {
@@ -56,7 +68,7 @@ const EditService = ({ itemId, isEditable }: EditServiceProps) => {
       try {
         setLoading(true);
         const service = await getServiceById(itemId);
-        
+
         setFormData({
           name: service.name,
           description: service.description,
@@ -66,11 +78,13 @@ const EditService = ({ itemId, isEditable }: EditServiceProps) => {
 
         // Load routes for this service
         const allRoutes = await getAllRoutes();
-        const serviceRoutes = allRoutes.filter((route: Route) => route.serviceId === itemId) as ServiceRoute[];
+        const serviceRoutes = allRoutes.filter(
+          (route: Route) => route.serviceId === itemId,
+        ) as ServiceRoute[];
         setRoutes(serviceRoutes);
       } catch (error) {
-        console.error('Failed to load service:', error);
-        setValidationError('Failed to load service data');
+        console.error("Failed to load service:", error);
+        setValidationError("Failed to load service data");
       } finally {
         setLoading(false);
       }
@@ -90,18 +104,48 @@ const EditService = ({ itemId, isEditable }: EditServiceProps) => {
 
   // When a row is populated, add a new empty row if one doesn't exist
   const openAddRouteDialog = () => {
-    const dialog = document.getElementById("add-route-dialog") as HTMLDialogElement | null;
+    const dialog = document.getElementById(
+      "add-route-dialog",
+    ) as HTMLDialogElement | null;
     dialog?.showModal();
   };
 
   const refreshRoutes = async () => {
     try {
       const allRoutes = await getAllRoutes();
-      const serviceRoutes = allRoutes.filter((route: Route) => route.serviceId === itemId) as ServiceRoute[];
+      const serviceRoutes = allRoutes.filter(
+        (route: Route) => route.serviceId === itemId,
+      ) as ServiceRoute[];
       setRoutes(serviceRoutes);
     } catch (error) {
-      console.error('Failed to refresh routes:', error);
+      console.error("Failed to refresh routes:", error);
     }
+  };
+
+  const handleDeleteRoute = async () => {
+    if (!routeToDelete?.id) return;
+
+    try {
+      setSaving(true);
+      await deleteRoute(routeToDelete.id);
+      await refreshRoutes();
+      setRouteToDelete(null);
+    } catch (error) {
+      console.error("Failed to delete route:", error);
+      setValidationError(
+        error instanceof Error ? error.message : "Failed to delete route",
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const openDeleteConfirmation = (route: ServiceRoute) => {
+    setRouteToDelete(route);
+    const dialog = document.getElementById(
+      "delete-route-dialog",
+    ) as HTMLDialogElement | null;
+    dialog?.showModal();
   };
 
   async function handleUpdate() {
@@ -114,7 +158,7 @@ const EditService = ({ itemId, isEditable }: EditServiceProps) => {
 
     try {
       setSaving(true);
-      
+
       // Update service
       await updateService(itemId, {
         name: formData.name,
@@ -125,31 +169,36 @@ const EditService = ({ itemId, isEditable }: EditServiceProps) => {
 
       // Handle routes
       const cleanedRoutes = cleanupServiceRoutes(routes);
-      
-      // Separate new and existing routes by whether they have an ID
-      const newRoutes = cleanedRoutes.filter(r => !r.id);
-      const existingRoutes = cleanedRoutes.filter(r => r.id);
 
-      console.log('Routes to create (new):', newRoutes);
-      console.log('Routes to update (existing):', existingRoutes);
-      console.log('Service ID:', itemId);
+      // Separate new and existing routes by whether they have an ID
+      const newRoutes = cleanedRoutes.filter((r) => !r.id);
+      const existingRoutes = cleanedRoutes.filter((r) => r.id);
+
+      console.log("Routes to create (new):", newRoutes);
+      console.log("Routes to update (existing):", existingRoutes);
+      console.log("Service ID:", itemId);
 
       // Create new routes via POST endpoint (backend generates IDs)
       for (const route of newRoutes) {
-        if (route.name && route.method && route.actualPath && route.exposedPath) {
+        if (
+          route.name &&
+          route.method &&
+          route.actualPath &&
+          route.exposedPath
+        ) {
           try {
-            console.log('Creating route:', route);
+            console.log("Creating route:", route);
             const response = await createRoute({
               serviceId: itemId,
               name: route.name,
               method: route.method,
               actualPath: route.actualPath,
               exposedPath: route.exposedPath,
-              description: route.description || '',
+              description: route.description || "",
             });
-            console.log('Route created:', response);
+            console.log("Route created:", response);
           } catch (err) {
-            console.error('Failed to create route:', err);
+            console.error("Failed to create route:", err);
             throw err;
           }
         }
@@ -159,7 +208,7 @@ const EditService = ({ itemId, isEditable }: EditServiceProps) => {
       for (const route of existingRoutes) {
         if (route.id) {
           try {
-            console.log('Updating route:', route);
+            console.log("Updating route:", route);
             await updateRoute(route.id, {
               serviceId: itemId,
               name: route.name,
@@ -169,33 +218,40 @@ const EditService = ({ itemId, isEditable }: EditServiceProps) => {
               description: route.description,
               isActive: route.isActive,
             });
-            console.log('Route updated');
+            console.log("Route updated");
           } catch (err) {
-            console.error('Failed to update route:', err);
+            console.error("Failed to update route:", err);
             throw err;
           }
         }
       }
 
       // Fetch fresh data from backend and update state
-      console.log('Fetching routes for service:', itemId);
+      console.log("Fetching routes for service:", itemId);
       const allRoutes = await getAllRoutes();
-      console.log('All routes from backend:', allRoutes);
-      const serviceRoutes = allRoutes.filter((route: Route) => route.serviceId === itemId) as ServiceRoute[];
-      console.log('Filtered service routes:', serviceRoutes);
+      console.log("All routes from backend:", allRoutes);
+      const serviceRoutes = allRoutes.filter(
+        (route: Route) => route.serviceId === itemId,
+      ) as ServiceRoute[];
+      console.log("Filtered service routes:", serviceRoutes);
       setRoutes(serviceRoutes);
 
       setValidationError(null);
-      alert('Service updated successfully!');
+      alert("Service updated successfully!");
     } catch (error) {
-      console.error('Failed to update service:', error);
-      setValidationError(error instanceof Error ? error.message : 'Failed to update service');
+      console.error("Failed to update service:", error);
+      setValidationError(
+        error instanceof Error ? error.message : "Failed to update service",
+      );
     } finally {
       setSaving(false);
     }
   }
 
-  const handleFormChange = (field: keyof ServiceFormData, value: string | boolean) => {
+  const handleFormChange = (
+    field: keyof ServiceFormData,
+    value: string | boolean,
+  ) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
@@ -215,10 +271,47 @@ const EditService = ({ itemId, isEditable }: EditServiceProps) => {
     );
   };
 
+  const renderRouteCell = (
+    row: ServiceRoute,
+    col: (typeof serviceRouteColumns)[0],
+    rowIndex: number,
+  ) => {
+    // Show delete button on last column if editable
+    if (col.key === "isActive" && isEditable) {
+      return (
+        <div className="flex gap-2 items-center">
+          {generateEditableCellRenderer(
+            row,
+            col,
+            handleRouteChange,
+            EDITABLE_CELL_CONFIGS.serviceRoute,
+            rowIndex,
+          )}
+          <button
+            type="button"
+            className="btn btn-xs btn-square btn-error"
+            onClick={() => openDeleteConfirmation(row)}
+            disabled={saving}
+            title="Delete route"
+          >
+            <Trash2Icon className="h-4 w-4" />
+          </button>
+        </div>
+      );
+    }
+    return generateEditableCellRenderer(
+      row,
+      col,
+      handleRouteChange,
+      EDITABLE_CELL_CONFIGS.serviceRoute,
+      rowIndex,
+    );
+  };
+
   return (
-    <form action="" className="p-4 bg-base-300 rounded-xl flex flex-col gap-4">
+    <div className="p-4 bg-base-300 rounded-xl flex flex-col gap-4">
       {loading && <div className="alert alert-info loading" />}
-      
+
       <Input
         label="Name"
         placeholder="E.g: User Service"
@@ -286,7 +379,7 @@ const EditService = ({ itemId, isEditable }: EditServiceProps) => {
           striped={true}
           hover={true}
           compact={false}
-          renderCell={isEditable ? (row, col, rowIndex) => generateEditableCellRenderer(row, col, handleRouteChange, EDITABLE_CELL_CONFIGS.serviceRoute, rowIndex) : undefined}
+          renderCell={isEditable ? renderRouteCell : undefined}
           cellColorConfigs={[httpMethodColorConfig]}
         />
       </div>
@@ -304,12 +397,12 @@ const EditService = ({ itemId, isEditable }: EditServiceProps) => {
 
       <div className="divider" />
 
-      <button 
-        className="btn btn-primary" 
-        onClick={handleUpdate} 
+      <button
+        className="btn btn-primary"
+        onClick={handleUpdate}
         disabled={!isEditable || loading || saving}
       >
-        {saving ? 'Saving...' : 'Save Changes'}
+        {saving ? "Saving..." : "Save Changes"}
       </button>
       {validationError && (
         <div className="alert alert-error">
@@ -323,7 +416,17 @@ const EditService = ({ itemId, isEditable }: EditServiceProps) => {
         onRouteCreated={refreshRoutes}
         onClose={() => {}}
       />
-    </form>
+
+      <ConfirmationDialog
+        id="delete-route-dialog"
+        title="Delete Route"
+        message={`Are you sure you want to delete the route "${routeToDelete?.name}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        confirmVariant="error"
+        onConfirm={handleDeleteRoute}
+      />
+    </div>
   );
 };
 

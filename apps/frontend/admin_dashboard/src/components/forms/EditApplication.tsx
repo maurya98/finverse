@@ -11,14 +11,27 @@ import {
   EDITABLE_CELL_CONFIGS,
 } from "../../utils/editableCellRenderer";
 import TableFilterBar from "../common/TableFilterBar";
-import { useTableFilters, type TableFilterConfig } from "../../hooks/useTableFilters";
-import { getApplicationById, updateApplication } from "../../services/applicationsApi";
-import { getAllPermissions, updatePermission, type Permission } from "../../services/permissionsApi";
+import {
+  useTableFilters,
+  type TableFilterConfig,
+} from "../../hooks/useTableFilters";
+import {
+  getApplicationById,
+  updateApplication,
+} from "../../services/applicationsApi";
+import {
+  getAllPermissions,
+  updatePermission,
+  deletePermission,
+  type Permission,
+} from "../../services/permissionsApi";
 import { getAllRoutes, type Route } from "../../services/routesApi";
 
 import Input from "../common/Input";
 import Table from "../common/Table";
 import AddPermissionDialog from "../common/AddPermissionDialog";
+import ConfirmationDialog from "../common/ConfirmationDialog";
+import { Trash2Icon } from "lucide-react";
 
 interface EditApplicationProps {
   itemId: string;
@@ -42,13 +55,13 @@ const PERMISSION_FILTER_CONFIG: TableFilterConfig = {
  */
 const mapApiPermissionToTablePermission = (
   apiPerm: Permission,
-  routeMap: Map<string, Route>
+  routeMap: Map<string, Route>,
 ): ClientPermission => {
   const route = routeMap.get(apiPerm.routeId);
   return {
     id: apiPerm.id,
     routeUrl: route?.exposedPath || apiPerm.routeId,
-    routeMethod: route?.method || 'GET',
+    routeMethod: route?.method || "GET",
     scope: apiPerm.scope,
     description: apiPerm.description,
     isActive: apiPerm.isActive,
@@ -67,6 +80,8 @@ const EditApplication = ({ itemId, isEditable }: EditApplicationProps) => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [permissionToDelete, setPermissionToDelete] =
+    useState<ClientPermission | null>(null);
 
   // Load application data on mount
   useEffect(() => {
@@ -74,7 +89,7 @@ const EditApplication = ({ itemId, isEditable }: EditApplicationProps) => {
       try {
         setLoading(true);
         const app = await getApplicationById(itemId);
-        
+
         setFormData({
           name: app.name,
           description: app.description,
@@ -84,21 +99,23 @@ const EditApplication = ({ itemId, isEditable }: EditApplicationProps) => {
         // Load all routes to create a mapping
         const allRoutes = await getAllRoutes();
         const routes = new Map<string, Route>();
-        allRoutes.forEach(route => routes.set(route.id, route));
+        allRoutes.forEach((route) => routes.set(route.id, route));
 
         // Load permissions for this application
         const allPermissions = await getAllPermissions();
-        const appPermissions = allPermissions.filter((perm: Permission) => perm.clientId === itemId);
-        
+        const appPermissions = allPermissions.filter(
+          (perm: Permission) => perm.clientId === itemId,
+        );
+
         // Convert API permissions to table format
-        const tablePermissions = appPermissions.map((perm: Permission) => 
-          mapApiPermissionToTablePermission(perm, routes)
+        const tablePermissions = appPermissions.map((perm: Permission) =>
+          mapApiPermissionToTablePermission(perm, routes),
         );
 
         setPermissions(tablePermissions);
       } catch (error) {
-        console.error('Failed to load application:', error);
-        setValidationError('Failed to load application data');
+        console.error("Failed to load application:", error);
+        setValidationError("Failed to load application data");
       } finally {
         setLoading(false);
       }
@@ -117,7 +134,9 @@ const EditApplication = ({ itemId, isEditable }: EditApplicationProps) => {
   } = useTableFilters(permissions, PERMISSION_FILTER_CONFIG);
 
   const openAddPermissionDialog = () => {
-    const dialog = document.getElementById("add-permission-dialog") as HTMLDialogElement | null;
+    const dialog = document.getElementById(
+      "add-permission-dialog",
+    ) as HTMLDialogElement | null;
     dialog?.showModal();
   };
 
@@ -125,18 +144,46 @@ const EditApplication = ({ itemId, isEditable }: EditApplicationProps) => {
     try {
       const allRoutes = await getAllRoutes();
       const routes = new Map<string, Route>();
-      allRoutes.forEach(route => routes.set(route.id, route));
+      allRoutes.forEach((route) => routes.set(route.id, route));
 
       const allPermissions = await getAllPermissions();
-      const appPermissions = allPermissions.filter((perm: Permission) => perm.clientId === itemId);
-      
-      const tablePermissions = appPermissions.map((perm: Permission) => 
-        mapApiPermissionToTablePermission(perm, routes)
+      const appPermissions = allPermissions.filter(
+        (perm: Permission) => perm.clientId === itemId,
+      );
+
+      const tablePermissions = appPermissions.map((perm: Permission) =>
+        mapApiPermissionToTablePermission(perm, routes),
       );
       setPermissions(tablePermissions);
     } catch (error) {
-      console.error('Failed to refresh permissions:', error);
+      console.error("Failed to refresh permissions:", error);
     }
+  };
+
+  const handleDeletePermission = async () => {
+    if (!permissionToDelete?.id) return;
+
+    try {
+      setSaving(true);
+      await deletePermission(permissionToDelete.id);
+      await refreshPermissions();
+      setPermissionToDelete(null);
+    } catch (error) {
+      console.error("Failed to delete permission:", error);
+      setValidationError(
+        error instanceof Error ? error.message : "Failed to delete permission",
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const openDeleteConfirmation = (permission: ClientPermission) => {
+    setPermissionToDelete(permission);
+    const dialog = document.getElementById(
+      "delete-permission-dialog",
+    ) as HTMLDialogElement | null;
+    dialog?.showModal();
   };
 
   async function handleUpdate() {
@@ -149,7 +196,7 @@ const EditApplication = ({ itemId, isEditable }: EditApplicationProps) => {
 
     try {
       setSaving(true);
-      
+
       // Update application
       await updateApplication(itemId, {
         name: formData.name,
@@ -159,7 +206,7 @@ const EditApplication = ({ itemId, isEditable }: EditApplicationProps) => {
 
       // Handle permission updates (only update existing permissions that have been edited)
       const cleanedPermissions = cleanupClientPermissions(permissions);
-      const existingPermissions = cleanedPermissions.filter(p => p.id);
+      const existingPermissions = cleanedPermissions.filter((p) => p.id);
 
       // Update existing permissions
       for (const perm of existingPermissions) {
@@ -176,27 +223,34 @@ const EditApplication = ({ itemId, isEditable }: EditApplicationProps) => {
       // Fetch fresh data from backend and update state
       const allRoutes = await getAllRoutes();
       const routes = new Map<string, Route>();
-      allRoutes.forEach(route => routes.set(route.id, route));
+      allRoutes.forEach((route) => routes.set(route.id, route));
 
       const allPermissions = await getAllPermissions();
-      const appPermissions = allPermissions.filter((perm: Permission) => perm.clientId === itemId);
-      
-      const tablePermissions = appPermissions.map((perm: Permission) => 
-        mapApiPermissionToTablePermission(perm, routes)
+      const appPermissions = allPermissions.filter(
+        (perm: Permission) => perm.clientId === itemId,
+      );
+
+      const tablePermissions = appPermissions.map((perm: Permission) =>
+        mapApiPermissionToTablePermission(perm, routes),
       );
       setPermissions(tablePermissions);
 
       setValidationError(null);
-      alert('Application updated successfully!');
+      alert("Application updated successfully!");
     } catch (error) {
-      console.error('Failed to update application:', error);
-      setValidationError(error instanceof Error ? error.message : 'Failed to update application');
+      console.error("Failed to update application:", error);
+      setValidationError(
+        error instanceof Error ? error.message : "Failed to update application",
+      );
     } finally {
       setSaving(false);
     }
   }
 
-  const handleFormChange = (field: keyof ApplicationFormData, value: string | boolean) => {
+  const handleFormChange = (
+    field: keyof ApplicationFormData,
+    value: string | boolean,
+  ) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
@@ -216,10 +270,47 @@ const EditApplication = ({ itemId, isEditable }: EditApplicationProps) => {
     );
   };
 
+  const renderPermissionCell = (
+    row: ClientPermission,
+    col: (typeof clientPermissionColumns)[0],
+    rowIndex: number,
+  ) => {
+    // Show delete button on last column if editable
+    if (col.key === "isActive" && isEditable) {
+      return (
+        <div className="flex gap-2 items-center">
+          {generateEditableCellRenderer(
+            row,
+            col,
+            handlePermissionChange,
+            EDITABLE_CELL_CONFIGS.clientPermission,
+            rowIndex,
+          )}
+          <button
+            type="button"
+            className="btn btn-xs btn-square btn-error"
+            onClick={() => openDeleteConfirmation(row)}
+            disabled={saving}
+            title="Delete Permission"
+          >
+            <Trash2Icon className="h-4 w-4" />
+          </button>
+        </div>
+      );
+    }
+    return generateEditableCellRenderer(
+      row,
+      col,
+      handlePermissionChange,
+      EDITABLE_CELL_CONFIGS.clientPermission,
+      rowIndex,
+    );
+  };
+
   return (
-    <form action="" className="p-4 bg-base-300 rounded-xl flex flex-col gap-4">
+    <div className="p-4 bg-base-300 rounded-xl flex flex-col gap-4">
       {loading && <div className="alert alert-info loading" />}
-      
+
       <Input
         label="Name"
         placeholder="E.g: Mobile App"
@@ -279,7 +370,7 @@ const EditApplication = ({ itemId, isEditable }: EditApplicationProps) => {
           striped={true}
           hover={true}
           compact={false}
-          renderCell={isEditable ? (row, col, rowIndex) => generateEditableCellRenderer(row, col, handlePermissionChange, EDITABLE_CELL_CONFIGS.clientPermission, rowIndex) : undefined}
+          renderCell={isEditable ? renderPermissionCell : undefined}
           cellColorConfigs={[httpMethodColorConfig]}
         />
       </div>
@@ -297,12 +388,12 @@ const EditApplication = ({ itemId, isEditable }: EditApplicationProps) => {
 
       <div className="divider" />
 
-      <button 
-        className="btn btn-primary" 
-        onClick={handleUpdate} 
+      <button
+        className="btn btn-primary"
+        onClick={handleUpdate}
         disabled={!isEditable || loading || saving}
       >
-        {saving ? 'Saving...' : 'Save Changes'}
+        {saving ? "Saving..." : "Save Changes"}
       </button>
       {validationError && (
         <div className="alert alert-error">
@@ -316,7 +407,17 @@ const EditApplication = ({ itemId, isEditable }: EditApplicationProps) => {
         onPermissionCreated={refreshPermissions}
         onClose={() => {}}
       />
-    </form>
+
+      <ConfirmationDialog
+        id="delete-permission-dialog"
+        title="Delete Permission"
+        message={`Are you sure you want to delete this permission? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        confirmVariant="error"
+        onConfirm={handleDeletePermission}
+      />
+    </div>
   );
 };
 

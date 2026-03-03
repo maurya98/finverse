@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { SidebarIcon, Grid3x3, List, FileUp } from "lucide-react";
 import { useLocation } from "react-router";
-import { useViewToggle } from "../../contexts/ViewToggleContext";
+import { useViewToggle } from "../../hooks/useViewToggle";
 import ImportExportDialog from "./ImportExportDialog";
 
 interface NavbarProps {

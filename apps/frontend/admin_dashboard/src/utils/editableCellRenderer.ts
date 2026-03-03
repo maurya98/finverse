@@ -109,7 +109,7 @@ export const EDITABLE_CELL_CONFIGS = {
   } as EditableCellConfig,
 
   serviceRoute: {
-    textFields: ["exposedPath", "actualPath", "method", "description"],
+    textFields: ["name", "exposedPath", "actualPath", "method", "description"],
     booleanFields: ["isActive"],
     colorCodeFields: ["method"],
   } as EditableCellConfig,

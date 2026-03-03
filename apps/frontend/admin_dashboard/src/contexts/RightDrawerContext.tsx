@@ -4,7 +4,7 @@ interface RightDrawerContextType {
   isVisible: boolean;
   isExpanded: boolean;
   content: ReactNode;
-  openDrawer: (content: ReactNode, expanded?: boolean) => void;
+  openDrawer: (content: ReactNode, expanded?: boolean, onClose?: () => void) => void;
   closeDrawer: () => void;
   toggleExpand: () => void;
 }
@@ -17,18 +17,29 @@ export const RightDrawerProvider = ({ children }: { children: ReactNode }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [content, setContent] = useState<ReactNode>(null);
+  const [onCloseCallback, setOnCloseCallback] = useState<(() => void) | null>(null);
 
   const openDrawer = useCallback(
-    (drawerContent: ReactNode, expanded = false) => {
+    (drawerContent: ReactNode, expanded = false, onClose?: () => void) => {
       setContent(drawerContent);
       setIsVisible(true);
       setIsExpanded(expanded);
+      setOnCloseCallback(onClose || null);
     },
     []
   );
 
   const closeDrawer = useCallback(() => {
     setIsVisible(false);
+    // Call the onClose callback after a small delay to ensure drawer closes first
+    setTimeout(() => {
+      setOnCloseCallback((callback) => {
+        if (typeof callback === 'function') {
+          callback();
+        }
+        return null;
+      });
+    }, 300);
   }, []);
 
   const toggleExpand = useCallback(() => {
