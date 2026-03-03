@@ -12,3 +12,4 @@ infra/deployment/**/*.env
 **/.DS_Store/**
 **/.turbo/**
 **/generated/**
+**/tsconfig.tsbuildinfo
