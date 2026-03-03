@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { CopyIcon, CheckIcon } from "lucide-react";
+import { rotateApplicationKey } from "../../services/applicationsApi";
 
 interface RotateKeyDialogProps {
   id: string;
@@ -8,15 +9,24 @@ interface RotateKeyDialogProps {
 }
 
 const RotateKeyDialog = ({ id, applicationId, applicationName }: RotateKeyDialogProps) => {
-  // Static key for now - will come from backend later
   const [generatedKey, setGeneratedKey] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleRegenerateKey = () => {
-    // For now, generate a static key - replace with backend call later
-    const newKey = `app_${applicationId}_${Math.random().toString(36).substr(2, 32)}`;
-    setGeneratedKey(newKey);
-    setCopied(false);
+  const handleRegenerateKey = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await rotateApplicationKey(applicationId);
+      setGeneratedKey(response.secret);
+      setCopied(false);
+    } catch (err) {
+      console.error("Failed to rotate key:", err);
+      setError(err instanceof Error ? err.message : "Failed to rotate key");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCopyKey = () => {
@@ -31,6 +41,7 @@ const RotateKeyDialog = ({ id, applicationId, applicationName }: RotateKeyDialog
   const handleClose = () => {
     setGeneratedKey(null);
     setCopied(false);
+    setError(null);
     const dialog = document.getElementById(id) as HTMLDialogElement;
     dialog?.close();
   };
@@ -82,13 +93,15 @@ const RotateKeyDialog = ({ id, applicationId, applicationName }: RotateKeyDialog
               <button
                 type="button"
                 onClick={handleRegenerateKey}
-                className="btn btn-sm btn-outline flex-1"
+                disabled={loading}
+                className="btn btn-sm btn-outline flex-1 disabled:loading"
               >
-                Generate Again
+                {loading ? "Generating..." : "Generate Again"}
               </button>
               <button
                 type="button"
                 onClick={handleClose}
+                disabled={loading}
                 className="btn btn-sm btn-primary flex-1"
               >
                 Done
@@ -97,6 +110,11 @@ const RotateKeyDialog = ({ id, applicationId, applicationName }: RotateKeyDialog
           </div>
         ) : (
           <div className="space-y-4">
+            {error && (
+              <div className="alert alert-error">
+                <span className="text-sm">{error}</span>
+              </div>
+            )}
             <p className="text-sm text-base-content/70">
               A new key will be generated and replace the existing one. The old key will no longer work.
             </p>
@@ -104,13 +122,15 @@ const RotateKeyDialog = ({ id, applicationId, applicationName }: RotateKeyDialog
               <button
                 type="button"
                 onClick={handleRegenerateKey}
-                className="btn btn-sm btn-primary flex-1"
+                disabled={loading}
+                className="btn btn-sm btn-primary flex-1 disabled:loading"
               >
-                Generate New Key
+                {loading ? "Generating..." : "Generate New Key"}
               </button>
               <button
                 type="button"
                 onClick={handleClose}
+                disabled={loading}
                 className="btn btn-sm btn-ghost flex-1"
               >
                 Cancel
