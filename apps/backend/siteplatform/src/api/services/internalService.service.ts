@@ -1,5 +1,14 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "../../databases/client";
+import {
+  CACHE_KEYS,
+  CACHE_TTL,
+  generateAllItemsCacheKey,
+  generateItemCacheKey,
+  getOrFetchItem,
+  getOrFetchMultiple,
+  invalidateCache,
+} from "../../utils/cacheHelper.util";
 
 // Service
 export class InternalServiceService {
@@ -14,38 +23,57 @@ export class InternalServiceService {
 
     // Read Operations
     async getInternalServiceById(id: string): Promise<Prisma.ServiceGetPayload<true> | null> {
-        return prisma.service.findUnique({
-            where: {
-                id,
-            },
-        });
+        const cacheKey = generateItemCacheKey(CACHE_KEYS.INTERNAL_SERVICE, id);
+        return getOrFetchItem(
+            cacheKey,
+            () => prisma.service.findUnique({ where: { id } }),
+            CACHE_TTL.LONG
+        );
     }
 
     async getAllInternalServices(): Promise<Prisma.ServiceGetPayload<true>[]> {
-        return prisma.service.findMany();
+        const cacheKey = generateAllItemsCacheKey(CACHE_KEYS.INTERNAL_SERVICE);
+        return getOrFetchMultiple(
+            cacheKey,
+            () => prisma.service.findMany(),
+            CACHE_TTL.LONG
+        );
     }
 
     // Create Operations
     async createInternalService(data: Omit<Prisma.ServiceCreateInput, "id">): Promise<Prisma.ServiceGetPayload<true>> {
-        return prisma.service.create({
-            data
-        });
+        const result = await prisma.service.create({ data });
+        
+        // Invalidate cache for all services
+        await invalidateCache([generateAllItemsCacheKey(CACHE_KEYS.INTERNAL_SERVICE)]);
+        
+        return result;
     }
 
     async createBulkInternalServices(services: Omit<Prisma.ServiceCreateInput, "id">[]): Promise<{ count: number }> {
-        return prisma.service.createMany({
-            data: services,
-        });
+        const result = await prisma.service.createMany({ data: services });
+        
+        // Invalidate cache for all services
+        await invalidateCache([generateAllItemsCacheKey(CACHE_KEYS.INTERNAL_SERVICE)]);
+        
+        return result;
     }
 
     // Update Operations
     async updateInternalService(data: Partial<Omit<Prisma.ServiceUpdateInput, "id">> & { id: string }): Promise<Prisma.ServiceGetPayload<true>> {
-        return prisma.service.update({
-            where: {
-                id: data.id,
-            },
-            data,
+        const { id, ...updateData } = data;
+        const result = await prisma.service.update({
+            where: { id },
+            data: updateData,
         });
+        
+        // Invalidate cache for this specific service and all services list
+        await invalidateCache([
+            generateItemCacheKey(CACHE_KEYS.INTERNAL_SERVICE, id),
+            generateAllItemsCacheKey(CACHE_KEYS.INTERNAL_SERVICE),
+        ]);
+        
+        return result;
     }
 
     async updateBulkInternalServices(services: (Partial<Omit<Prisma.ServiceUpdateInput, "id">> & { id: string })[]): Promise<{ count: number }> {
@@ -56,11 +84,17 @@ export class InternalServiceService {
     
     // Delete Operations
     async deleteInternalService(id: string): Promise<Prisma.ServiceGetPayload<true>> {
-        return prisma.service.delete({
-            where: {
-                id,
-            },
+        const result = await prisma.service.delete({
+            where: { id },
         });
+        
+        // Invalidate cache for this specific service and all services list
+        await invalidateCache([
+            generateItemCacheKey(CACHE_KEYS.INTERNAL_SERVICE, id),
+            generateAllItemsCacheKey(CACHE_KEYS.INTERNAL_SERVICE),
+        ]);
+        
+        return result;
     }
 
     async deleteBulkInternalServices(services: { id: string }[]): Promise<{ count: number }> {

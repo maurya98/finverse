@@ -1,5 +1,15 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "../../databases/client";
+import {
+  CACHE_KEYS,
+  CACHE_TTL,
+  generateAllItemsCacheKey,
+  generateItemCacheKey,
+  getOrFetchItem,
+  getOrFetchMultiple,
+  invalidateCache,
+  invalidateCacheByPattern,
+} from "../../utils/cacheHelper.util";
 
 // Custom input types that accept IDs directly
 type ClientPermissionCreateInputSimple = {
@@ -25,21 +35,27 @@ export class ClientPermissionService {
 
     // Read Operations
     async getClientPermissionById(id: string): Promise<Prisma.ClientPermissionGetPayload<true> | null> {
-        return prisma.clientPermission.findUnique({
-            where: {
-                id,
-            },
-        });
+        const cacheKey = generateItemCacheKey(CACHE_KEYS.CLIENT_PERMISSION, id);
+        return getOrFetchItem(
+            cacheKey,
+            () => prisma.clientPermission.findUnique({ where: { id } }),
+            CACHE_TTL.LONG
+        );
     }
 
     async getAllClientPermissions(): Promise<Prisma.ClientPermissionGetPayload<true>[]> {
-        return prisma.clientPermission.findMany();
+        const cacheKey = generateAllItemsCacheKey(CACHE_KEYS.CLIENT_PERMISSION);
+        return getOrFetchMultiple(
+            cacheKey,
+            () => prisma.clientPermission.findMany(),
+            CACHE_TTL.LONG
+        );
     }
 
     // Create Operations
     async createClientPermission(data: ClientPermissionCreateInputSimple): Promise<Prisma.ClientPermissionGetPayload<true>> {
         const normalizedScope = (data.scope?.toUpperCase() as "READ" | "WRITE" | "FULL") || "FULL";
-        return prisma.clientPermission.create({
+        const result = await prisma.clientPermission.create({
             data: {
                 description: data.description,
                 isActive: data.isActive,
@@ -48,6 +64,12 @@ export class ClientPermissionService {
                 route: { connect: { id: data.routeId } },
             },
         });
+        
+        // Invalidate permissions cache and client app permissions cache
+        await invalidateCache([generateAllItemsCacheKey(CACHE_KEYS.CLIENT_PERMISSION)]);
+        await invalidateCacheByPattern(`${CACHE_KEYS.CLIENT_APP}:with_permissions:*`);
+        
+        return result;
     }
 
     async createBulkClientPermissions(permissions: ClientPermissionCreateManyInputSimple): Promise<{ count: number }> {
@@ -64,6 +86,11 @@ export class ClientPermissionService {
             });
         });
         await Promise.all(promises);
+        
+        // Invalidate permissions cache and client app permissions cache
+        await invalidateCache([generateAllItemsCacheKey(CACHE_KEYS.CLIENT_PERMISSION)]);
+        await invalidateCacheByPattern(`${CACHE_KEYS.CLIENT_APP}:with_permissions:*`);
+        
         return { count: permissions.length };
     }
 
@@ -74,10 +101,13 @@ export class ClientPermissionService {
         if (updateData.scope) {
             updateData.scope = (updateData.scope as string).toUpperCase() as "READ" | "WRITE" | "FULL";
         }
+        
+        let result: Prisma.ClientPermissionGetPayload<true>;
+        
         // If no ID provided, create new record with generated ID
         if (!id) {
             const normalizedScope = (updateData.scope as "READ" | "WRITE" | "FULL") || "FULL";
-            return prisma.clientPermission.create({
+            result = await prisma.clientPermission.create({
                 data: {
                     clientId: clientId as string,
                     routeId: routeId as string,
@@ -86,22 +116,30 @@ export class ClientPermissionService {
                     isActive: data.isActive as boolean | undefined,
                 },
             });
+        } else {
+            // If ID provided, upsert (create if not exists, update if exists)
+            result = await prisma.clientPermission.upsert({
+                where: { id },
+                update: updateData,
+                create: {
+                    id,
+                    clientId: clientId as string,
+                    routeId: routeId as string,
+                    scope: (updateData.scope as "READ" | "WRITE" | "FULL") || "FULL",
+                    description: data.description as string | undefined,
+                    isActive: data.isActive as boolean | undefined,
+                },
+            });
         }
-        // If ID provided, upsert (create if not exists, update if exists)
-        return prisma.clientPermission.upsert({
-            where: {
-                id,
-            },
-            update: updateData,
-            create: {
-                id,
-                clientId: clientId as string,
-                routeId: routeId as string,
-                scope: (updateData.scope as "READ" | "WRITE" | "FULL") || "FULL",
-                description: data.description as string | undefined,
-                isActive: data.isActive as boolean | undefined,
-            },
-        });
+        
+        // Invalidate cache
+        if (id) {
+            await invalidateCache([generateItemCacheKey(CACHE_KEYS.CLIENT_PERMISSION, id)]);
+        }
+        await invalidateCache([generateAllItemsCacheKey(CACHE_KEYS.CLIENT_PERMISSION)]);
+        await invalidateCacheByPattern(`${CACHE_KEYS.CLIENT_APP}:with_permissions:*`);
+        
+        return result;
     }
 
     async updateBulkClientPermissions(permissions: (Partial<Omit<Prisma.ClientPermissionUpdateInput, "id">> & { id?: string })[]): Promise<{ count: number }> {
@@ -112,11 +150,18 @@ export class ClientPermissionService {
 
     // Delete Operations
     async deleteClientPermission(id: string): Promise<Prisma.ClientPermissionGetPayload<true>> {
-        return prisma.clientPermission.delete({
-            where: {
-                id,
-            },
+        const result = await prisma.clientPermission.delete({
+            where: { id },
         });
+        
+        // Invalidate cache
+        await invalidateCache([
+            generateItemCacheKey(CACHE_KEYS.CLIENT_PERMISSION, id),
+            generateAllItemsCacheKey(CACHE_KEYS.CLIENT_PERMISSION),
+        ]);
+        await invalidateCacheByPattern(`${CACHE_KEYS.CLIENT_APP}:with_permissions:*`);
+        
+        return result;
     }
 
     async deleteBulkClientPermissions(permissions: { id: string }[]): Promise<{ count: number }> {

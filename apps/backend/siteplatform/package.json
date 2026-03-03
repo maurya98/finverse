@@ -20,6 +20,7 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
+    "@finverse/cache": "workspace:*",
     "@finverse/logger": "workspace:*",
     "@finverse/middlewares": "workspace:*",
     "@finverse/utils": "workspace:*",

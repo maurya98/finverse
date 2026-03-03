@@ -2,6 +2,7 @@ import { createClient, RedisClientType } from "redis";
 
 export class Cache {
   public readonly redis: RedisClientType;
+  private connectionPromise: Promise<void>;
 
   constructor() {
     this.redis = createClient({
@@ -10,7 +11,16 @@ export class Cache {
       }`,
       password: process.env.REDIS_PASSWORD,
     }) as RedisClientType;
-    this.redis.connect();
+    
+    // Handle connection asynchronously
+    this.connectionPromise = this.redis.connect().then(() => {}).catch((error) => {
+      console.error("Failed to connect to Redis:", error);
+    });
+  }
+
+  // Ensure connection is established before operations
+  private async ensureConnected(): Promise<void> {
+    await this.connectionPromise;
   }
 
   // async sadd(key: string, ...members: string[]) {
@@ -45,6 +55,7 @@ export class Cache {
 
   async get(key: string) {
     try {
+      await this.ensureConnected();
       return await this.redis.get(key);
     } catch (error) {
       console.error("Error getting cache:", error);
@@ -55,6 +66,7 @@ export class Cache {
   async set(key: string, value: any, ttl: number = 3600) {
     // Default TTL is 1 hour (3600 seconds)
     try {
+      await this.ensureConnected();
       const stringValue =
         typeof value === "string" ? value : JSON.stringify(value);
       return await this.redis.setEx(key, ttl, stringValue);
@@ -66,6 +78,7 @@ export class Cache {
 
   async del(key: string) {
     try {
+      await this.ensureConnected();
       return await this.redis.del(key);
     } catch (error) {
       console.error("Error deleting cache:", error);
@@ -75,6 +88,7 @@ export class Cache {
 
   async keys(pattern: string = "*") {
     try {
+      await this.ensureConnected();
       return await this.redis.keys(pattern);
     } catch (error) {
       console.error("Error listing cache keys:", error);
@@ -84,6 +98,7 @@ export class Cache {
 
   async exists(key: string) {
     try {
+      await this.ensureConnected();
       return (await this.redis.exists(key)) === 1;
     } catch (error) {
       console.error("Error checking cache key:", error);

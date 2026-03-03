@@ -1,4 +1,11 @@
 import { prisma } from "../../databases/client";
+import {
+  CACHE_KEYS,
+  CACHE_TTL,
+  getOrFetchItem,
+  getOrFetchMultiple,
+  invalidateCacheByPattern,
+} from "../../utils/cacheHelper.util";
 
 interface ExportedData {
     services: Array<{
@@ -61,164 +68,192 @@ export class DataExportService {
      * Relationships are automatically resolved by Prisma includes
      */
     async exportAllData(): Promise<ExportedData> {
-        try {
-            // Fetch services with their routes
-            const services = await prisma.service.findMany({
-                include: {
-                    routes: {
-                        select: {
-                            id: true,
-                            name: true,
-                            description: true,
-                            isActive: true,
-                            method: true,
-                            actualPath: true,
-                            exposedPath: true,
-                            createdAt: true,
-                        },
-                    },
-                },
-            });
-
-            // Fetch client apps with their permissions and related routes
-            const clientApps = await prisma.clientApp.findMany({
-                include: {
-                    permissions: {
-                        select: {
-                            id: true,
-                            description: true,
-                            isActive: true,
-                            scope: true,
-                            route: {
+        const cacheKey = "dataExport:all";
+        return getOrFetchItem(
+            cacheKey,
+            async () => {
+                try {
+                    // Fetch services with their routes
+                    const services = await prisma.service.findMany({
+                        include: {
+                            routes: {
                                 select: {
                                     id: true,
                                     name: true,
+                                    description: true,
+                                    isActive: true,
                                     method: true,
                                     actualPath: true,
                                     exposedPath: true,
+                                    createdAt: true,
                                 },
                             },
                         },
-                    },
-                },
-            });
+                    });
 
-            return {
-                services: services.map((service) => ({
-                    id: service.id,
-                    name: service.name,
-                    baseUrl: service.baseUrl,
-                    description: service.description,
-                    isActive: service.isActive,
-                    createdAt: service.createdAt,
-                    routes: service.routes,
-                })),
-                clientApps: clientApps.map((app) => ({
-                    id: app.id,
-                    name: app.name,
-                    description: app.description,
-                    isActive: app.isActive,
-                    secret: app.secret,
-                    createdAt: app.createdAt,
-                    permissions: app.permissions,
-                })),
-                metadata: {
-                    exportedAt: new Date(),
-                    version: "1.0",
-                },
-            };
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : (error as Record<string, unknown>)?.message || String(error);
-            throw new Error(`Failed to export data: ${errorMessage}`);
-        }
+                    // Fetch client apps with their permissions and related routes
+                    const clientApps = await prisma.clientApp.findMany({
+                        include: {
+                            permissions: {
+                                select: {
+                                    id: true,
+                                    description: true,
+                                    isActive: true,
+                                    scope: true,
+                                    route: {
+                                        select: {
+                                            id: true,
+                                            name: true,
+                                            method: true,
+                                            actualPath: true,
+                                            exposedPath: true,
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    });
+
+                    return {
+                        services: services.map((service) => ({
+                            id: service.id,
+                            name: service.name,
+                            baseUrl: service.baseUrl,
+                            description: service.description,
+                            isActive: service.isActive,
+                            createdAt: service.createdAt,
+                            routes: service.routes,
+                        })),
+                        clientApps: clientApps.map((app) => ({
+                            id: app.id,
+                            name: app.name,
+                            description: app.description,
+                            isActive: app.isActive,
+                            secret: app.secret,
+                            createdAt: app.createdAt,
+                            permissions: app.permissions,
+                        })),
+                        metadata: {
+                            exportedAt: new Date(),
+                            version: "1.0",
+                        },
+                    };
+                } catch (error) {
+                    const errorMessage = error instanceof Error ? error.message : (error as Record<string, unknown>)?.message || String(error);
+                    throw new Error(`Failed to export data: ${errorMessage}`);
+                }
+            },
+            CACHE_TTL.LONG
+        ) as Promise<ExportedData>;
     }
 
     /**
      * Export only services with their routes
      */
     async exportServices() {
-        try {
-            return await prisma.service.findMany({
-                include: {
-                    routes: {
-                        select: {
-                            id: true,
-                            name: true,
-                            description: true,
-                            isActive: true,
-                            method: true,
-                            actualPath: true,
-                            exposedPath: true,
-                            createdAt: true,
+        const cacheKey = "dataExport:services";
+        return getOrFetchMultiple(
+            cacheKey,
+            async () => {
+                try {
+                    return await prisma.service.findMany({
+                        include: {
+                            routes: {
+                                select: {
+                                    id: true,
+                                    name: true,
+                                    description: true,
+                                    isActive: true,
+                                    method: true,
+                                    actualPath: true,
+                                    exposedPath: true,
+                                    createdAt: true,
+                                },
+                            },
                         },
-                    },
-                },
-            });
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : (error as Record<string, unknown>)?.message || String(error);
-            throw new Error(`Failed to export services: ${errorMessage}`);
-        }
+                    });
+                } catch (error) {
+                    const errorMessage = error instanceof Error ? error.message : (error as Record<string, unknown>)?.message || String(error);
+                    throw new Error(`Failed to export services: ${errorMessage}`);
+                }
+            },
+            CACHE_TTL.LONG
+        );
     }
 
     /**
      * Export only client apps with their permissions
      */
     async exportClientApps() {
-        try {
-            return await prisma.clientApp.findMany({
-                include: {
-                    permissions: {
-                        select: {
-                            id: true,
-                            description: true,
-                            isActive: true,
-                            scope: true,
-                            route: {
+        const cacheKey = "dataExport:clientApps";
+        return getOrFetchMultiple(
+            cacheKey,
+            async () => {
+                try {
+                    return await prisma.clientApp.findMany({
+                        include: {
+                            permissions: {
                                 select: {
                                     id: true,
-                                    name: true,
-                                    method: true,
-                                    actualPath: true,
-                                    exposedPath: true,
+                                    description: true,
+                                    isActive: true,
+                                    scope: true,
+                                    route: {
+                                        select: {
+                                            id: true,
+                                            name: true,
+                                            method: true,
+                                            actualPath: true,
+                                            exposedPath: true,
+                                        },
+                                    },
                                 },
                             },
                         },
-                    },
-                },
-            });
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : (error as Record<string, unknown>)?.message || String(error);
-            throw new Error(`Failed to export client apps: ${errorMessage}`);
-        }
+                    });
+                } catch (error) {
+                    const errorMessage = error instanceof Error ? error.message : (error as Record<string, unknown>)?.message || String(error);
+                    throw new Error(`Failed to export client apps: ${errorMessage}`);
+                }
+            },
+            CACHE_TTL.LONG
+        );
     }
 
     /**
      * Export client app route permissions for authorization checking
      */
     async exportClientAppRoutePermissions() {
-        try {
-            return await prisma.clientPermission.findMany({
-                include: {
-                    client: {
-                        select: {
-                            id: true,
-                            name: true,
+        const cacheKey = "dataExport:permissions";
+        return getOrFetchMultiple(
+            cacheKey,
+            async () => {
+                try {
+                    return await prisma.clientPermission.findMany({
+                        include: {
+                            client: {
+                                select: {
+                                    id: true,
+                                    name: true,
+                                },
+                            },
+                            route: {
+                                select: {
+                                    id: true,
+                                    method: true,
+                                    exposedPath: true,
+                                    actualPath: true,
+                                },
+                            },
                         },
-                    },
-                    route: {
-                        select: {
-                            id: true,
-                            method: true,
-                            exposedPath: true,
-                            actualPath: true,
-                        },
-                    },
-                },
-            });
-        } catch (error) {
-            const errorMessage = error instanceof Error ? error.message : (error as Record<string, unknown>)?.message || String(error);
-            throw new Error(`Failed to export permissions: ${errorMessage}`);
-        }
+                    });
+                } catch (error) {
+                    const errorMessage = error instanceof Error ? error.message : (error as Record<string, unknown>)?.message || String(error);
+                    throw new Error(`Failed to export permissions: ${errorMessage}`);
+                }
+            },
+            CACHE_TTL.LONG
+        );
     }
 
     /**
@@ -353,6 +388,13 @@ export class DataExportService {
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : (error as Record<string, unknown>)?.message || String(error);
             throw new Error(`Failed to import data: ${errorMessage}`);
+        } finally {
+            // Invalidate all related caches after import
+            await invalidateCacheByPattern("dataExport:*");
+            await invalidateCacheByPattern(`${CACHE_KEYS.INTERNAL_SERVICE}:*`);
+            await invalidateCacheByPattern(`${CACHE_KEYS.ROUTE}:*`);
+            await invalidateCacheByPattern(`${CACHE_KEYS.CLIENT_APP}:*`);
+            await invalidateCacheByPattern(`${CACHE_KEYS.CLIENT_PERMISSION}:*`);
         }
     }
 
@@ -424,6 +466,12 @@ export class DataExportService {
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : (error as Record<string, unknown>)?.message || String(error);
             throw new Error(`Failed to import services: ${errorMessage}`);
+        } finally {
+            // Invalidate related caches
+            await invalidateCacheByPattern("dataExport:*");
+            await invalidateCacheByPattern(`${CACHE_KEYS.INTERNAL_SERVICE}:*`);
+            await invalidateCacheByPattern(`${CACHE_KEYS.ROUTE}:*`);
+            await invalidateCacheByPattern(`${CACHE_KEYS.CLIENT_APP}:with_permissions:*`);
         }
     }
 
@@ -501,6 +549,11 @@ export class DataExportService {
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : (error as Record<string, unknown>)?.message || String(error);
             throw new Error(`Failed to import client apps: ${errorMessage}`);
+        } finally {
+            // Invalidate related caches
+            await invalidateCacheByPattern("dataExport:*");
+            await invalidateCacheByPattern(`${CACHE_KEYS.CLIENT_APP}:*`);
+            await invalidateCacheByPattern(`${CACHE_KEYS.CLIENT_PERMISSION}:*`);
         }
     }
 }

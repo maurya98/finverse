@@ -1,5 +1,15 @@
 import type { Prisma } from "@prisma/client";
 import { prisma } from "../../databases/client";
+import {
+  CACHE_KEYS,
+  CACHE_TTL,
+  generateAllItemsCacheKey,
+  generateItemCacheKey,
+  getOrFetchItem,
+  getOrFetchMultiple,
+  invalidateCache,
+  invalidateCacheByPattern,
+} from "../../utils/cacheHelper.util";
 
 // Custom input type that accepts serviceId directly
 type ServiceRouteCreateInputSimple = {
@@ -28,20 +38,26 @@ export class RouteService {
 
     // Read Operations
     async getRouteById(id: string): Promise<Prisma.ServiceRouteGetPayload<true> | null> {
-        return prisma.serviceRoute.findUnique({
-            where: {
-                id,
-            },
-        });
+        const cacheKey = generateItemCacheKey(CACHE_KEYS.ROUTE, id);
+        return getOrFetchItem(
+            cacheKey,
+            () => prisma.serviceRoute.findUnique({ where: { id } }),
+            CACHE_TTL.LONG
+        );
     }
 
     async getAllRoutes(): Promise<Prisma.ServiceRouteGetPayload<true>[]> {
-        return prisma.serviceRoute.findMany();
+        const cacheKey = generateAllItemsCacheKey(CACHE_KEYS.ROUTE);
+        return getOrFetchMultiple(
+            cacheKey,
+            () => prisma.serviceRoute.findMany(),
+            CACHE_TTL.LONG
+        );
     }
 
     // Create Operations
     async createRoute(data: ServiceRouteCreateInputSimple): Promise<Prisma.ServiceRouteGetPayload<true>> {
-        return prisma.serviceRoute.create({
+        const result = await prisma.serviceRoute.create({
             data: {
                 name: data.name,
                 method: data.method as unknown as "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
@@ -53,6 +69,13 @@ export class RouteService {
                 service: { connect: { id: data.serviceId } },
             },
         });
+        
+        // Invalidate routes cache and client permissions cache
+        await invalidateCache([generateAllItemsCacheKey(CACHE_KEYS.ROUTE)]);
+        await invalidateCacheByPattern(`${CACHE_KEYS.CLIENT_PERMISSION}:*`);
+        await invalidateCacheByPattern(`${CACHE_KEYS.CLIENT_APP}:with_permissions:*`);
+        
+        return result;
     }
 
     async createBulkRoutes(routes: ServiceRouteCreateManyInputSimple): Promise<{ count: number }> {
@@ -71,15 +94,24 @@ export class RouteService {
             })
         );
         await Promise.all(promises);
+        
+        // Invalidate routes cache and client permissions cache
+        await invalidateCache([generateAllItemsCacheKey(CACHE_KEYS.ROUTE)]);
+        await invalidateCacheByPattern(`${CACHE_KEYS.CLIENT_PERMISSION}:*`);
+        await invalidateCacheByPattern(`${CACHE_KEYS.CLIENT_APP}:with_permissions:*`);
+        
         return { count: routes.length };
     }
 
     // Update Operations - handles both create (no ID) and upsert (with ID)
     async updateRoute(data: Partial<Omit<Prisma.ServiceRouteUpdateInput, "id">> & { id?: string; serviceId?: string }): Promise<Prisma.ServiceRouteGetPayload<true>> {
         const { id, serviceId, ...updateData } = data;
+        
+        let result: Prisma.ServiceRouteGetPayload<true>;
+        
         // If no ID provided, create new record with generated ID
         if (!id) {
-            return prisma.serviceRoute.create({
+            result = await prisma.serviceRoute.create({
                 data: {
                     name: data.name as string,
                     method: data.method as "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
@@ -90,24 +122,33 @@ export class RouteService {
                     isActive: data.isActive as boolean | undefined,
                 },
             });
+        } else {
+            // If ID provided, upsert (create if not exists, update if exists)
+            result = await prisma.serviceRoute.upsert({
+                where: { id },
+                update: updateData,
+                create: {
+                    id,
+                    name: data.name as string,
+                    method: data.method as "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
+                    actualPath: data.actualPath as string,
+                    exposedPath: data.exposedPath as string,
+                    serviceId: serviceId as string,
+                    description: data.description as string | undefined,
+                    isActive: data.isActive as boolean | undefined,
+                },
+            });
         }
-        // If ID provided, upsert (create if not exists, update if exists)
-        return prisma.serviceRoute.upsert({
-            where: {
-                id,
-            },
-            update: updateData,
-            create: {
-                id,
-                name: data.name as string,
-                method: data.method as "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
-                actualPath: data.actualPath as string,
-                exposedPath: data.exposedPath as string,
-                serviceId: serviceId as string,
-                description: data.description as string | undefined,
-                isActive: data.isActive as boolean | undefined,
-            },
-        });
+        
+        // Invalidate cache
+        if (id) {
+            await invalidateCache([generateItemCacheKey(CACHE_KEYS.ROUTE, id)]);
+        }
+        await invalidateCache([generateAllItemsCacheKey(CACHE_KEYS.ROUTE)]);
+        await invalidateCacheByPattern(`${CACHE_KEYS.CLIENT_PERMISSION}:*`);
+        await invalidateCacheByPattern(`${CACHE_KEYS.CLIENT_APP}:with_permissions:*`);
+        
+        return result;
     }
 
     async updateBulkRoutes(routes: (Partial<Omit<Prisma.ServiceRouteUpdateInput, "id">> & { id?: string; serviceId?: string })[]): Promise<{ count: number }> {
@@ -118,11 +159,19 @@ export class RouteService {
 
     // Delete Operations
     async deleteRoute(id: string): Promise<Prisma.ServiceRouteGetPayload<true>> {
-        return prisma.serviceRoute.delete({
-            where: {
-                id,
-            },
+        const result = await prisma.serviceRoute.delete({
+            where: { id },
         });
+        
+        // Invalidate cache
+        await invalidateCache([
+            generateItemCacheKey(CACHE_KEYS.ROUTE, id),
+            generateAllItemsCacheKey(CACHE_KEYS.ROUTE),
+        ]);
+        await invalidateCacheByPattern(`${CACHE_KEYS.CLIENT_PERMISSION}:*`);
+        await invalidateCacheByPattern(`${CACHE_KEYS.CLIENT_APP}:with_permissions:*`);
+        
+        return result;
     }
 
     async deleteBulkRoutes(routes: { id: string }[]): Promise<{ count: number }> {
