@@ -109,7 +109,7 @@ CREATE TABLE "Blob" (
     "id" TEXT NOT NULL,
     "repositoryId" TEXT NOT NULL,
     "contentHash" TEXT NOT NULL,
-    "content" TEXT NOT NULL,
+    "content" JSONB,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Blob_pkey" PRIMARY KEY ("id")
@@ -155,9 +155,6 @@ CREATE UNIQUE INDEX "RepositoryMember_repositoryId_userId_key" ON "RepositoryMem
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Branch_repositoryId_name_key" ON "Branch"("repositoryId", "name");
-
--- CreateIndex
-CREATE UNIQUE INDEX "Commit_treeId_key" ON "Commit"("treeId");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "TreeEntry_treeId_name_key" ON "TreeEntry"("treeId", "name");

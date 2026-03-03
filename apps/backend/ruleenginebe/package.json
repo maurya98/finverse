@@ -24,6 +24,7 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
+    "@prisma/client-runtime-utils": "^7.4.1",
     "@finverse/logger": "workspace:*",
     "@finverse/middlewares": "workspace:*",
     "@finverse/utils": "workspace:*",

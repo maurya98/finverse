@@ -1,0 +1,18 @@
+# Rule Engine Backend - Production
+# Build from monorepo root: docker compose -f infra/deployment/production/docker-compose.ruleenginebe.yml build
+# Run: docker compose -f infra/deployment/production/docker-compose.ruleenginebe.yml --env-file infra/deployment/production/ruleenginebe.env up -d
+# Database and Redis are on the server; network_mode: host lets the container use localhost:5432 and localhost:6379
+
+services:
+  ruleenginebe:
+    build:
+      context: ../../..
+      dockerfile: infra/docker/ruleenginebe/Dockerfile
+    image: finverse/ruleenginebe:production
+    container_name: ruleenginebe-production
+    restart: unless-stopped
+    network_mode: host
+    env_file:
+      - ruleenginebe.env
+    environment:
+      - NODE_ENV=production

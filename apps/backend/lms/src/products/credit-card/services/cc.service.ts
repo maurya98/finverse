@@ -1,9 +1,9 @@
 import { logger } from "@finverse/logger";
 import { prisma } from "../../../databases/client";
 import type { Prisma } from "../../../databases/generated/prisma";
-import { creditCardModule } from "..";
 import { maskPI } from "@finverse/utils";
 import { getPanDetails } from "../../../common/kyc";
+import { CREDIT_CARD_PRODUCT_ID, STAGE_FLOW } from "../constants";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -49,17 +49,9 @@ export type LeadStageResult = {
 // Constants
 // ---------------------------------------------------------------------------
 
-const product_id = creditCardModule.productId;
+const product_id = CREDIT_CARD_PRODUCT_ID;
 
-/** Stage order: each key leads to the next stage. "offer_creation" is terminal. */
-const STAGE_FLOW: Record<string, string> = {
-    initiated: "customer_details",
-    customer_details: "address_details",
-    address_details: "pan_verification",
-    pan_verification: "employment_details",
-    employment_details: "offer_creation",
-    offer_creation: "offer_creation",
-};
+/** Stage order is in constants.ts; STAGE_FLOW imported from there. */
 
 // ---------------------------------------------------------------------------
 // Lead lookup & update helpers

@@ -1,0 +1,16 @@
+# Site Platform Backend - Staging
+# yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-go/master/schema/compose-spec.json
+version: '3.8'
+services:
+  siteplatform:
+    build:
+      context: ../../../
+      dockerfile: infra/docker/siteplatform/Dockerfile
+    image: finverse/siteplatform:staging
+    container_name: siteplatform-staging
+    restart: unless-stopped
+    network_mode: host
+    env_file:
+      - siteplatform.env
+    environment:
+      - NODE_ENV=staging

@@ -6,6 +6,8 @@ import {
   type LogSearchFilters,
   type LogsApiError,
 } from "../services/logsApi";
+import Editor from "@monaco-editor/react";
+import { useTheme } from "../../../contexts/ThemeContext";
 import Skeleton from "@mui/material/Skeleton";
 import "./LogsPage.css";
 
@@ -15,13 +17,12 @@ function isLogsApiError(r: { data?: RequestLogEntry[]; error?: string }): r is L
   return "error" in r && typeof (r as LogsApiError).error === "string";
 }
 
-function LogRow({ log: row, onSelect }: { log: RequestLogEntry; onSelect: () => void }) {
+function LogRow({ log: row, onSelect, selected }: { log: RequestLogEntry; onSelect: () => void; selected?: boolean }) {
   const statusClass =
     row.status_code >= 500 ? "status-5xx" : row.status_code >= 400 ? "status-4xx" : "status-2xx";
   return (
-    <tr className="logs-table-row" onClick={onSelect}>
+    <tr className={`logs-table-row ${selected ? "selected" : ""}`} onClick={onSelect}>
       <td className="logs-cell logs-cell-time">{new Date(row.timestamp).toLocaleString()}</td>
-      <td className="logs-cell logs-cell-app">{row.application ?? "—"}</td>
       <td className={`logs-cell logs-cell-method ${statusClass}`}>{row.method}</td>
       <td className="logs-cell logs-cell-url" title={row.url}>
         {row.url}
@@ -44,10 +45,12 @@ export function LogsPage() {
     limit: 50,
     offset: 0,
     count: true,
+    application: "ruleenginebe",
   });
   const [selectedLog, setSelectedLog] = useState<RequestLogEntry | null>(null);
   const liveRef = useRef<EventSource | null>(null);
   const liveContainerRef = useRef<HTMLDivElement | null>(null);
+  const tableWrapperRef = useRef<HTMLDivElement | null>(null);
 
   const fetchSearch = useCallback(async () => {
     setSearchLoading(true);
@@ -109,6 +112,33 @@ export function LogsPage() {
   };
 
   const logs = viewMode === "live" ? liveLogs : searchResult;
+  const selectedIndex = selectedLog ? logs.findIndex((l) => l.id === selectedLog.id && l.timestamp === selectedLog.timestamp) : -1;
+
+  const handleTableKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (logs.length === 0) return;
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        const next = selectedIndex < 0 ? 0 : Math.min(selectedIndex + 1, logs.length - 1);
+        setSelectedLog(logs[next]);
+        return;
+      }
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        const prev = selectedIndex <= 0 ? logs.length - 1 : selectedIndex - 1;
+        setSelectedLog(logs[prev]);
+      }
+    },
+    [logs, selectedIndex]
+  );
+
+  const handleRowSelect = useCallback((log: RequestLogEntry) => {
+    setSelectedLog(log);
+    tableWrapperRef.current?.focus({ preventScroll: true });
+  }, []);
+
+  const { appliedTheme } = useTheme();
+  const monacoTheme = appliedTheme === "light" ? "vs" : "vs-dark";
 
   return (
     <div className="logs-page">
@@ -237,12 +267,23 @@ export function LogsPage() {
 
       {searchError && <div className="logs-error" role="alert">{searchError}</div>}
 
-      <div className="logs-table-wrap" ref={liveContainerRef}>
+      <div className="logs-main">
+        <div className="logs-table-section">
+      <div
+        className="logs-table-wrap"
+        ref={(el) => {
+          (liveContainerRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
+          (tableWrapperRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
+        }}
+        tabIndex={0}
+        role="application"
+        aria-label="Request logs"
+        onKeyDown={handleTableKeyDown}
+      >
         <table className="logs-table">
           <thead>
             <tr>
               <th>Time</th>
-              <th>Application</th>
               <th>Method</th>
               <th>URL</th>
               <th>Status</th>
@@ -254,7 +295,7 @@ export function LogsPage() {
               <>
                 {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
                   <tr key={i}>
-                    <td colSpan={6} style={{ padding: 8 }}>
+                    <td colSpan={5} style={{ padding: 8 }}>
                       <Skeleton variant="text" width="100%" height={24} />
                     </td>
                   </tr>
@@ -263,13 +304,18 @@ export function LogsPage() {
             )}
             {!searchLoading && logs.length === 0 && (
               <tr>
-                <td colSpan={6} className="logs-empty">
+                <td colSpan={5} className="logs-empty">
                   {viewMode === "live" ? "Waiting for new logs…" : "No logs match the filters."}
                 </td>
               </tr>
             )}
             {!searchLoading && logs.map((log) => (
-              <LogRow key={`${log.id}-${log.timestamp}`} log={log} onSelect={() => setSelectedLog(log)} />
+              <LogRow
+                key={`${log.id}-${log.timestamp}`}
+                log={log}
+                onSelect={() => handleRowSelect(log)}
+                selected={selectedLog?.id === log.id}
+              />
             ))}
           </tbody>
         </table>
@@ -297,30 +343,40 @@ export function LogsPage() {
         </div>
       )}
 
-      {selectedLog && (
-        <div
-          className="logs-modal-backdrop"
-          onClick={() => setSelectedLog(null)}
-          role="presentation"
-        >
-          <div className="logs-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="logs-modal-header">
+        </div>
+
+        {selectedLog && (
+          <div className="logs-detail-panel">
+            <div className="logs-detail-header">
               <h3>Log #{selectedLog.id}</h3>
-              <button type="button" className="logs-modal-close" onClick={() => setSelectedLog(null)}>
+              <button type="button" className="logs-detail-close" onClick={() => setSelectedLog(null)} aria-label="Close">
                 ×
               </button>
             </div>
-            <div className="logs-modal-body">
-              <p className="logs-modal-meta">
+            <div className="logs-detail-body">
+              <p className="logs-detail-meta">
                 {selectedLog.timestamp} · {selectedLog.method} {selectedLog.url} · {selectedLog.status_code} · {selectedLog.duration_ms} ms
               </p>
-              <pre className="logs-modal-payload">
-                {JSON.stringify(selectedLog.payload_json, null, 2)}
-              </pre>
+              <div className="logs-detail-json">
+                <Editor
+                  height="100%"
+                  language="json"
+                  value={JSON.stringify(selectedLog.payload_json, null, 2)}
+                  theme={monacoTheme}
+                  options={{
+                    readOnly: true,
+                    minimap: { enabled: false },
+                    fontSize: 12,
+                    wordWrap: "on",
+                    padding: { top: 8 },
+                    scrollBeyondLastLine: false,
+                  }}
+                />
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

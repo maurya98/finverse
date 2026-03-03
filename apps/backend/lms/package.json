@@ -24,6 +24,7 @@
     "@finverse/utils": "workspace:*"
   },
   "devDependencies": {
+    "@prisma/client-runtime-utils": "^7.4.1",
     "@finverse/logger": "workspace:*",
     "@finverse/middlewares": "workspace:*",
     "@types/express": "^5.0.6",

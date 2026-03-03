@@ -1,0 +1,16 @@
+# LMS Backend - Production
+# Build from monorepo root. Load .env from infra/deployment/production/lms.env
+
+services:
+  lms:
+    build:
+      context: ../../..
+      dockerfile: infra/docker/lms/Dockerfile
+    image: finverse/lms:production
+    container_name: lms-production
+    restart: unless-stopped
+    network_mode: host
+    env_file:
+      - lms.env
+    environment:
+      - NODE_ENV=production

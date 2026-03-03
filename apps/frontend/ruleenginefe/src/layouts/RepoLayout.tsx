@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Outlet, useParams, useSearchParams, Link, useLocation, useMatch } from "react-router-dom";
+import { Outlet, useParams, useSearchParams, Link, useMatch } from "react-router-dom";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Chip from "@mui/material/Chip";
@@ -13,7 +13,6 @@ import { RepoRoleProvider } from "../features/dashboard/contexts/RepoRoleContext
 export function RepoLayout() {
   const { repositoryId } = useParams<{ repositoryId: string }>();
   const [searchParams] = useSearchParams();
-  const location = useLocation();
   const branch = searchParams.get("branch") ?? "main";
   const [repo, setRepo] = useState<{
     id: string;

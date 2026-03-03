@@ -1,0 +1,17 @@
+# Rule Engine Backend - Staging
+# Build from monorepo root. Use --env-file infra/deployment/staging/ruleenginebe.env
+# yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-go/master/schema/compose-spec.json
+version: '3.8'
+services:
+  ruleenginebe:
+    build:
+      context: ../../../
+      dockerfile: infra/docker/ruleenginebe/Dockerfile
+    image: finverse/ruleenginebe:staging
+    container_name: ruleenginebe-staging
+    restart: unless-stopped
+    network_mode: host
+    env_file:
+      - ruleenginebe.env
+    environment:
+      - NODE_ENV=staging

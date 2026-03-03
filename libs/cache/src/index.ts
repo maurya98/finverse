@@ -3,24 +3,41 @@ import { createClient, RedisClientType } from "redis";
 export class Cache {
   public readonly redis: RedisClientType;
   private connectionPromise: Promise<void>;
+  private connected = false;
 
   constructor() {
     this.redis = createClient({
-      url: `redis://${process.env.REDIS_HOST || "localhost"}:${
-        process.env.REDIS_PORT || "6379"
-      }`,
+      url: `redis://${process.env.REDIS_HOST || "localhost"}:${process.env.REDIS_PORT || "6379"}`,
       password: process.env.REDIS_PASSWORD,
     }) as RedisClientType;
-    
-    // Handle connection asynchronously
-    this.connectionPromise = this.redis.connect().then(() => {}).catch((error) => {
-      console.error("Failed to connect to Redis:", error);
-    });
+
+    // Connect asynchronously; resolve either way so app can start even if Redis is down
+    this.connectionPromise = this.redis
+      .connect()
+      .then(() => {
+        this.connected = true;
+      })
+      .catch((error: Error & { code?: string }) => {
+        const msg = error?.message ?? error?.code ?? "unknown";
+        console.error(`Redis unavailable (${msg}). App will run without cache.`);
+        this.connected = false;
+      });
   }
 
-  // Ensure connection is established before operations
+  // Wait for connection attempt to finish (success or failure)
   private async ensureConnected(): Promise<void> {
     await this.connectionPromise;
+  }
+
+  private async whenConnected<T>(fn: () => Promise<T>, fallback: T): Promise<T> {
+    await this.ensureConnected();
+    if (!this.connected) return fallback;
+    try {
+      return await fn();
+    } catch (error) {
+      console.error("Redis operation failed:", error);
+      return fallback;
+    }
   }
 
   // async sadd(key: string, ...members: string[]) {
@@ -54,56 +71,28 @@ export class Cache {
   // }
 
   async get(key: string) {
-    try {
-      await this.ensureConnected();
-      return await this.redis.get(key);
-    } catch (error) {
-      console.error("Error getting cache:", error);
-      return null;
-    }
+    return this.whenConnected(() => this.redis.get(key), null);
   }
 
   async set(key: string, value: any, ttl: number = 3600) {
-    // Default TTL is 1 hour (3600 seconds)
-    try {
-      await this.ensureConnected();
-      const stringValue =
-        typeof value === "string" ? value : JSON.stringify(value);
-      return await this.redis.setEx(key, ttl, stringValue);
-    } catch (error) {
-      console.error("Error setting cache:", error);
-      return null;
-    }
+    const stringValue =
+      typeof value === "string" ? value : JSON.stringify(value);
+    return this.whenConnected(() => this.redis.setEx(key, ttl, stringValue), null);
   }
 
   async del(key: string) {
-    try {
-      await this.ensureConnected();
-      return await this.redis.del(key);
-    } catch (error) {
-      console.error("Error deleting cache:", error);
-      return 0;
-    }
+    return this.whenConnected(() => this.redis.del(key), 0);
   }
 
   async keys(pattern: string = "*") {
-    try {
-      await this.ensureConnected();
-      return await this.redis.keys(pattern);
-    } catch (error) {
-      console.error("Error listing cache keys:", error);
-      return [];
-    }
+    return this.whenConnected(() => this.redis.keys(pattern), []);
   }
 
   async exists(key: string) {
-    try {
-      await this.ensureConnected();
-      return (await this.redis.exists(key)) === 1;
-    } catch (error) {
-      console.error("Error checking cache key:", error);
-      return false;
-    }
+    return this.whenConnected(
+      async () => (await this.redis.exists(key)) === 1,
+      false
+    );
   }
 }
 
