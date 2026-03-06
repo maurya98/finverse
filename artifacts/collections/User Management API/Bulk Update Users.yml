@@ -1,0 +1,33 @@
+info:
+  name: Bulk Update Users
+  type: http
+  seq: 12
+
+http:
+  method: PATCH
+  url: http://localhost:3002/api/users/bulk/update
+  headers:
+    - name: Content-Type
+      value: application/json
+    - name: Authorization
+      value: Bearer your_auth_token_here
+  body:
+    type: json
+    data: |-
+      [
+        {
+          "id": "58dc8fe4-066d-4564-99bc-3efd5943f34c",
+          "name": "Updated Name 1"
+        },
+        {
+          "id": "another-user-id",
+          "name": "Updated Name 2"
+        }
+      ]
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

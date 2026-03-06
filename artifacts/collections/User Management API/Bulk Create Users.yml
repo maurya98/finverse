@@ -1,0 +1,37 @@
+info:
+  name: Bulk Create Users
+  type: http
+  seq: 11
+
+http:
+  method: POST
+  url: http://localhost:3002/api/users/bulk/create
+  headers:
+    - name: content-type
+      value: application/json
+    - name: Cookie
+      value: cookies.txt
+  body:
+    type: json
+    data: |-
+      [
+        {
+          "email": "user1@example.com",
+          "password": "Pass123!",
+          "name": "User One",
+          "role": "USER"
+        },
+        {
+          "email": "user2@example.com",
+          "password": "Pass456!",
+          "name": "User Two",
+          "role": "USER"
+        }
+      ]
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

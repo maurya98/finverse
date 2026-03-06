@@ -1,0 +1,29 @@
+info:
+  name: Bulk Delete Users
+  type: http
+  seq: 13
+
+http:
+  method: DELETE
+  url: http://localhost:3002/api/users/bulk/delete
+  headers:
+    - name: Content-Type
+      value: application/json
+    - name: Authorization
+      value: Bearer your_auth_token_here
+  body:
+    type: json
+    data: |-
+      {
+        "ids": [
+          "58dc8fe4-066d-4564-99bc-3efd5943f34c",
+          "another-user-id"
+        ]
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

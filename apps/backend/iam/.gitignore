@@ -1,0 +1,25 @@
+<<<<<<< Updated upstream
+.env
+node_modules
+dist
+**/.git/**
+**/.idea/**
+**/.vscode/**
+**/.pnpm-store/**
+.pnpm-store
+**/.env/**
+.DS_Store
+**/.DS_Store/**
+**/.turbo/**
+.turbo
+**/generated/**
+=======
+node_modules/
+dist/
+.env
+.env.local
+.DS_Store
+*.log
+.turbo/
+tsconfig.tsbuildinfo
+>>>>>>> Stashed changes

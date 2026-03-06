@@ -1,0 +1,14 @@
+opencollection: 1.0.0
+
+info:
+  name: User Management API
+
+docs:
+  content: Postman collection for User Management endpoints
+  type: text/markdown
+bundled: false
+extensions:
+  bruno:
+    ignore:
+      - node_modules
+      - .git

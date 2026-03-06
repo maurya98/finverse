@@ -8,7 +8,7 @@ const app: Express = express();
 
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
-app.use(requestLoggerMiddleware);
+app.use(requestLoggerMiddleware());
 app.use(securityMiddleware);
 app.use(errorHandlerMiddleware);
 app.use(apiRouter);

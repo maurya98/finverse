@@ -1,0 +1,25 @@
+info:
+  name: Get Users (Paginated)
+  type: http
+  seq: 2
+
+http:
+  method: GET
+  url: http://localhost:3002/api/users?page=1&limit=10
+  headers:
+    - name: Authorization
+      value: Bearer your_auth_token_here
+  params:
+    - name: page
+      value: "1"
+      type: query
+    - name: limit
+      value: "10"
+      type: query
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

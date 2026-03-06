@@ -1,0 +1,4 @@
+name: Local
+variables:
+  - name: iamBaseUrl
+    value: http://localhost:3002

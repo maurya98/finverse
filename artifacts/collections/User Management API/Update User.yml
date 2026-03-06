@@ -1,0 +1,28 @@
+info:
+  name: Update User
+  type: http
+  seq: 8
+
+http:
+  method: PATCH
+  url: http://localhost:3002/api/users/aaa2a1ba-e341-448e-b337-6c95c377d889
+  headers:
+    - name: Content-Type
+      value: application/json
+    - name: Authorization
+      value: Bearer your_auth_token_here
+  body:
+    type: json
+    data: |-
+      {
+        "email": "newuser2@example.com",
+        "name": "Updated Name something",
+        "role": "ADMIN"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

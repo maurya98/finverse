@@ -22,6 +22,8 @@ const FILTER_CONFIG: TableFilterConfig = {
 
 const ApplicationsPage = () => {
   const [items, setItems] = useState<GridItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
   const [rotateKeyItemId, setRotateKeyItemId] = useState<string | null>(null);
   const { openDrawer } = useRightDrawer();
@@ -30,6 +32,8 @@ const ApplicationsPage = () => {
   // Load applications from API
   const loadApplications = async () => {
     try {
+      setLoading(true);
+      setError(null);
       const applications = await getAllApplications();
       const gridItems: GridItem[] = applications.map(app => ({
         id: app.id,
@@ -40,6 +44,10 @@ const ApplicationsPage = () => {
       setItems(gridItems);
     } catch (error) {
       console.error('Failed to load applications:', error);
+      setError(error instanceof Error ? error.message : 'Failed to load applications');
+      setItems([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -121,6 +129,27 @@ const ApplicationsPage = () => {
     onStatusToggle: handleStatusToggle,
     onCardClick: handleCardClick,
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="loading loading-spinner loading-lg"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="alert alert-error">
+        <div>
+          <span>{error}</span>
+          <button className="btn btn-sm" onClick={loadApplications}>
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>

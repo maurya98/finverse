@@ -1,0 +1,26 @@
+info:
+  name: Sign Up
+  type: http
+  seq: 1
+
+http:
+  method: post
+  url: "{{iamBaseUrl}}/api/auth/sign-up"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "email": "user1@example.com",
+        "password": "SecurePass123!",
+        "name": "John Cena"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: false
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

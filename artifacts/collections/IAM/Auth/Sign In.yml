@@ -1,0 +1,25 @@
+info:
+  name: Sign In
+  type: http
+  seq: 2
+
+http:
+  method: post
+  url: http://localhost:3002/api/auth/sign-in
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+        "email": "priyanshu.bharti@buddyloan.com",
+        "password": "Admin@123!"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: false
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
