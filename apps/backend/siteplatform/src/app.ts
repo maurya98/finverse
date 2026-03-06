@@ -3,6 +3,7 @@ import { requestLoggerMiddleware, securityMiddleware } from "@finverse/middlewar
 import express, { Request, Response } from "express";
 import { gatewayMiddleware } from "./api/middlewares/gateway.middleware";
 import apiRouter from "./api/routes/api";
+import { prisma } from "./databases/client";
 
 const app = express();
 
@@ -22,8 +23,23 @@ app.use("/api/admin", apiRouter);
 // Catch-all for all other routes (Gateway)
 app.use("/", gatewayMiddleware);
 
+async function start(): Promise<void> {
+  try {
+    await prisma.$connect();
+    logger.info("Database connection established");
+  } catch (err) {
+    const url = process.env.DATABASE_URL ?? "";
+    const safeUrl = url.replace(/:[^:@]+@/, ":****@");
+    logger.error(
+      { err, DATABASE_URL: safeUrl },
+      "Cannot connect to database. Check that PostgreSQL is running and DATABASE_URL is correct (host, port, database name)."
+    );
+    process.exit(1);
+  }
 
-// Start the application
-app.listen(3001, () => {
-  logger.info("Site Platform server is running on port 3001");
-});
+  app.listen(3001, () => {
+    logger.info("Site Platform server is running on port 3001");
+  });
+}
+
+start();

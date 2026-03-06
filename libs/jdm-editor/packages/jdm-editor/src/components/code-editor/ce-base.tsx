@@ -4,7 +4,6 @@ import { EditorView, placeholder as placeholderExt } from '@codemirror/view';
 import { createVariableType } from '@gorules/zen-engine-wasm';
 import { theme } from 'antd';
 import clsx from 'clsx';
-import { clamp } from 'lodash';
 import React, { useEffect, useMemo, useRef } from 'react';
 import { match } from 'ts-pattern';
 
@@ -112,7 +111,7 @@ export const CodeEditorBase = React.forwardRef<CodeEditorBaseRef, CodeEditorBase
         didMount = true;
       });
 
-      const clampSelection = (n: number) => clamp(n, 0, value?.length ?? 0);
+      const clampSelection = (n: number) => Math.min(Math.max(n, 0), value?.length ?? 0);
 
       const editorView = new EditorView({
         parent: container.current,

@@ -3,7 +3,6 @@ import { VariableType } from '@gorules/zen-engine-wasm';
 import { Button, Form } from 'antd';
 import equal from 'fast-deep-equal/es6/react';
 import { produce } from 'immer';
-import _ from 'lodash';
 import { HashIcon } from 'lucide-react';
 import React from 'react';
 import type { z } from 'zod';
@@ -46,31 +45,31 @@ export const expressionSpecification: NodeSpecification<NodeExpressionData> = {
       const fields: DiffMetadata['fields'] = {};
 
       if ((current.executionMode || false) !== (previous.executionMode || false)) {
-        _.set(fields, 'executionMode', {
+        (fields as Record<string, unknown>)['executionMode'] = {
           status: 'modified',
           previousValue: previous.executionMode,
-        });
+        };
       }
 
       if (!compareStringFields(current.inputField, previous.inputField)) {
-        _.set(fields, 'inputField', {
+        (fields as Record<string, unknown>)['inputField'] = {
           status: 'modified',
           previousValue: previous.inputField,
-        });
+        };
       }
 
       if (!compareStringFields(current.outputPath, previous.outputPath)) {
-        _.set(fields, 'outputPath', {
+        (fields as Record<string, unknown>)['outputPath'] = {
           status: 'modified',
           previousValue: previous.outputPath,
-        });
+        };
       }
 
       if ((current.passThrough || false) !== (previous.passThrough || false)) {
-        _.set(fields, 'passThrough', {
+        (fields as Record<string, unknown>)['passThrough'] = {
           status: 'modified',
           previousValue: previous.passThrough,
-        });
+        };
       }
 
       const expressions = compareAndUnifyLists(current?.expressions || [], previous?.expressions || [], {
@@ -106,9 +105,9 @@ export const expressionSpecification: NodeSpecification<NodeExpressionData> = {
             expr?._diff?.status === 'modified' || expr?._diff?.status === 'added' || expr?._diff?.status === 'removed',
         )
       ) {
-        _.set(fields, 'expressions', {
+        (fields as Record<string, unknown>)['expressions'] = {
           status: 'modified',
-        });
+        };
       }
 
       if (Object.keys(fields).length > 0) {

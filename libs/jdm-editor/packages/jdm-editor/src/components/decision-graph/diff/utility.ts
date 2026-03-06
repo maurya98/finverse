@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import { P, match } from 'ts-pattern';
 
 import type { DecisionEdge, DecisionGraphType, DecisionNode, DiffMetadata } from '../dg-types';
@@ -56,17 +55,17 @@ export const processNodes = (
       const fields: DiffMetadata['fields'] = {};
 
       if (oldNode.position.x !== newNode.position.x || oldNode.position.y !== newNode.position.y) {
-        _.set(fields, 'position', {
+        (fields as Record<string, unknown>)['position'] = {
           status: 'moved',
           previousValue: oldNode.position,
-        });
+        };
       }
 
       if (oldNode.name !== newNode.name) {
-        _.set(fields, 'name', {
+        (fields as Record<string, unknown>)['name'] = {
           status: 'modified',
           previousValue: oldNode.name,
-        });
+        };
       }
 
       const calculatedContent = match([newNode.type, oldNode.type])
@@ -87,10 +86,10 @@ export const processNodes = (
           return match(newNode?.content)
             .with(P.string, () => {
               if (content?._diff?.fields?.source?.status === 'modified') {
-                _.set(fields, 'content', {
+                (fields as Record<string, unknown>)['content'] = {
                   status: 'modified',
                   previousValue: content?._diff?.fields?.source?.previousValue,
-                });
+                };
               }
               return content?.source;
             })

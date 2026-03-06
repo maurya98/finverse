@@ -3,7 +3,6 @@ import type { VariableType } from '@gorules/zen-engine-wasm';
 import { Button, Dropdown, Popconfirm, Typography } from 'antd';
 import clsx from 'clsx';
 import { produce } from 'immer';
-import _ from 'lodash';
 import { SplitIcon } from 'lucide-react';
 import React, { useLayoutEffect, useMemo, useState } from 'react';
 import { useInView } from 'react-intersection-observer';
@@ -43,10 +42,10 @@ export const switchSpecification: NodeSpecification<NodeSwitchData> = {
     return produce(current, (draft) => {
       const fields: DiffMetadata['fields'] = {};
       if ((current.hitPolicy ?? '') !== (previous.hitPolicy ?? '')) {
-        _.set(fields, 'hitPolicy', {
+        (fields as Record<string, unknown>)['hitPolicy'] = {
           status: 'modified',
           previousValue: current.hitPolicy,
-        });
+        };
       }
 
       const statements = compareAndUnifyLists(current?.statements || [], previous?.statements || [], {
@@ -83,9 +82,9 @@ export const switchSpecification: NodeSpecification<NodeSwitchData> = {
             statement?._diff?.status === 'removed',
         )
       ) {
-        _.set(fields, 'statements', {
+        (fields as Record<string, unknown>)['statements'] = {
           status: 'modified',
-        });
+        };
       }
 
       if (Object.keys(fields).length > 0) {

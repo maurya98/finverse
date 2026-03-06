@@ -1,6 +1,5 @@
 import { WarningFilled } from '@ant-design/icons';
 import { Button, Tooltip, Typography } from 'antd';
-import _ from 'lodash';
 import React from 'react';
 import { P, match } from 'ts-pattern';
 
@@ -36,18 +35,18 @@ export const functionSpecification: NodeSpecification<NodeFunctionData> = {
     match([current, previous])
       .with([P.string, P.string], ([current, previous]) => {
         if (current !== previous) {
-          _.set(fields, 'source', {
+          (fields as Record<string, unknown>)['source'] = {
             previousValue: previous,
             status: 'modified',
-          });
+          };
         }
       })
       .with([{ source: P.string }, { source: P.string }], ([current, previous]) => {
         if (current?.source !== previous?.source) {
-          _.set(fields, 'source', {
+          (fields as Record<string, unknown>)['source'] = {
             previousValue: previous.source,
             status: 'modified',
-          });
+          };
         }
       })
       .otherwise(() => {

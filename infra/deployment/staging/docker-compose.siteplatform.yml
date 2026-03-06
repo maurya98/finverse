@@ -10,6 +10,9 @@ services:
     container_name: siteplatform-staging
     restart: unless-stopped
     network_mode: host
+    # So that host.docker.internal resolves when DB/Redis are on the host (needed on Mac/Windows; optional on Linux)
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     env_file:
       - siteplatform.env
     environment:

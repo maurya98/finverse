@@ -1,7 +1,6 @@
 import { BookOutlined, DeleteOutlined } from '@ant-design/icons';
 import { Button, Modal, Typography } from 'antd';
 import { produce } from 'immer';
-import _ from 'lodash';
 import { ArrowRightToLineIcon } from 'lucide-react';
 import React from 'react';
 import type { z } from 'zod';
@@ -92,10 +91,10 @@ export const inputSpecification: NodeSpecification<NodeInputData> = {
     const fields: DiffMetadata['fields'] = {};
     return produce(current || {}, (draft) => {
       if ((current?.schema || '')?.trim?.() !== (previous?.schema || '')?.trim?.()) {
-        _.set(fields, 'schema', {
+        (fields as Record<string, unknown>)['schema'] = {
           previousValue: previous?.schema || '',
           status: 'modified',
-        });
+        };
       }
 
       const hasModifications = Object.keys(fields).length > 0;

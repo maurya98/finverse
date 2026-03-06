@@ -3,7 +3,6 @@ import { VariableType } from '@gorules/zen-engine-wasm';
 import { Button, Form, Space } from 'antd';
 import equal from 'fast-deep-equal/es6/react';
 import { produce } from 'immer';
-import _ from 'lodash';
 import { Grid3x3Icon } from 'lucide-react';
 import React from 'react';
 import type { z } from 'zod';
@@ -39,38 +38,38 @@ export const decisionTableSpecification: NodeSpecification<NodeDecisionTableData
     return produce(current, (draft) => {
       const fields: DiffMetadata['fields'] = {};
       if ((current.executionMode ?? 'single') !== (previous.executionMode ?? 'single')) {
-        _.set(fields, 'executionMode', {
+        (fields as Record<string, unknown>)['executionMode'] = {
           status: 'modified',
           previousValue: previous.executionMode,
-        });
+        };
       }
 
       if ((current.hitPolicy ?? 'first') !== (previous.hitPolicy ?? 'first')) {
-        _.set(fields, 'hitPolicy', {
+        (fields as Record<string, unknown>)['hitPolicy'] = {
           status: 'modified',
           previousValue: previous.hitPolicy,
-        });
+        };
       }
 
       if ((current.inputField ?? '') !== (previous.inputField ?? '')) {
-        _.set(fields, 'inputField', {
+        (fields as Record<string, unknown>)['inputField'] = {
           status: 'modified',
           previousValue: previous.inputField,
-        });
+        };
       }
 
       if ((current.outputPath ?? '') !== (previous.outputPath ?? '')) {
-        _.set(fields, 'outputPath', {
+        (fields as Record<string, unknown>)['outputPath'] = {
           status: 'modified',
           previousValue: previous.outputPath,
-        });
+        };
       }
 
       if ((current.passThrough ?? false) !== (previous.passThrough ?? false)) {
-        _.set(fields, 'passThrough', {
+        (fields as Record<string, unknown>)['passThrough'] = {
           status: 'modified',
           previousValue: previous.passThrough,
-        });
+        };
       }
 
       const inputs = compareAndUnifyLists(current?.inputs || [], previous?.inputs || [], {
@@ -207,9 +206,9 @@ export const decisionTableSpecification: NodeSpecification<NodeDecisionTableData
             input?._diff?.status === 'removed',
         )
       ) {
-        _.set(fields, 'inputs', {
+        (fields as Record<string, unknown>)['inputs'] = {
           status: 'modified',
-        });
+        };
       }
 
       if (
@@ -220,9 +219,9 @@ export const decisionTableSpecification: NodeSpecification<NodeDecisionTableData
             output?._diff?.status === 'removed',
         )
       ) {
-        _.set(fields, 'outputs', {
+        (fields as Record<string, unknown>)['outputs'] = {
           status: 'modified',
-        });
+        };
       }
 
       if (
@@ -231,9 +230,9 @@ export const decisionTableSpecification: NodeSpecification<NodeDecisionTableData
             rule?._diff?.status === 'modified' || rule?._diff?.status === 'added' || rule?._diff?.status === 'removed',
         )
       ) {
-        _.set(fields, 'rules', {
+        (fields as Record<string, unknown>)['rules'] = {
           status: 'modified',
-        });
+        };
       }
 
       if (Object.keys(fields).length > 0) {
