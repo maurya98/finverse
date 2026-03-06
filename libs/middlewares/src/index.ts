@@ -9,3 +9,14 @@ export {
   type RequestLoggerOptions,
 } from "./request-logger/request.logger.middleware";
 export { requestLoggerRoutes } from "./request-logger/logs.routes";
+export { createAuthMiddleware } from "./auth.middleware";
+export type {
+  AuthUser,
+  AuthSession,
+  SessionValidationResult,
+  IAuthService,
+  PermissionType,
+  AuthenticatedRequest,
+  RolePermissionsMap,
+  AuthMiddlewareConfig,
+} from "./auth.types";
