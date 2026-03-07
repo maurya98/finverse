@@ -37,8 +37,9 @@ async function start(): Promise<void> {
     process.exit(1);
   }
 
-  app.listen(3001, () => {
-    logger.info("Site Platform server is running on port 3001");
+  const port = Number(process.env.PORT) || 5001;
+  app.listen(port, () => {
+    logger.info(`Site Platform server is running on port ${port}`);
   });
 }
 

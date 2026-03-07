@@ -1,0 +1,16 @@
+# IAM Backend - Production
+# Build from monorepo root. Load .env from infra/deployment/production/iam.env
+
+services:
+  iam:
+    build:
+      context: ../../..
+      dockerfile: infra/docker/iam/Dockerfile
+    image: finverse/iam:production
+    container_name: iam-production
+    restart: unless-stopped
+    network_mode: host
+    env_file:
+      - iam.env
+    environment:
+      - NODE_ENV=production

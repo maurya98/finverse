@@ -27,6 +27,7 @@
     "@finverse/logger": "workspace:*",
     "@finverse/middlewares": "workspace:*",
     "@finverse/utils": "workspace:*",
+    "@prisma/client-runtime-utils": "^7.4.1",
     "@prisma/adapter-pg": "^7.4.0",
     "@prisma/client": "^7.4.1",
     "bcryptjs": "^2.4.3",

@@ -13,8 +13,8 @@ app.use(securityMiddleware);
 app.use(errorHandlerMiddleware);
 app.use(apiRouter);
 
-app.listen(process.env.PORT ?? 3002, () => {
-  logger.info(`LMS server is running on port ${process.env.PORT ?? 3002}`);
+app.listen(process.env.PORT ?? 5003, () => {
+  logger.info(`LMS server is running on port ${process.env.PORT ?? 5003}`);
 });
 
 export default app;

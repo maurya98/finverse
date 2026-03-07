@@ -65,8 +65,6 @@ WORKDIR /app
 
 COPY --from=builder /prod/ruleenginebe ./
 
-ENV NODE_ENV=production
-
-EXPOSE 3000
+EXPOSE 5000
 
 CMD ["node", "dist/app.js"]

@@ -17,7 +17,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$SCRIPT_DIR"
 INFRA="$ROOT_DIR/infra/deployment"
 
-BACKENDS=(ruleenginebe siteplatform lms)
+BACKENDS=(ruleenginebe siteplatform lms iam)
 FRONTENDS=(ruleenginefe admin_dashboard)
 
 usage() {
@@ -25,7 +25,7 @@ usage() {
   echo ""
   echo "Run without arguments for interactive prompts."
   echo "Environments: staging, production"
-  echo "Apps (backend): ruleenginebe, siteplatform, lms"
+  echo "Apps (backend): ruleenginebe, siteplatform, lms, iam"
   echo "Apps (frontend, build only): ruleenginefe, admin_dashboard"
   echo "App 'all': deploy all backends and build all frontends."
   exit 1
@@ -57,6 +57,7 @@ prompt_app() {
   echo "  4) lms (LMS backend)" >&2
   echo "  5) ruleenginefe (Rule Engine frontend - build only)" >&2
   echo "  6) admin_dashboard (Admin Dashboard frontend - build only)" >&2
+  echo "  7) iam (IAM backend)" >&2
   echo "" >&2
   read -r -p "Enter choice [1-6]: " choice
   case "$choice" in
@@ -66,6 +67,7 @@ prompt_app() {
     4) echo "lms" ;;
     5) echo "ruleenginefe" ;;
     6) echo "admin_dashboard" ;;
+    7) echo "iam" ;;
     *)
       echo "Invalid choice." >&2
       exit 1
@@ -137,7 +139,7 @@ main() {
     exit 0
   fi
 
-  if [[ "$app" == "ruleenginebe" || "$app" == "siteplatform" || "$app" == "lms" ]]; then
+  if [[ "$app" == "ruleenginebe" || "$app" == "siteplatform" || "$app" == "lms" || "$app" == "iam" ]]; then
     deploy_backend "$env" "$app"
     exit 0
   fi

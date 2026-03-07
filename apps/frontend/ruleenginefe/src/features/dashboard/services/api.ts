@@ -1,6 +1,6 @@
 /**
  * API client for Rule Engine Backend.
- * Base URL: VITE_API_URL or http://localhost:3000
+ * Base URL: VITE_API_URL or http://localhost:5000
  */
 
 import { getToken } from "../../auth/services/auth";
@@ -8,7 +8,7 @@ import { getToken } from "../../auth/services/auth";
 const getBaseUrl = (): string => {
   const url = import.meta.env.VITE_API_URL;
   if (url && typeof url === "string") return url.replace(/\/$/, "");
-  return "http://localhost:3000";
+  return "http://localhost:5000";
 };
 
 function authHeaders(): HeadersInit {

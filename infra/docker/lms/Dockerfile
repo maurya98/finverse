@@ -65,8 +65,6 @@ WORKDIR /app
 
 COPY --from=builder /prod/lms ./
 
-ENV NODE_ENV=production
-
-EXPOSE 3002
+EXPOSE 5003
 
 CMD ["node", "dist/app.js"]
