@@ -1,11 +1,11 @@
 import { useMemo } from "react";
-import "@gorules/jdm-editor/dist/style.css";
+import "@finverse/jdm-editor/dist/style.css";
 import {
   DecisionGraph,
   JdmConfigProvider,
   calculateDiffGraph,
   type DecisionGraphType,
-} from "@gorules/jdm-editor";
+} from "@finverse/jdm-editor";
 import { useTheme } from "../../../contexts/ThemeContext";
 import "./JdmDiffViewer.css";
 

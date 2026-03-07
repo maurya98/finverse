@@ -1,5 +1,5 @@
 import { useMemo, useCallback, useState, useEffect, useRef } from "react";
-import "@gorules/jdm-editor/dist/style.css";
+import "@finverse/jdm-editor/dist/style.css";
 import {
   DecisionGraph,
   JdmConfigProvider,
@@ -7,7 +7,7 @@ import {
   type DecisionGraphType,
   type DecisionGraphRef,
   type Simulation,
-} from "@gorules/jdm-editor";
+} from "@finverse/jdm-editor";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { simulate as simulateApi, isApiError } from "../services/api";
 import "./JdmEditorView.css";
@@ -100,7 +100,7 @@ export function JdmEditorView({
         renderPanel: () => (
           <GraphSimulator
             defaultRequest={JSON.stringify({}, null, 2)}
-            onRun={async ({ graph, context }) => {
+            onRun={async ({ graph, context }: { graph: DecisionGraphType; context: unknown }) => {
               try {
                 const decisions =
                   getDecisionsForSimulation != null

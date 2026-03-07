@@ -3,7 +3,7 @@
 JDM Editor is an open-source React component for crafting and designing JDM (JSON Decision model) files.
 Whether you’re a developer, data analyst, or decision model expert, JDM Editor can help you harness the full potential of decision modeling, making it more accessible and manageable than ever before
 
-[<img width="945" alt="Rules Engine Editor" src="https://gorules.io/images/jdm-editor.gif">](https://gorules.github.io/jdm-editor/)
+<img width="945" alt="Rules Engine Editor" src="https://gorules.io/images/jdm-editor.gif">
 
 > A JDM Editor
 > Live demo and usage at https://gorules.github.io/jdm-editor/
@@ -41,11 +41,13 @@ export type DecisionGraphProps = {
   defaultValue?: DecisionGraphType;
   value?: DecisionGraphType;
   disabled?: boolean;
+  configurable?: boolean;
   components?: CustomNodeType[];
   onChange?: (val: DecisionGraphType) => void;
   manager?: DragDropManager;
   reactFlowProOptions?: ProOptions;
   onReactFlowInit?: () => void;
+  simulate?: Simulation;
 };
 ```
 
@@ -62,7 +64,7 @@ export type DecisionTableProps = {
   value?: DecisionTableType;
   onChange?: (decisionTable: DecisionTableType) => void;
   activeRules?: string[];
-  permission?: DecisionTablePermission;
+  configurable?: boolean;
   disabled?: boolean;
   disableHitPolicy?: boolean;
   minColWidth?: number;
