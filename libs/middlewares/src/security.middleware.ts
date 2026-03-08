@@ -244,8 +244,8 @@ export const securityMiddleware = [
   contentTypeProtection,
   requestSizeLimit,
   parameterPollutionProtection,
-  sqlInjectionProtection,
-  xssProtection,
+  // sqlInjectionProtection,
+  // xssProtection,
 ];
 
 export default securityMiddleware;
