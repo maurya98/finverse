@@ -1,16 +1,17 @@
 import { logger } from "@finverse/logger";
-import { requestLoggerMiddleware, securityMiddleware } from "@finverse/middlewares";
-import express, { Request, Response } from "express";
+import { requestLoggerMiddleware, requestLoggerRoutes, securityMiddleware } from "@finverse/middlewares";
+import express, { Express, Request, Response } from "express";
 import { gatewayMiddleware } from "./api/middlewares/gateway.middleware";
 import apiRouter from "./api/routes/api";
 import { prisma } from "./databases/client";
 
-const app = express();
+const app: Express = express();
 
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
-app.use(requestLoggerMiddleware({ appName: "site-platform" }));
 app.use(...securityMiddleware);
+app.use("/api/v1/logs", requestLoggerRoutes());  
+app.use(requestLoggerMiddleware({ appName: "siteplatform" }));
 
 // Health Check Endpoint
 app.get("/health", (_: Request, res: Response) => {
@@ -39,7 +40,7 @@ async function start(): Promise<void> {
 
   const port = Number(process.env.PORT) || 5001;
   app.listen(port, () => {
-    logger.info(`Site Platform server is running on port ${port}`);
+    logger.info(`Site Platform is running on port ${port} with Environment: ${process.env.NODE_ENV}`);
   });
 }
 

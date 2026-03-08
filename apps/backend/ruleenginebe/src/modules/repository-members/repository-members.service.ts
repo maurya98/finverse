@@ -51,7 +51,7 @@ export class RepositoryMembersService {
     repositoryId: string,
     userId: string,
     role: string,
-    _invitedBy?: string
+    _invitedBy?: string // eslint-disable-line @typescript-eslint/no-unused-vars
   ): Promise<RepositoryMemberWithUser> {
     const member = await prisma.repositoryMember.create({
       data: { repositoryId, userId, role: role as "ADMIN" | "MAINTAINER" | "CONTRIBUTOR" | "VIEWER" },

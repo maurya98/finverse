@@ -47,11 +47,7 @@ export function requireRepoAccess(minRole: string) {
  * Resolve repositoryId from a merge request id and check that the user has at least minRole.
  * Use in merge-request handlers where the route param is MR id. Returns repositoryId and role, or null if forbidden/not found.
  */
-export async function getRepoAccessFromMergeRequestId(
-  mergeRequestId: string,
-  userId: string,
-  minRole: string
-): Promise<{ repositoryId: string; role: string } | null> {
+export async function getRepoAccessFromMergeRequestId(mergeRequestId: string, userId: string, minRole: string): Promise<{ repositoryId: string; role: string } | null> {
   const { prisma } = await import("../../databases/client");
   const mr = await prisma.mergeRequest.findUnique({
     where: { id: mergeRequestId },
@@ -87,14 +83,7 @@ export async function setRepositoryIdFromBranchId(req: Request, res: Response, n
   }
 }
 
-async function setRepositoryIdFromResource(
-  req: Request,
-  res: Response,
-  next: NextFunction,
-  findOne: (id: string) => Promise<{ repositoryId: string } | null>,
-  paramKey: string,
-  notFoundMessage: string
-): Promise<void> {
+async function setRepositoryIdFromResource(req: Request, res: Response, next: NextFunction, findOne: (id: string) => Promise<{ repositoryId: string } | null>, paramKey: string, notFoundMessage: string): Promise<void> {
   const id = (req.params as Record<string, string>)[paramKey];
   if (!id) {
     res.status(400).json({ success: false, message: "Resource id is required" });

@@ -1,15 +1,10 @@
 /**
  * In-process Postgres writer for request logs. Uses env config only; no app-level setup.
  * Set LOG_PG_URL or DB_URL to enable. Runs in main thread (no worker).
+ * Expects the consuming app (e.g. apps/backend/*) to load .env via dotenv so process.env is set.
  */
 
 import { Client } from "pg";
-import * as path from "path";
-import { config } from "dotenv";
-
-// Load .env from this package root (so it works when app runs from another app's cwd)
-const packageRoot = path.resolve(__dirname, "..", "..");
-config({ path: path.join(packageRoot, ".env") });
 
 
 const QUEUE_MAX = 10_000;

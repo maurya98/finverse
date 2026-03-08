@@ -5,6 +5,7 @@ const authService = new AuthService();
 
 export type AuthUser = { id: string; role: string };
 
+/* eslint-disable @typescript-eslint/no-namespace -- Express type augmentation requires namespace */
 declare global {
   namespace Express {
     interface Request {

@@ -14,26 +14,6 @@ import { WorkspacesController } from "../controllers/workspaces.controller";
 
 const router: Router = Router();
 
-// Root route so GET / returns 200 (e.g. health check / verify server is up)
-router.get("/", (_req, res) => {
-  res.status(200).json({
-    ok: true,
-    message: "Rule Engine API",
-    endpoints: [
-      "/auth/login",
-      "/auth/logout",
-      "/users",
-      "/blobs",
-      "/branches",
-      "/commits",
-      "/merge-requests",
-      "/execute",
-      "/simulate",
-      "/trees",
-    ],
-  });
-});
-
 router.use("/auth/", new AuthController().router);
 router.use("/blobs/", new BlobsController().router);
 router.use("/branches/", new BranchesController().router);

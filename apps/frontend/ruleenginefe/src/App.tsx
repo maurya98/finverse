@@ -11,7 +11,7 @@ import { LogsPage } from "./features/logs/pages/LogsPage";
 
 function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/ruleenginefe">
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route

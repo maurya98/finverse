@@ -4,7 +4,7 @@ import { appRoutes } from "./data/AppRoutes";
 
 const App = () => {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/admin_dashboard">
       <Routes>
         <Route element={<RootLayout />}>
           {appRoutes.map((route) => (

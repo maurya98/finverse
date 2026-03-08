@@ -1,14 +1,10 @@
 /**
  * Read-only Postgres client for request logs. Uses same env as pg-writer (LOG_PG_URL/DB_URL).
  * Separate client so long-running reads do not block the writer.
+ * Expects the consuming app (e.g. apps/backend/*) to load .env via dotenv so process.env is set.
  */
 
 import { Client } from "pg";
-import * as path from "path";
-import { config } from "dotenv";
-
-const packageRoot = path.resolve(__dirname, "..", "..");
-config({ path: path.join(packageRoot, ".env") });
 
 export interface RequestLogRow {
   id: number;
