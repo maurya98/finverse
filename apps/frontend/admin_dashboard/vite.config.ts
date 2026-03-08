@@ -8,4 +8,10 @@ export default defineConfig({
   server: {
     port: 5005,
   },
+  resolve: {
+    dedupe: ['react', 'react-dom', 'react/jsx-runtime'],
+  },
+  optimizeDeps: {
+    include: ['react', 'react-dom'],
+  },
 });
