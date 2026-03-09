@@ -31,14 +31,5 @@
     {
       "path": "apps/backend/customer"
     },
-    {
-      "path": "libs/lezer-zen"
-    },
-    {
-      "path": "libs/lezer-zen-template"
-    },
-    {
-      "path": "libs/zen-engine-wasm"
-    },
   ]
 }
