@@ -29,6 +29,9 @@
       "path": "libs/jdm-editor"
     },
     {
+      "path": "apps/backend/customer"
+    },
+    {
       "path": "libs/lezer-zen"
     },
     {
@@ -36,6 +39,6 @@
     },
     {
       "path": "libs/zen-engine-wasm"
-    }
+    },
   ]
 }

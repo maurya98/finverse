@@ -1,0 +1,18 @@
+# Customer Backend - Production
+# Build from monorepo root: docker compose -f infra/deployment/production/docker-compose.customer.yml build
+# Run: docker compose -f infra/deployment/production/docker-compose.customer.yml --env-file infra/deployment/production/customer.env up -d
+# Database runs on the server; network_mode: host lets the container use localhost:5432
+
+services:
+  customer:
+    build:
+      context: ../../..
+      dockerfile: infra/docker/customer/Dockerfile
+    image: finverse/customer:production
+    container_name: customer-production
+    restart: unless-stopped
+    network_mode: host
+    env_file:
+      - customer.env
+    environment:
+      - NODE_ENV=production
