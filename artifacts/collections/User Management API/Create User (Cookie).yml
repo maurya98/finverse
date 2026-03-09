@@ -5,7 +5,7 @@ info:
 
 http:
   method: POST
-  url: http://localhost:3002/api/users
+  url: http://localhost:5002/api/users
   headers:
     - name: Content-Type
       value: application/json
@@ -15,9 +15,9 @@ http:
     type: json
     data: |-
       {
-        "email": "newuser@example.com",
-        "password": "SecurePass123!",
-        "name": "New User"
+        "email": "maintainer@buddyloan.com",
+        "password": "Admin@123!",
+        "name": "John Cena"
       }
   auth: inherit
 

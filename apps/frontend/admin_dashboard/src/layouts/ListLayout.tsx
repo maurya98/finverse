@@ -1,4 +1,5 @@
 import { type GridItem } from "../components/common/GridCard";
+import CopyableId from "../components/common/CopyableId";
 
 export interface ListLayoutProps {
   items: GridItem[];
@@ -47,20 +48,25 @@ const ListLayout = ({
                 onClick={() => onCardClick?.(item.id)}
                 className="hover:bg-base-300 cursor-pointer"
               >
-                <td className="text-xs font-mono whitespace-nowrap">{item.id}</td>
+                <td>
+                  <CopyableId id={item.id} />
+                </td>
                 <td className="font-semibold">{item.title}</td>
                 <td className="text-sm text-gray-600 max-w-xs truncate">
                   {item.description || "-"}
                 </td>
                 <td>
-                  <div className="tooltip" data-tip="Toggle Status">
+                  <div className="tooltip" data-tip={onStatusToggle ? "Toggle Status" : item.active ? "Active" : "Inactive"}>
                     <button
                       type="button"
+                      disabled={!onStatusToggle}
                       onClick={(e) => {
                         e.stopPropagation();
                         onStatusToggle?.(item.id);
                       }}
-                      className={`badge text-xs cursor-pointer transition-all ${
+                      className={`badge text-xs transition-all ${
+                        onStatusToggle ? "cursor-pointer" : "cursor-default opacity-60"
+                      } ${
                         item.active ? "badge-success" : "badge-ghost"
                       }`}
                     >

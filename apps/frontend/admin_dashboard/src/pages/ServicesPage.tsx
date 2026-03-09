@@ -12,6 +12,7 @@ import GridLayout from "../layouts/GridLayout";
 import ListLayout from "../layouts/ListLayout";
 import { useTableFilters, type TableFilterConfig } from "../hooks/useTableFilters";
 import { getAllServices, deleteService, updateService } from "../services/servicesApi";
+import { usePermission } from "../hooks/usePermission";
 
 const FILTER_CONFIG: TableFilterConfig = {
   searchableFields: ["title", "description"],
@@ -26,6 +27,7 @@ const ServicesPage = () => {
   const [deleteItemId, setDeleteItemId] = useState<string | null>(null);
   const { openDrawer } = useRightDrawer();
   const { currentView } = useViewToggle();
+  const { canWrite, canDelete } = usePermission();
 
   // Load services from API
   const loadServices = async () => {
@@ -85,7 +87,7 @@ const ServicesPage = () => {
 
   const handleActionClick = (actionId: string, itemId: string) => {
     if (actionId === "edit") {
-      openDrawer(<EditService itemId={itemId} isEditable={true} />, false, loadServices);
+      openDrawer(<EditService itemId={itemId} isEditable={canWrite} />, false, loadServices);
     } else if (actionId === "delete") {
       setDeleteItemId(itemId);
       (document.getElementById("delete-service-modal") as HTMLDialogElement)?.showModal();
@@ -109,19 +111,27 @@ const ServicesPage = () => {
 
   const itemsWithActions = filteredItems.map((item) => ({
     ...item,
-    actions: servicesCardActions.map((action) => ({
-      ...action,
-      onClick: () => handleActionClick(action.id, item.id),
-    })),
+    actions: servicesCardActions
+      .filter((action) => {
+        if (action.id === "delete") return canDelete;
+        if (action.id === "edit") return canWrite;
+        return true;
+      })
+      .map((action) => ({
+        ...action,
+        onClick: () => handleActionClick(action.id, item.id),
+      })),
   }));
 
   const layoutProps = {
     items: itemsWithActions,
-    onCreate: () =>
-      (
-        document.getElementById("create-service-modal") as HTMLDialogElement
-      )?.showModal(),
-    onStatusToggle: handleStatusToggle,
+    onCreate: canWrite
+      ? () =>
+          (
+            document.getElementById("create-service-modal") as HTMLDialogElement
+          )?.showModal()
+      : undefined,
+    onStatusToggle: canWrite ? handleStatusToggle : undefined,
     onCardClick: handleCardClick,
   };
 

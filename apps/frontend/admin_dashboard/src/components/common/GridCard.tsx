@@ -1,4 +1,5 @@
 import { type ReactNode } from "react";
+import CopyableId from "./CopyableId";
 
 export type GridAction = {
   id: string;
@@ -45,18 +46,22 @@ const GridCard = ({
             {item.description}
           </span>
         ) : null}
+        <div className="mt-2">
+          <CopyableId id={item.id} truncate />
+        </div>
       </div>
 
       <div className="flex items-center justify-between w-full">
         {showStatus ? (
-          <div className="tooltip" data-tip="Toggle Status">
+          <div className="tooltip" data-tip={onStatusToggle ? "Toggle Status" : item.active ? "Active" : "Inactive"}>
             <button
               type="button"
+              disabled={!onStatusToggle}
               onClick={(e) => {
                 e.stopPropagation();
                 onStatusToggle?.(item.id);
               }}
-              className={`badge text-xs cursor-pointer transition-all ${item.active ? "badge-success" : "badge-ghost"}`}
+              className={`badge text-xs transition-all ${onStatusToggle ? "cursor-pointer" : "cursor-default opacity-60"} ${item.active ? "badge-success" : "badge-ghost"}`}
             >
               {item.active ? "Active" : "Inactive"}
             </button>

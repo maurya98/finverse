@@ -5,7 +5,7 @@ info:
 
 http:
   method: PATCH
-  url: http://localhost:3002/api/users/aaa2a1ba-e341-448e-b337-6c95c377d889
+  url: http://localhost:5002/api/users/5753be66-49b7-4237-b080-e763d28d1a00
   headers:
     - name: Content-Type
       value: application/json
@@ -15,9 +15,7 @@ http:
     type: json
     data: |-
       {
-        "email": "newuser2@example.com",
-        "name": "Updated Name something",
-        "role": "ADMIN"
+        "role": "MAINTAINER"
       }
   auth: inherit
 

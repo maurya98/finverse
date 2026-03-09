@@ -13,6 +13,7 @@ import { useViewToggle } from "../hooks/useViewToggle";
 import EditApplication from "../components/forms/EditApplication";
 import { useTableFilters, type TableFilterConfig } from "../hooks/useTableFilters";
 import { getAllApplications, deleteApplication, updateApplication } from "../services/applicationsApi";
+import { usePermission } from "../hooks/usePermission";
 
 const FILTER_CONFIG: TableFilterConfig = {
   searchableFields: ["title", "description"],
@@ -28,6 +29,7 @@ const ApplicationsPage = () => {
   const [rotateKeyItemId, setRotateKeyItemId] = useState<string | null>(null);
   const { openDrawer } = useRightDrawer();
   const { currentView } = useViewToggle();
+  const { canWrite, canDelete } = usePermission();
 
   // Load applications from API
   const loadApplications = async () => {
@@ -87,7 +89,7 @@ const ApplicationsPage = () => {
 
   const handleActionClick = (actionId: string, itemId: string) => {
     if (actionId === "edit") {
-      openDrawer(<EditApplication itemId={itemId} isEditable={true} />, false, loadApplications);
+      openDrawer(<EditApplication itemId={itemId} isEditable={canWrite} />, false, loadApplications);
     } else if (actionId === "delete") {
       setDeleteItemId(itemId);
       (document.getElementById("delete-app-modal") as HTMLDialogElement)?.showModal();
@@ -114,19 +116,27 @@ const ApplicationsPage = () => {
 
   const itemsWithActions = filteredItems.map((item) => ({
     ...item,
-    actions: applicationsCardActions.map((action) => ({
-      ...action,
-      onClick: () => handleActionClick(action.id, item.id),
-    })),
+    actions: applicationsCardActions
+      .filter((action) => {
+        if (action.id === "delete") return canDelete;
+        if (action.id === "edit" || action.id === "rotate") return canWrite;
+        return true;
+      })
+      .map((action) => ({
+        ...action,
+        onClick: () => handleActionClick(action.id, item.id),
+      })),
   }));
 
   const layoutProps = {
     items: itemsWithActions,
-    onCreate: () =>
-      (
-        document.getElementById("create-app-modal") as HTMLDialogElement
-      )?.showModal(),
-    onStatusToggle: handleStatusToggle,
+    onCreate: canWrite
+      ? () =>
+          (
+            document.getElementById("create-app-modal") as HTMLDialogElement
+          )?.showModal()
+      : undefined,
+    onStatusToggle: canWrite ? handleStatusToggle : undefined,
     onCardClick: handleCardClick,
   };
 
