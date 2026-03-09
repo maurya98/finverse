@@ -8,6 +8,9 @@ import { RepositoryEditorPage } from "./features/dashboard/pages/RepositoryEdito
 import { RepositorySettingsPage } from "./features/dashboard/pages/RepositorySettingsPage";
 import { BranchManagementPage } from "./features/dashboard/pages/BranchManagementPage";
 import { LogsPage } from "./features/logs/pages/LogsPage";
+import { ProfilePage } from "./features/profile/pages/ProfilePage";
+import { UsersManagementPage } from "./features/users/pages/UsersManagementPage";
+import { UserAccessPage } from "./features/users/pages/UserAccessPage";
 
 function App() {
   return (
@@ -32,6 +35,9 @@ function App() {
         >
           <Route index element={<DashboardPage />} />
           <Route path="logs" element={<LogsPage />} />
+          <Route path="profile" element={<ProfilePage />} />
+          <Route path="users" element={<UsersManagementPage />} />
+          <Route path="users/access" element={<UserAccessPage />} />
           <Route path="repo/:repositoryId" element={<RepoLayout />}>
             <Route index element={<RepositoryEditorPage />} />
             <Route path="branches" element={<BranchManagementPage />} />

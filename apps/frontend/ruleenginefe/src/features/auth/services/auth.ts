@@ -18,6 +18,11 @@ export function setAuth(token: string, user: StoredUser): void {
   localStorage.setItem(USER_KEY, JSON.stringify(user));
 }
 
+/** Update stored user (e.g. after profile update) without changing token. */
+export function setUser(user: StoredUser): void {
+  localStorage.setItem(USER_KEY, JSON.stringify(user));
+}
+
 export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY);
 }

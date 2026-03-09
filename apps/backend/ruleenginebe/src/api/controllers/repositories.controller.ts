@@ -76,12 +76,18 @@ export class RepositoriesController {
       const { workspaceId, skip, take } = parsed.data;
       const workspace = await this.workspaceService.findById(workspaceId);
       if (!workspace) return sendError(res, "Workspace not found", 404);
-      if (workspace.ownerId !== req.user!.id) {
+      const isAdmin = req.user!.role === "ADMIN";
+      const hasWorkspaceAccess = await this.workspaceService.hasAccess(workspaceId, req.user!.id);
+      if (!isAdmin && !hasWorkspaceAccess) {
         return sendError(res, "You do not have access to this workspace", 403);
       }
-      const list = await this.repositoryService.listByWorkspace(workspaceId, skip ?? 0, take ?? 50);
+      const isOwner = workspace.ownerId === req.user!.id;
+      let list = await this.repositoryService.listByWorkspace(workspaceId, skip ?? 0, take ?? 50);
       const repoIds = list.map((r) => r.id);
       const rolesByRepo = await this.membersService.getRolesForUserInRepositories(req.user!.id, repoIds);
+      if (!isOwner && !isAdmin) {
+        list = list.filter((repo) => rolesByRepo[repo.id] != null);
+      }
       const data = list.map((repo) => {
         const out = { ...repo } as Record<string, unknown>;
         const role = rolesByRepo[repo.id];

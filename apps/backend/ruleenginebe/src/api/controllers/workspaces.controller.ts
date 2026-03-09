@@ -1,7 +1,7 @@
 import { Request, Response, Router } from "express";
 import { validateBody } from "@finverse/utils";
 import { sendSuccess, sendError } from "@finverse/utils";
-import { requireAuth } from "../middlewares/auth.middleware";
+import { requireAuth, requireAdmin } from "../middlewares/auth.middleware";
 import { WorkspaceService } from "../../modules/workspaces/workspace.service";
 import { createWorkspaceSchema, listWorkspacesQuerySchema } from "../validations/workspace.validator";
 
@@ -39,7 +39,8 @@ export class WorkspacesController {
       const id = typeof req.params.id === "string" ? req.params.id : req.params.id?.[0] ?? "";
       const ws = await this.workspaceService.findById(id);
       if (!ws) return sendError(res, "Workspace not found", 404);
-      if (ws.ownerId !== req.user!.id) {
+      const hasAccess = await this.workspaceService.hasAccess(id, req.user!.id);
+      if (!hasAccess) {
         return sendError(res, "You do not have access to this workspace", 403);
       }
       return sendSuccess(res, ws);
@@ -54,9 +55,12 @@ export class WorkspacesController {
       if (!parsed.success) {
         return sendError(res, "Invalid query", 400, parsed.error.errors.map((e) => ({ path: e.path.join("."), message: e.message })));
       }
-      const { skip, take } = parsed.data;
-      const ownerId = req.user!.id;
-      const list = await this.workspaceService.listByOwner(ownerId, skip ?? 0, take ?? 50);
+      const { skip, take, all } = parsed.data;
+      const userId = req.user!.id;
+      const isAdmin = req.user!.role === "ADMIN";
+      const list = all && isAdmin
+        ? await this.workspaceService.listAll(skip ?? 0, take ?? 50)
+        : await this.workspaceService.listForUser(userId, skip ?? 0, take ?? 50);
       return sendSuccess(res, list);
     } catch {
       return sendError(res, "Failed to list workspaces", 500);

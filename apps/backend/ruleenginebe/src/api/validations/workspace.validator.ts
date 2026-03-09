@@ -7,6 +7,7 @@ export const createWorkspaceSchema = z.object({
 
 export const listWorkspacesQuerySchema = z.object({
   ownerId: z.string().uuid().optional(),
+  all: z.coerce.boolean().optional(),
   skip: z.coerce.number().int().min(0).optional(),
   take: z.coerce.number().int().min(1).max(100).optional(),
 });

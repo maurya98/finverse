@@ -103,6 +103,40 @@ export class UserService {
     return toSafeUser(updated);
   }
 
+  /**
+   * Update own profile: name and/or password. Validates currentPassword when changing password.
+   */
+  async updateProfile(
+    id: string,
+    data: { name?: string | null; currentPassword?: string; newPassword?: string }
+  ): Promise<SafeUser | null> {
+    const user = await prisma.user.findUnique({ where: { id } });
+    if (!user) return null;
+
+    if (data.newPassword != null) {
+      if (!data.currentPassword) {
+        throw new Error("Current password is required to change password");
+      }
+      const valid = await bcrypt.compare(data.currentPassword, user.passwordHash);
+      if (!valid) {
+        throw new Error("Current password is incorrect");
+      }
+    }
+
+    const passwordHash =
+      data.newPassword != null ? await bcrypt.hash(data.newPassword, 10) : undefined;
+
+    const updated = await prisma.user.update({
+      where: { id },
+      data: {
+        ...(data.name !== undefined && { name: data.name }),
+        ...(passwordHash != null && { passwordHash }),
+      },
+      select: userSelect,
+    });
+    return toSafeUser(updated);
+  }
+
   async delete(id: string): Promise<boolean> {
     const user = await prisma.user.findUnique({ where: { id } });
     if (!user) return false;

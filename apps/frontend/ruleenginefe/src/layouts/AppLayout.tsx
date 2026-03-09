@@ -7,7 +7,11 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
+import ListSubheader from "@mui/material/ListSubheader";
 import Logout from "@mui/icons-material/Logout";
+import Person from "@mui/icons-material/Person";
+import Group from "@mui/icons-material/Group";
+import Folder from "@mui/icons-material/Folder";
 import { useState, useRef } from "react";
 import { getUser } from "../features/auth/services/auth";
 import { logout } from "../features/auth/services/authApi";
@@ -21,11 +25,28 @@ export function AppLayout() {
   const user = getUser();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const shortcutsRef = useRef<KeyboardShortcutsHelpHandle>(null);
+  const isAdmin = user?.role === "ADMIN";
+  const displayName = user?.name?.trim() || user?.email || "User";
 
   const handleLogout = () => {
     logout();
     setAnchorEl(null);
     navigate("/login", { replace: true });
+  };
+
+  const handleProfile = () => {
+    setAnchorEl(null);
+    navigate("/dashboard/profile");
+  };
+
+  const handleUserManagement = () => {
+    setAnchorEl(null);
+    navigate("/dashboard/users");
+  };
+
+  const handleWorkspaceAccess = () => {
+    setAnchorEl(null);
+    navigate("/dashboard/users/access");
   };
 
   return (
@@ -42,7 +63,7 @@ export function AppLayout() {
           </Typography>
           <Button
             color="inherit"
-            sx={{ color: location.pathname === "/dashboard" && !location.pathname.startsWith("/dashboard/repo") ? "primary.main" : "text.primary" }}
+            sx={{ color: location.pathname === "/dashboard" && !location.pathname.startsWith("/dashboard/repo") && !location.pathname.startsWith("/dashboard/profile") && !location.pathname.startsWith("/dashboard/users") ? "primary.main" : "text.primary" }}
             onClick={() => navigate("/dashboard")}
           >
             Repositories
@@ -62,7 +83,7 @@ export function AppLayout() {
             onClick={(e) => setAnchorEl(e.currentTarget)}
             sx={{ textTransform: "none" }}
           >
-            {user?.email ?? "User"}
+            {displayName}
           </Button>
           <Menu
             anchorEl={anchorEl}
@@ -71,6 +92,25 @@ export function AppLayout() {
             anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
             transformOrigin={{ vertical: "top", horizontal: "right" }}
           >
+            <MenuItem onClick={handleProfile}>
+              <ListItemIcon>
+                <Person fontSize="small" />
+              </ListItemIcon>
+              <ListItemText>Profile</ListItemText>
+            </MenuItem>
+            {isAdmin && (
+              <>
+                <ListSubheader sx={{ lineHeight: 2 }}>User Management</ListSubheader>
+                <MenuItem onClick={handleUserManagement}>
+                  <ListItemIcon><Group fontSize="small" /></ListItemIcon>
+                  <ListItemText>Users</ListItemText>
+                </MenuItem>
+                <MenuItem onClick={handleWorkspaceAccess}>
+                  <ListItemIcon><Folder fontSize="small" /></ListItemIcon>
+                  <ListItemText>Workspace & repo access</ListItemText>
+                </MenuItem>
+              </>
+            )}
             <MenuItem onClick={handleLogout}>
               <ListItemIcon>
                 <Logout fontSize="small" />

@@ -1,9 +1,9 @@
 import { Request, Response, Router } from "express";
 import { validateBody } from "@finverse/utils";
 import { sendSuccess, sendError } from "@finverse/utils";
-import { requireAuth } from "../middlewares/auth.middleware";
+import { requireAuth, requireAdmin } from "../middlewares/auth.middleware";
 import { UserService } from "../../modules/users/user.service";
-import { createUserSchema, updateUserSchema } from "../validations/user.validator";
+import { createUserSchema, updateUserSchema, updateProfileSchema } from "../validations/user.validator";
 
 export class UsersController {
   public router: Router;
@@ -16,11 +16,43 @@ export class UsersController {
   }
 
   private initRoutes(): void {
-    this.router.get("/", requireAuth, this.list.bind(this));
+    this.router.get("/me", requireAuth, this.getMe.bind(this));
+    this.router.patch("/me", requireAuth, validateBody(updateProfileSchema), this.updateMe.bind(this));
+    this.router.get("/", requireAuth, requireAdmin, this.list.bind(this));
     this.router.get("/:id", requireAuth, this.getById.bind(this));
-    this.router.post("/", requireAuth, validateBody(createUserSchema), this.create.bind(this));
-    this.router.patch("/:id", requireAuth, validateBody(updateUserSchema), this.update.bind(this));
-    this.router.delete("/:id", requireAuth, this.delete.bind(this));
+    this.router.post("/", requireAuth, requireAdmin, validateBody(createUserSchema), this.create.bind(this));
+    this.router.patch("/:id", requireAuth, requireAdmin, validateBody(updateUserSchema), this.update.bind(this));
+    this.router.delete("/:id", requireAuth, requireAdmin, this.delete.bind(this));
+  }
+
+  private async getMe(req: Request, res: Response): Promise<Response> {
+    try {
+      const id = req.user!.id;
+      const user = await this.userService.findById(id);
+      if (!user) {
+        return sendError(res, "User not found", 404);
+      }
+      return sendSuccess(res, user);
+    } catch {
+      return sendError(res, "Failed to get profile", 500);
+    }
+  }
+
+  private async updateMe(req: Request, res: Response): Promise<Response> {
+    try {
+      const id = req.user!.id;
+      const user = await this.userService.updateProfile(id, req.body);
+      if (!user) {
+        return sendError(res, "User not found", 404);
+      }
+      return sendSuccess(res, user, 200, "Profile updated");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to update profile";
+      if (message === "Current password is incorrect" || message === "Current password is required to change password") {
+        return sendError(res, message, 400);
+      }
+      return sendError(res, "Failed to update profile", 500);
+    }
   }
 
   private async list(req: Request, res: Response): Promise<Response> {

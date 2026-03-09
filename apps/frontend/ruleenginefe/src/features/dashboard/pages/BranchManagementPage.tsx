@@ -6,6 +6,7 @@ import {
   listCommits,
   createBranch,
   deleteBranch,
+  updateBranchHead,
   getCommitDiff,
   getMergeRequestDiff,
   listMergeRequests,
@@ -75,6 +76,8 @@ export function BranchManagementPage() {
   const [viewMR, setViewMR] = useState<{ mr: MergeRequest; diff: DiffResult } | null>(null);
   const [loadingMRDiff, setLoadingMRDiff] = useState(false);
   const [selectedMRFilePath, setSelectedMRFilePath] = useState<string | null>(null);
+  const [resetConfirm, setResetConfirm] = useState<Commit | null>(null);
+  const [resetting, setResetting] = useState(false);
 
   const currentBranch = branches.find((b) => b.name === branchParam) ?? null;
   const { currentUserRole } = useRepoRole();
@@ -292,6 +295,27 @@ export function BranchManagementPage() {
     setSelectedDiffFilePath(firstPath);
   }
 
+  async function handleHardReset(commit: Commit) {
+    if (!currentBranch || !canMergeMR) return;
+    setResetting(true);
+    setError(null);
+    const res = await updateBranchHead(currentBranch.id, commit.id);
+    setResetting(false);
+    setResetConfirm(null);
+    setCommitDiff(null);
+    setSelectedDiffFilePath(null);
+    if (isApiError(res)) {
+      setError(res.message);
+      return;
+    }
+    loadBranches();
+    if (repositoryId && branchParam) {
+      const commitsRes = await listCommits(repositoryId, { branch: branchParam, take: 100 });
+      if (!isApiError(commitsRes) && commitsRes.data) setCommits(commitsRes.data);
+    }
+    setError(null);
+  }
+
   if (!repo) {
     return (
       <Box sx={{ display: "flex", alignItems: "center", minHeight: 200, p: 2 }}>
@@ -502,6 +526,19 @@ export function BranchManagementPage() {
                     <Typography variant="caption" color="text.secondary">
                       {commitDiff.commit.message || "(no message)"} — {commitDiff.commit.authorName ?? "—"} · {formatDate(commitDiff.commit.createdAt)}
                     </Typography>
+                    {canMergeMR && currentBranch && (
+                      <Box sx={{ mt: 1 }}>
+                        <AppButton
+                          size="small"
+                          variant="danger"
+                          onClick={() => setResetConfirm(commitDiff.commit)}
+                          disabled={currentBranch.headCommitId === commitDiff.commit.id}
+                          title={currentBranch.headCommitId === commitDiff.commit.id ? "Branch is already at this commit" : "Reset branch to this commit (discards later commits)"}
+                        >
+                          Hard reset branch to this commit
+                        </AppButton>
+                      </Box>
+                    )}
                   </Box>
                   <Box sx={{ flex: 1, minHeight: 0, display: "flex" }}>
                     <Box
@@ -746,6 +783,38 @@ export function BranchManagementPage() {
         >
           <Typography>
             Are you sure you want to delete the branch <strong>{deleteConfirm?.name}</strong>? This cannot be undone.
+          </Typography>
+        </AppModal>
+      )}
+
+      {resetConfirm && (
+        <AppModal
+          open={!!resetConfirm}
+          onClose={() => setResetConfirm(null)}
+          title="Hard reset branch"
+          submitLabel={resetting ? "Resetting…" : "Hard reset"}
+          onSubmit={() => resetConfirm && handleHardReset(resetConfirm)}
+          submitDisabled={resetting}
+          actions={
+            <>
+              <AppButton variant="secondary" onClick={() => setResetConfirm(null)} disabled={resetting}>
+                Cancel
+              </AppButton>
+              <AppButton
+                variant="danger"
+                onClick={() => resetConfirm && handleHardReset(resetConfirm)}
+                disabled={resetting}
+              >
+                {resetting ? "Resetting…" : "Hard reset"}
+              </AppButton>
+            </>
+          }
+        >
+          <Typography sx={{ mb: 1 }}>
+            Reset branch <strong>{currentBranch?.name}</strong> to commit <strong>{resetConfirm.id.slice(0, 7)}</strong>?
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            The branch head will point to this commit. All commits after this on the branch will no longer be reachable from the branch. This cannot be undone.
           </Typography>
         </AppModal>
       )}

@@ -44,6 +44,24 @@ export function requireRepoAccess(minRole: string) {
 }
 
 /**
+ * Same as requireRepoAccess but allows global ADMIN to bypass repo membership check.
+ * Use for admin-only flows (e.g. user management: assign users to any repo).
+ */
+export function requireRepoAccessOrAdmin(minRole: string) {
+  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    if (!req.user) {
+      res.status(401).json({ success: false, message: "Authorization required" });
+      return;
+    }
+    if (req.user.role === "ADMIN") {
+      next();
+      return;
+    }
+    return requireRepoAccess(minRole)(req, res, next);
+  };
+}
+
+/**
  * Resolve repositoryId from a merge request id and check that the user has at least minRole.
  * Use in merge-request handlers where the route param is MR id. Returns repositoryId and role, or null if forbidden/not found.
  */

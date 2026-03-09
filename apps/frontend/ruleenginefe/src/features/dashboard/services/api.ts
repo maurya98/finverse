@@ -53,8 +53,14 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<ApiR
 
 // --- Workspaces ---
 export type Workspace = { id: string; name: string; ownerId: string; createdAt: string };
-export async function listWorkspaces(ownerId: string, skip = 0, take = 50): Promise<ApiResponse<Workspace[]>> {
-  return request(`/workspaces/list?ownerId=${encodeURIComponent(ownerId)}&skip=${skip}&take=${take}`);
+export async function listWorkspaces(ownerIdOrOptions?: string | { skip?: number; take?: number; all?: boolean }): Promise<ApiResponse<Workspace[]>> {
+  const opts = ownerIdOrOptions == null || typeof ownerIdOrOptions === "string"
+    ? { skip: 0, take: 50 }
+    : { skip: 0, take: 50, ...ownerIdOrOptions };
+  const { skip, take, all } = opts;
+  const params = new URLSearchParams({ skip: String(skip), take: String(take) });
+  if (all) params.set("all", "true");
+  return request(`/workspaces/list?${params}`);
 }
 export async function createWorkspace(name: string, ownerId: string): Promise<ApiResponse<Workspace>> {
   return request("/workspaces/", { method: "POST", body: JSON.stringify({ name, ownerId }) });
@@ -139,10 +145,31 @@ export async function removeRepositoryMember(repositoryId: string, userId: strin
   return request(`/repositories/${repositoryId}/members/${userId}`, { method: "DELETE" });
 }
 
-// --- Users (for member picker) ---
+// --- Users (for member picker and profile) ---
 export type User = { id: string; email: string; name: string | null; role?: string };
+export async function getMe(): Promise<ApiResponse<User>> {
+  return request("/users/me");
+}
+export type UpdateProfileBody = { name?: string | null; currentPassword?: string; newPassword?: string };
+export async function updateProfile(body: UpdateProfileBody): Promise<ApiResponse<User>> {
+  return request("/users/me", { method: "PATCH", body: JSON.stringify(body) });
+}
 export async function listUsers(skip = 0, take = 100): Promise<ApiResponse<User[]>> {
   return request(`/users/?skip=${skip}&take=${take}`);
+}
+export async function getUser(id: string): Promise<ApiResponse<User>> {
+  return request(`/users/${id}`);
+}
+export type CreateUserBody = { email: string; password: string; name?: string | null; role?: string };
+export async function createUser(body: CreateUserBody): Promise<ApiResponse<User>> {
+  return request("/users/", { method: "POST", body: JSON.stringify(body) });
+}
+export type UpdateUserBody = { name?: string | null; role?: string };
+export async function updateUser(id: string, body: UpdateUserBody): Promise<ApiResponse<User>> {
+  return request(`/users/${id}`, { method: "PATCH", body: JSON.stringify(body) });
+}
+export async function deleteUser(id: string): Promise<ApiResponse<unknown>> {
+  return request(`/users/${id}`, { method: "DELETE" });
 }
 
 // --- Blobs ---

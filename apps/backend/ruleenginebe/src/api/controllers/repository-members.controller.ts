@@ -2,7 +2,7 @@ import { Request, Response, Router } from "express";
 import { validateBody } from "@finverse/utils";
 import { sendSuccess, sendError } from "@finverse/utils";
 import { requireAuth } from "../middlewares/auth.middleware";
-import { requireRepoAccess } from "../middlewares/repo-access.middleware";
+import { requireRepoAccess, requireRepoAccessOrAdmin } from "../middlewares/repo-access.middleware";
 import { RepositoryMembersService } from "../../modules/repository-members/repository-members.service";
 import {
   addRepositoryMemberSchema,
@@ -21,10 +21,10 @@ export class RepositoryMembersController {
 
   private initRoutes(): void {
     this.router.get("/:repositoryId/members/me",requireAuth,this.getMe.bind(this));
-    this.router.get("/:repositoryId/members",requireAuth,requireRepoAccess("VIEWER"),this.list.bind(this));
-    this.router.post("/:repositoryId/members",requireAuth,requireRepoAccess("MAINTAINER"),validateBody(addRepositoryMemberSchema),this.add.bind(this));
-    this.router.patch("/:repositoryId/members/:userId",requireAuth,requireRepoAccess("MAINTAINER"),validateBody(updateRepositoryMemberRoleSchema),this.updateRole.bind(this));
-    this.router.delete("/:repositoryId/members/:userId",requireAuth,requireRepoAccess("MAINTAINER"),this.remove.bind(this));
+    this.router.get("/:repositoryId/members", requireAuth, requireRepoAccessOrAdmin("VIEWER"), this.list.bind(this));
+    this.router.post("/:repositoryId/members", requireAuth, requireRepoAccessOrAdmin("MAINTAINER"), validateBody(addRepositoryMemberSchema), this.add.bind(this));
+    this.router.patch("/:repositoryId/members/:userId", requireAuth, requireRepoAccessOrAdmin("MAINTAINER"), validateBody(updateRepositoryMemberRoleSchema), this.updateRole.bind(this));
+    this.router.delete("/:repositoryId/members/:userId", requireAuth, requireRepoAccessOrAdmin("MAINTAINER"), this.remove.bind(this));
   }
 
   private async list(req: Request, res: Response): Promise<Response> {

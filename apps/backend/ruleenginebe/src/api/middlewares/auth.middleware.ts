@@ -41,6 +41,24 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
 const ALLOWED_MERGE_ROLES = ["ADMIN", "MAINTAINER"];
 
 /**
+ * Require req.user.role to be ADMIN. Use after requireAuth.
+ */
+export function requireAdmin(req: Request, res: Response, next: NextFunction): void {
+  if (!req.user) {
+    res.status(401).json({ success: false, message: "Authorization required" });
+    return;
+  }
+  if (req.user.role !== "ADMIN") {
+    res.status(403).json({
+      success: false,
+      message: "Only admins can perform this action",
+    });
+    return;
+  }
+  next();
+}
+
+/**
  * Require req.user.role to be ADMIN or MAINTAINER. Use after requireAuth.
  */
 export function requireMergePermission(req: Request, res: Response, next: NextFunction): void {

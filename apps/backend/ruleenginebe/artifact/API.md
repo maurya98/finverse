@@ -114,9 +114,41 @@ All endpoints except `POST auth/login` and `POST auth/logout` require a valid JW
 
 ## Users
 
+**Note:** Listing, creating, updating, and deleting users require **ADMIN** role. Getting a user by ID and profile endpoints are available to the authenticated user as documented below.
+
+### GET `users/me`
+
+Get the current authenticated user's profile.
+
+**Success (200)** — `data`: user object (id, email, name, role, createdAt, updatedAt).
+
+**Requires:** Authentication.
+
+---
+
+### PATCH `users/me`
+
+Update own profile (name) and/or change password.
+
+**Request body**
+
+| Field           | Type   | Required | Description                          |
+|-----------------|--------|----------|--------------------------------------|
+| name            | string | No       | Display name                         |
+| currentPassword | string | No       | Required when changing password      |
+| newPassword     | string | No       | Min length 8; requires currentPassword |
+
+**Success (200)** — `data`: updated user.
+
+**Errors** — `400` if current password is incorrect or missing when newPassword is provided.
+
+**Requires:** Authentication.
+
+---
+
 ### GET `users/`
 
-List users with pagination.
+List users with pagination. **ADMIN only.**
 
 **Query**
 
@@ -145,7 +177,7 @@ Get a user by ID.
 
 ### POST `users/`
 
-Create a user.
+Create a user. **ADMIN only.**
 
 **Request body**
 
@@ -164,7 +196,7 @@ Create a user.
 
 ### PATCH `users/:id`
 
-Update a user (e.g. name, role).
+Update a user (e.g. name, role). **ADMIN only.**
 
 **Path** — `id`: user UUID.
 
@@ -178,7 +210,7 @@ Update a user (e.g. name, role).
 
 ### DELETE `users/:id`
 
-Delete a user.
+Delete a user. **ADMIN only.**
 
 **Path** — `id`: user UUID.
 
@@ -200,9 +232,17 @@ Create a workspace. The authenticated user becomes the owner.
 
 **Requires:** Authentication.
 
-### GET `workspaces/list?skip=&take=`
+### GET `workspaces/list?skip=&take=&all=`
 
-List workspaces owned by the authenticated user. `ownerId` query is no longer required; the server uses the current user.
+List workspaces the authenticated user can access. By default returns workspaces where the user is the **owner** or has **repository membership in at least one repo** in that workspace. When they open a workspace, they see only the repos they have access to (owners and ADMIN see all repos; others see only repos they are a member of). If `all=true` and the user has **ADMIN** role, returns all workspaces (for user management).
+
+**Query**
+
+| Param | Type    | Required | Default | Description                          |
+|-------|---------|----------|---------|--------------------------------------|
+| skip  | number  | No       | 0       | Offset                               |
+| take  | number  | No       | 50      | Limit (1–100)                        |
+| all   | boolean | No       | false   | If true and user is ADMIN, list all  |
 
 **Success (200)** — `data`: array of workspaces.
 
@@ -210,7 +250,7 @@ List workspaces owned by the authenticated user. `ownerId` query is no longer re
 
 ### GET `workspaces/:id`
 
-Get workspace by ID. Only the workspace owner can access.
+Get workspace by ID. Allowed if the user is the workspace owner or has repository membership in **any** repo in the workspace.
 
 **Success (200)** — `data`: workspace.
 
@@ -246,9 +286,9 @@ Create a repository. Creates a default branch (e.g. `main`) with no head commit 
 
 ### GET `repositories/list?workspaceId=...&skip=&take=`
 
-List repositories in a workspace. Only allowed if the user is the workspace owner.
+List repositories in a workspace. Allowed if the user has access to the workspace (owner or has membership in at least one repo). **Workspace owners and ADMIN** receive all repos in the workspace; **other users** receive only the repos they are a member of.
 
-**Success (200)** — `data`: array of repositories.
+**Success (200)** — `data`: array of repositories (with `currentUserRole` when the user is a member).
 
 **Errors** — `403` if the user does not have access to the workspace.
 
@@ -598,6 +638,26 @@ Get a commit by ID.
 
 ---
 
+### GET `commits/:id/diff`
+
+Get the diff for a commit (this commit vs its parent). Use for viewing what changed in a single commit.
+
+**Path** — `id`: commit UUID.
+
+**Query**
+
+| Param          | Type    | Required | Default | Description                          |
+|----------------|---------|----------|---------|--------------------------------------|
+| includeContent | boolean | No       | false   | If true, include blob content in each entry for line-by-line diff view |
+
+**Success (200)** — `data`: diff result (see [Diff result shape](#diff-result-shape)). When `includeContent=true`, each entry in `added`, `removed`, and `modified` includes a `content` field.
+
+**Errors** — `404` if commit not found.
+
+**Requires:** Authentication; repository role VIEWER or higher.
+
+---
+
 ## Branches (VCS)
 
 Branches have a **name** and an optional **head commit** (latest commit on the branch).
@@ -668,7 +728,7 @@ Get a branch by ID.
 
 ### PATCH `branches/:id/head`
 
-Update the branch’s head commit (e.g. after a new commit or merge).
+Update the branch’s head commit (e.g. after a new commit, merge, or **hard reset**). Use this to move the branch pointer to any commit in the repository (e.g. hard reset branch to an older commit from the Branch page).
 
 **Path** — `id`: branch UUID.
 
@@ -681,6 +741,8 @@ Update the branch’s head commit (e.g. after a new commit or merge).
 **Success (200)** — `data`: updated branch.
 
 **Errors** — `404` if branch not found.
+
+**Requires:** Authentication; repository role CONTRIBUTOR or higher.
 
 ### DELETE `branches/:id`
 
@@ -779,7 +841,13 @@ Compute diff for this MR (target branch → source branch): what would change if
 
 **Path** — `id`: merge request UUID.
 
-**Success (200)** — `data`: diff result (see [Diff result shape](#diff-result-shape)).
+**Query**
+
+| Param          | Type    | Required | Default | Description                          |
+|----------------|---------|----------|---------|--------------------------------------|
+| includeContent | boolean | No       | false   | If true, include blob content in each entry for line-by-line diff view |
+
+**Success (200)** — `data`: diff result (see [Diff result shape](#diff-result-shape)). When `includeContent=true`, each entry includes `content` for side-by-side view.
 
 **Errors** — `404` if MR or branches not found, or branches have no head commit.
 
@@ -805,7 +873,7 @@ Update merge request status.
 
 ### POST `merge-requests/:id/merge`
 
-Mark the merge request as merged and record merge commit and user.
+Mark the merge request as merged and record merge commit and user. Use when the merge commit has already been created (e.g. by an external process). For a full in-app merge (create merge commit, update target branch head, mark MR merged), use **POST `merge-requests/:id/perform-merge`** instead.
 
 **Path** — `id`: merge request UUID.
 
@@ -819,6 +887,23 @@ Mark the merge request as merged and record merge commit and user.
 **Success (200)** — `data`: updated merge request (status MERGED).
 
 **Errors** — `400` if MR not found or not OPEN (e.g. already merged/closed).
+
+---
+
+### POST `merge-requests/:id/perform-merge`
+
+Perform a full merge: create the merge commit, update the target branch head to that commit, and mark the merge request as merged. No request body. Use this from the UI when the user clicks "Merge".
+
+**Path** — `id`: merge request UUID.
+
+**Success (200)** — `data`: updated merge request (status MERGED) with `mergedBy`, `mergedCommitId` set.
+
+**Errors**
+
+- `400` — Merge request not found, not OPEN, or branches have no head commit.
+- `403` — User does not have MAINTAINER or ADMIN role on the repository.
+
+**Requires:** Authentication; repository role MAINTAINER or ADMIN.
 
 ---
 
@@ -961,6 +1046,7 @@ Execute index.json in a repository with the given context.
 | 201  | Created                    |
 | 400  | Bad request / validation   |
 | 401  | Unauthorized               |
+| 403  | Forbidden (insufficient permission) |
 | 404  | Not found                  |
 | 409  | Conflict (e.g. duplicate)  |
 | 500  | Internal server error      |
