@@ -32,7 +32,7 @@ async function apiRequest<T>(
     if (!response.ok) {
       // Handle 401 Unauthorized - redirect to login
       if (response.status === 401) {
-        window.location.href = '/login';
+        window.location.href = '/admin_dashboard/login';
         throw new Error('Unauthorized');
       }
 
