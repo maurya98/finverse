@@ -1,0 +1,191 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum MaritalStatus {
+  SINGLE
+  MARRIED
+  DIVORCED
+  WIDOWED
+}
+
+model Customer {
+  id              Int              @id @default(autoincrement())
+  fname           String?
+  lname           String?
+  email           String?          @unique
+  phone           String?          @unique
+  alternate_phone String?          @unique
+  pan             String?          @unique
+  aadhaar         String?          @unique
+  gender          String?
+  dob             DateTime?        @db.Date
+  employment_type Int?
+  income          Int?
+  marital_status  MaritalStatus?
+  is_active       Boolean          @default(true)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  address         Address[]
+  utmSources      UtmSource[]
+  gstDetails      GSTDetails[]
+  bureauScores    BureauScore[]
+  deviceDetails   DeviceDetails[]
+  companyDetails  CompanyDetails[]
+  paStampMaster   PAStampMaster[]
+
+  @@index([email, is_active])
+  @@index([phone, is_active])
+  @@index([pan, is_active])
+}
+
+enum AddressType {
+  PERMANENT
+  CURRENT
+  RENTED
+}
+
+model Address {
+  id           Int         @id @default(autoincrement())
+  customerId   Int
+  customer     Customer    @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  addressline1 String
+  addressline2 String?
+  pincode      Int
+  city         String
+  state        String
+  country      String
+  address_type AddressType
+  is_active    Boolean     @default(true)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([customerId, is_active])
+  @@index([address_type, is_active])
+}
+
+model UtmSource {
+  id           Int      @id @default(autoincrement())
+  customerId   Int
+  customer     Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  // identifies the traffic source (website/platform)
+  utm_source   String?
+  // identifies the medium (email/social/referral)
+  utm_medium   String?
+  // identifies the campaign name
+  utm_campaign String?
+  // identifies the content (ad/banner/email)
+  utm_content  String?
+  // identifies the term (keyword/phrase)
+  utm_term     String?
+  is_active    Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([customerId])
+  @@index([utm_source, is_active])
+  @@index([utm_medium, is_active])
+  @@index([utm_campaign, is_active])
+  @@index([utm_content, is_active])
+  @@index([utm_term, is_active])
+}
+
+enum BureauProvider {
+  CIBIL
+  EQUIFAX
+  EXPERIAN
+  HIGHMARK
+}
+
+model BureauScore {
+  id                   Int            @id @default(autoincrement())
+  customerId           Int
+  customer             Customer       @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  bureau_score         Int
+  bureau_provider      BureauProvider
+  bureau_document_path String?
+  is_active            Boolean        @default(true)
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+
+  @@index([bureau_provider, customerId, is_active])
+}
+
+model GSTDetails {
+  id           Int      @id @default(autoincrement())
+  customerId   Int
+  customer     Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  gst_number   String?
+  gst_type     String?
+  gst_state    String?
+  gst_district String?
+  gst_address  String?
+  gst_city     String?
+  gst_pincode  Int?
+  is_active    Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([customerId])
+}
+
+model CompanyDetails {
+  id                   Int      @id @default(autoincrement())
+  customerId           Int
+  customer             Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  customer_designation String?
+  company_name         String?
+  company_category     String?
+  company_address      String?
+  company_city         String?
+  company_state        String?
+  company_pincode      Int?
+  is_active            Boolean  @default(true)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([customerId])
+}
+
+model DeviceDetails {
+  id           Int      @id @default(autoincrement())
+  customerId   Int
+  customer     Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  device_id    String?
+  device_type  String?
+  device_token String?
+  app_version  String?
+  is_active    Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model PAStampMaster {
+  id            Int       @id @default(autoincrement())
+  customerId    Int
+  customer      Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  offer_id      Int?
+  product_id    Int?
+  bank_id       Int?
+  offer_expires DateTime? @db.Date
+  offer_amount  Float?
+  offer_roi     Float?
+  offer_tenure  Int?
+  offer_rank    Int?
+  is_active     Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([customerId, is_active])
+}

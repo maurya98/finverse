@@ -3,9 +3,9 @@ datasource db {
 }
 
 generator client {
-  provider      = "prisma-client-js"
-  output        = "../generated/prisma"
-  instanceName  = "prisma"
+  provider     = "prisma-client-js"
+  output       = "../generated/prisma"
+  instanceName = "prisma"
 }
 
 enum Role {
@@ -25,7 +25,7 @@ model User {
   id        String   @id @default(uuid())
   email     String   @unique
   name      String
-  password  String   // Hashed password
+  password  String // Hashed password
   role      Role     @default(USER)
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
