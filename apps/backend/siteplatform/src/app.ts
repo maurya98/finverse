@@ -17,15 +17,15 @@ app.use("/v1/api/logs", requestLoggerRoutes());
 app.use(requestLoggerMiddleware({ appName: "siteplatform" }));
 
 // Health Check Endpoint
-app.get("/v1/health", (_: Request, res: Response) => {
+app.get("/health", (_: Request, res: Response) => {
   res.json({ status: "ok", message: "Site Platform is running" });
 });
 
 // Admin Routes (protected with authentication)
-app.use("/v1/api/admin", apiRouter);
+app.use("/api/admin", apiRouter);
 
 // Catch-all for all other routes (Gateway)
-app.use("/v1/", gatewayMiddleware);
+app.use("/", gatewayMiddleware);
 
 async function start(): Promise<void> {
   try {
