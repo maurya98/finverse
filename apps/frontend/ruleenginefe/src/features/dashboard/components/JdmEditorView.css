@@ -1,8 +1,6 @@
 /* Container must have a defined height so Decision Graph (height: 100%) renders correctly */
 .jdm-editor-view {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
+  display: grid;
   min-height: 0;
   height: 100%;
   background: var(--grl-color-bg-layout, #1e1e1e);

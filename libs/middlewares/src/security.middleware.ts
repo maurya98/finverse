@@ -4,10 +4,10 @@ import helmet from "helmet";
 
 const corsOptions: cors.CorsOptions = {
   origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-    if(process.env.NODE_ENV === "development") {
+    if (process.env.NODE_ENV !== "production") {
       return callback(null, true);
     }
-    const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || ["http://localhost:3000"];
+    const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(",") || [];
     
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);

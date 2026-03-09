@@ -8,7 +8,7 @@ import { getToken } from "../../auth/services/auth";
 const getBaseUrl = (): string => {
   const url = import.meta.env.VITE_API_URL;
   if (url && typeof url === "string") return url.replace(/\/$/, "");
-  return "http://localhost:3000";
+  return "http://localhost:5000";
 };
 
 export type RequestLogEntry = {

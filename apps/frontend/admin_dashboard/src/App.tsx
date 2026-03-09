@@ -8,7 +8,7 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 const App = () => {
   return (
     <AuthProvider>
-      <BrowserRouter>
+      <BrowserRouter basename="/admin_dashboard">
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route
@@ -19,7 +19,11 @@ const App = () => {
             }
           >
             {appRoutes.map((route) => (
-              <Route key={route.path as string} path={route.path as string} element={route.element} />
+              <Route
+                key={route.path as string}
+                path={route.path as string}
+                element={route.element}
+              />
             ))}
           </Route>
         </Routes>

@@ -1,3 +1,6 @@
 import nodeConfig from "@finverse/eslint-config/node";
 
-export default [...nodeConfig];
+export default [
+  { ignores: ["**/generated/**", "**/dist/**"] },
+  ...nodeConfig,
+];

@@ -26,12 +26,14 @@
   "keywords": [],
   "author": "Saurabh Kumar Maurya",
   "license": "ISC",
-  "packageManager": "pnpm@10.30.3",
+  "packageManager": "pnpm@10.31.0+sha512.e3927388bfaa8078ceb79b748ffc1e8274e84d75163e67bc22e06c0d3aed43dd153151cbf11d7f8301ff4acb98c68bdc5cadf6989532801ffafe3b3e4a63c268",
   "pnpm": {
     "overrides": {
       "axios@<0.30.0": ">=0.30.0",
       "react": "^19.2.0",
-      "react-dom": "^19.2.0"
+      "react-dom": "^19.2.0",
+      "@types/react": "18.3.12",
+      "@types/react-dom": "18.3.1"
     }
   },
   "devDependencies": {

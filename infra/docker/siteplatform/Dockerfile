@@ -67,8 +67,6 @@ WORKDIR /app
 
 COPY --from=builder /prod/siteplatform ./
 
-ENV NODE_ENV=production
-
-EXPOSE 3001
+EXPOSE 5001
 
 CMD ["node", "dist/app.js"]

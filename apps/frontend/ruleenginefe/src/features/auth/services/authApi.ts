@@ -7,7 +7,7 @@ import { setAuth, clearAuth, type StoredUser } from "./auth";
 function getBaseUrl(): string {
   const url = import.meta.env.VITE_API_URL;
   if (url && typeof url === "string") return url.replace(/\/$/, "");
-  return "http://localhost:3000";
+  return "http://localhost:5000";
 }
 
 export type LoginBody = { email: string; password: string };

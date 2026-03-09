@@ -1,14 +1,18 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import type { PluginOption } from 'vite'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  base: "/ruleenginefe/",
+  plugins: [react() as PluginOption],
+  server: {
+    port: 5004,
+  },
   resolve: {
-    // Ensure JDM editor and app use the same React instance (fixes "useRef of null")
     dedupe: ['react', 'react-dom', 'react/jsx-runtime'],
   },
   optimizeDeps: {
-    include: ['react', 'react-dom', '@gorules/jdm-editor'],
+    include: ['react', 'react-dom', '@finverse/jdm-editor'],
   },
 })

@@ -51,7 +51,7 @@ app.use((err: Error, req: Request, res: Response) => {
 });
 
 // Start the application
-const PORT = process.env.PORT || 3002;
+const PORT = process.env.PORT || 5002;
 app.listen(PORT, () => {
-  logger.info(`IAM service is running on port ${PORT}`);
+  logger.info(`IAM is running on port ${PORT} with Environment: ${process.env.NODE_ENV}`);
 });

@@ -20,37 +20,11 @@ export class RepositoryMembersController {
   }
 
   private initRoutes(): void {
-    this.router.get(
-      "/:repositoryId/members/me",
-      requireAuth,
-      this.getMe.bind(this)
-    );
-    this.router.get(
-      "/:repositoryId/members",
-      requireAuth,
-      requireRepoAccess("VIEWER"),
-      this.list.bind(this)
-    );
-    this.router.post(
-      "/:repositoryId/members",
-      requireAuth,
-      requireRepoAccess("MAINTAINER"),
-      validateBody(addRepositoryMemberSchema),
-      this.add.bind(this)
-    );
-    this.router.patch(
-      "/:repositoryId/members/:userId",
-      requireAuth,
-      requireRepoAccess("MAINTAINER"),
-      validateBody(updateRepositoryMemberRoleSchema),
-      this.updateRole.bind(this)
-    );
-    this.router.delete(
-      "/:repositoryId/members/:userId",
-      requireAuth,
-      requireRepoAccess("MAINTAINER"),
-      this.remove.bind(this)
-    );
+    this.router.get("/:repositoryId/members/me",requireAuth,this.getMe.bind(this));
+    this.router.get("/:repositoryId/members",requireAuth,requireRepoAccess("VIEWER"),this.list.bind(this));
+    this.router.post("/:repositoryId/members",requireAuth,requireRepoAccess("MAINTAINER"),validateBody(addRepositoryMemberSchema),this.add.bind(this));
+    this.router.patch("/:repositoryId/members/:userId",requireAuth,requireRepoAccess("MAINTAINER"),validateBody(updateRepositoryMemberRoleSchema),this.updateRole.bind(this));
+    this.router.delete("/:repositoryId/members/:userId",requireAuth,requireRepoAccess("MAINTAINER"),this.remove.bind(this));
   }
 
   private async list(req: Request, res: Response): Promise<Response> {

@@ -1,0 +1,16 @@
+# LMS Backend - Staging
+# yaml-language-server: $schema=https://raw.githubusercontent.com/compose-spec/compose-go/master/schema/compose-spec.json
+version: '3.8'
+services:
+  iam:
+    build:
+      context: ../../../
+      dockerfile: infra/docker/iam/Dockerfile
+    image: finverse/iam:staging
+    container_name: iam-staging
+    restart: unless-stopped
+    network_mode: host
+    env_file:
+      - iam.env
+    environment:
+      - NODE_ENV=staging

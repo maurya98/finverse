@@ -1,8 +1,15 @@
 {
-  "files": [],
-  "references": [
-    {
-      "path": "packages/jdm-editor"
+  "extends": "../../tooling/tsconfig/node.json",
+  "compilerOptions": {
+    "allowJs": true,
+    "jsx": "react-jsx",
+    "types": ["node", "vite/client"],
+    "baseUrl": ".",
+    "paths": {
+      "@gorules/zen-engine-wasm": ["node_modules/@finverse/zen-engine-wasm"],
+      "@gorules/lezer-zen": ["node_modules/@finverse/lezer-zen"],
+      "@gorules/lezer-zen-template": ["node_modules/@finverse/lezer-zen-template"]
     }
-  ]
+  },
+  "include": ["src", ".storybook"]
 }

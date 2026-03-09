@@ -14,13 +14,28 @@
       "path": "apps/frontend/ruleenginefe"
     },
     {
-      "path": "libs/jdm-editor"
+      "path": "libs/cache"
+    },
+    {
+      "path": "libs/utils"
+    },
+    {
+      "path": "libs/middlewares"
     },
     {
       "path": "libs/logger"
     },
     {
-      "path": "libs/middlewares"
+      "path": "libs/jdm-editor"
+    },
+    {
+      "path": "libs/lezer-zen"
+    },
+    {
+      "path": "libs/lezer-zen-template"
+    },
+    {
+      "path": "libs/zen-engine-wasm"
     }
   ]
 }
