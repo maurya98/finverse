@@ -13,7 +13,7 @@ app.use(express.urlencoded({ limit: "10mb", extended: true }));
 app.use(cookieParser()); // Parse cookies for authentication
 app.use(requestLoggerMiddleware({ appName: "site-platform" }));
 app.use(...securityMiddleware);
-app.use("/api/v1/logs", requestLoggerRoutes());  
+app.use("v1/api/logs", requestLoggerRoutes());  
 app.use(requestLoggerMiddleware({ appName: "siteplatform" }));
 
 // Health Check Endpoint
