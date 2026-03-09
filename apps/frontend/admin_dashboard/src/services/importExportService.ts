@@ -62,10 +62,9 @@ export interface ImportResponse {
  */
 class ImportExportService {
   private httpClient: HttpRequest;
-  private readonly DEFAULT_BASE_URL = "http://localhost:5001";
 
   constructor(baseUrl?: string) {
-    this.httpClient = new HttpRequest(baseUrl || this.DEFAULT_BASE_URL);
+    this.httpClient = new HttpRequest(baseUrl || import.meta.env.VITE_API_BASE_URL || "http://localhost:5001");
   }
 
   /**
