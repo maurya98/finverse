@@ -55,6 +55,19 @@ export class RouteService {
         );
     }
 
+    async getAllRoutesWithService() {
+        const cacheKey = generateAllItemsCacheKey(`${CACHE_KEYS.ROUTE}:with_service`);
+        return getOrFetchMultiple(
+            cacheKey,
+            () => prisma.serviceRoute.findMany({
+                include: {
+                    service: true,
+                },
+            }),
+            CACHE_TTL.LONG
+        );
+    }
+
     // Create Operations
     async createRoute(data: ServiceRouteCreateInputSimple): Promise<Prisma.ServiceRouteGetPayload<true>> {
         const result = await prisma.serviceRoute.create({
@@ -71,7 +84,10 @@ export class RouteService {
         });
         
         // Invalidate routes cache and client permissions cache
-        await invalidateCache([generateAllItemsCacheKey(CACHE_KEYS.ROUTE)]);
+        await invalidateCache([
+            generateAllItemsCacheKey(CACHE_KEYS.ROUTE),
+            generateAllItemsCacheKey(`${CACHE_KEYS.ROUTE}:with_service`)
+        ]);
         await invalidateCacheByPattern(`${CACHE_KEYS.CLIENT_PERMISSION}:*`);
         await invalidateCacheByPattern(`${CACHE_KEYS.CLIENT_APP}:with_permissions:*`);
         
@@ -96,7 +112,10 @@ export class RouteService {
         await Promise.all(promises);
         
         // Invalidate routes cache and client permissions cache
-        await invalidateCache([generateAllItemsCacheKey(CACHE_KEYS.ROUTE)]);
+        await invalidateCache([
+            generateAllItemsCacheKey(CACHE_KEYS.ROUTE),
+            generateAllItemsCacheKey(`${CACHE_KEYS.ROUTE}:with_service`)
+        ]);
         await invalidateCacheByPattern(`${CACHE_KEYS.CLIENT_PERMISSION}:*`);
         await invalidateCacheByPattern(`${CACHE_KEYS.CLIENT_APP}:with_permissions:*`);
         
@@ -144,7 +163,10 @@ export class RouteService {
         if (id) {
             await invalidateCache([generateItemCacheKey(CACHE_KEYS.ROUTE, id)]);
         }
-        await invalidateCache([generateAllItemsCacheKey(CACHE_KEYS.ROUTE)]);
+        await invalidateCache([
+            generateAllItemsCacheKey(CACHE_KEYS.ROUTE),
+            generateAllItemsCacheKey(`${CACHE_KEYS.ROUTE}:with_service`)
+        ]);
         await invalidateCacheByPattern(`${CACHE_KEYS.CLIENT_PERMISSION}:*`);
         await invalidateCacheByPattern(`${CACHE_KEYS.CLIENT_APP}:with_permissions:*`);
         
@@ -167,6 +189,7 @@ export class RouteService {
         await invalidateCache([
             generateItemCacheKey(CACHE_KEYS.ROUTE, id),
             generateAllItemsCacheKey(CACHE_KEYS.ROUTE),
+            generateAllItemsCacheKey(`${CACHE_KEYS.ROUTE}:with_service`)
         ]);
         await invalidateCacheByPattern(`${CACHE_KEYS.CLIENT_PERMISSION}:*`);
         await invalidateCacheByPattern(`${CACHE_KEYS.CLIENT_APP}:with_permissions:*`);

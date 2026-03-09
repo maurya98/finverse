@@ -1,0 +1,129 @@
+info:
+  name: Register Bulk Routes
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{sitePlatformBaseUrl}}/api/admin/routes/bulk"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      [
+          {
+              "name": "Get User by ID",
+              "serviceId": "4dada07b-2e46-453c-9d1d-f7a3db227205",
+              "method": "GET",
+              "actualPath": "/api/users/:id",
+              "exposedPath": "/users/:id",
+              "description": "Fetch a specific user",
+              "isActive": true,
+              "createdAt": "2026-02-27T11:00:00Z"
+          },
+          {
+              "name": "Create User",
+              "serviceId": "4dada07b-2e46-453c-9d1d-f7a3db227205",
+              "method": "POST",
+              "actualPath": "/api/users",
+              "exposedPath": "/users",
+              "description": "Create a new user",
+              "isActive": true,
+              "createdAt": "2026-02-27T11:00:00Z"
+          }
+      ]
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: Register Bulk Routes
+    request:
+      url: "{{sitePlatformBaseUrl}}/api/admin/routes/bulk"
+      method: POST
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          [
+              {
+                  "name": "Get User by ID",
+                  "serviceId": "4dada07b-2e46-453c-9d1d-f7a3db227205",
+                  "method": "GET",
+                  "actualPath": "/api/users/:id",
+                  "exposedPath": "/users/:id",
+                  "description": "Fetch a specific user",
+                  "isActive": true,
+                  "createdAt": "2026-02-27T11:00:00Z"
+              },
+              {
+                  "name": "Create User",
+                  "serviceId": "4dada07b-2e46-453c-9d1d-f7a3db227205",
+                  "method": "POST",
+                  "actualPath": "/api/users",
+                  "exposedPath": "/users",
+                  "description": "Create a new user",
+                  "isActive": true,
+                  "createdAt": "2026-02-27T11:00:00Z"
+              }
+          ]
+    response:
+      statusText: "200"
+      headers:
+        - name: Vary
+          value: Origin
+        - name: Access-Control-Allow-Credentials
+          value: "true"
+        - name: Access-Control-Expose-Headers
+          value: X-Total-Count,X-Page-Count
+        - name: Content-Security-Policy
+          value: "default-src 'self';style-src 'self' 'unsafe-inline';script-src 'self';img-src 'self' data: https:;connect-src 'self';font-src 'self';object-src 'none';media-src 'self';frame-src 'none';base-uri 'self';form-action 'self';frame-ancestors 'self';script-src-attr 'none';upgrade-insecure-requests"
+        - name: Cross-Origin-Opener-Policy
+          value: same-origin
+        - name: Cross-Origin-Resource-Policy
+          value: same-origin
+        - name: Origin-Agent-Cluster
+          value: ?1
+        - name: Referrer-Policy
+          value: no-referrer
+        - name: Strict-Transport-Security
+          value: max-age=31536000; includeSubDomains; preload
+        - name: X-Content-Type-Options
+          value: nosniff
+        - name: X-DNS-Prefetch-Control
+          value: off
+        - name: X-Download-Options
+          value: noopen
+        - name: X-Frame-Options
+          value: DENY
+        - name: X-XSS-Protection
+          value: 1; mode=block
+        - name: Content-Type
+          value: application/json; charset=utf-8
+        - name: Content-Length
+          value: "35"
+        - name: ETag
+          value: W/"23-5fQqYsQcgozxCAW717bVgsb59Wk"
+        - name: Date
+          value: Fri, 27 Feb 2026 12:28:59 GMT
+        - name: Connection
+          value: keep-alive
+        - name: Keep-Alive
+          value: timeout=5
+      body:
+        type: json
+        data: |-
+          {
+              "success": true,
+              "data": {
+                  "count": 2
+              }
+          }

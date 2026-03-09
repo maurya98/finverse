@@ -1,0 +1,87 @@
+info:
+  name: Get Single Route By ID
+  type: http
+  seq: 4
+
+http:
+  method: GET
+  url: "{{sitePlatformBaseUrl}}/api/admin/routes/5819be6f-e768-4250-bbea-f2e533ce3a2f"
+  headers:
+    - name: Content-Type
+      value: application/json
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: Get Single Route By ID
+    request:
+      url: "{{sitePlatformBaseUrl}}/api/admin/routes/5819be6f-e768-4250-bbea-f2e533ce3a2f"
+      method: GET
+      headers:
+        - name: Content-Type
+          value: application/json
+    response:
+      statusText: "200"
+      headers:
+        - name: Vary
+          value: Origin
+        - name: Access-Control-Allow-Credentials
+          value: "true"
+        - name: Access-Control-Expose-Headers
+          value: X-Total-Count,X-Page-Count
+        - name: Content-Security-Policy
+          value: "default-src 'self';style-src 'self' 'unsafe-inline';script-src 'self';img-src 'self' data: https:;connect-src 'self';font-src 'self';object-src 'none';media-src 'self';frame-src 'none';base-uri 'self';form-action 'self';frame-ancestors 'self';script-src-attr 'none';upgrade-insecure-requests"
+        - name: Cross-Origin-Opener-Policy
+          value: same-origin
+        - name: Cross-Origin-Resource-Policy
+          value: same-origin
+        - name: Origin-Agent-Cluster
+          value: ?1
+        - name: Referrer-Policy
+          value: no-referrer
+        - name: Strict-Transport-Security
+          value: max-age=31536000; includeSubDomains; preload
+        - name: X-Content-Type-Options
+          value: nosniff
+        - name: X-DNS-Prefetch-Control
+          value: off
+        - name: X-Download-Options
+          value: noopen
+        - name: X-Frame-Options
+          value: DENY
+        - name: X-XSS-Protection
+          value: 1; mode=block
+        - name: Content-Type
+          value: application/json; charset=utf-8
+        - name: Content-Length
+          value: "295"
+        - name: ETag
+          value: W/"127-mShdkziaCAXM7d6an3IJTPAfmHM"
+        - name: Date
+          value: Fri, 27 Feb 2026 12:32:41 GMT
+        - name: Connection
+          value: keep-alive
+        - name: Keep-Alive
+          value: timeout=5
+      body:
+        type: json
+        data: |-
+          {
+              "success": true,
+              "data": {
+                  "id": "5819be6f-e768-4250-bbea-f2e533ce3a2f",
+                  "serviceId": "4dada07b-2e46-453c-9d1d-f7a3db227205",
+                  "name": "Create User",
+                  "description": "Create a new user",
+                  "isActive": true,
+                  "method": "POST",
+                  "actualPath": "/api/users",
+                  "exposedPath": "/users",
+                  "createdAt": "2026-02-27T11:00:00.000Z"
+              }
+          }

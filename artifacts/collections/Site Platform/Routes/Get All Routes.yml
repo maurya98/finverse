@@ -1,0 +1,116 @@
+info:
+  name: Get All Routes
+  type: http
+  seq: 3
+
+http:
+  method: GET
+  url: "{{sitePlatformBaseUrl}}/api/admin/routes"
+  headers:
+    - name: Content-Type
+      value: application/json
+  auth: inherit
+
+runtime:
+  variables:
+    - name: sitePlatformBaseUrl
+      value: http://localhost:3001
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: Get All Routes
+    request:
+      url: "{{sitePlatformBaseUrl}}/api/admin/routes"
+      method: GET
+      headers:
+        - name: Content-Type
+          value: application/json
+    response:
+      statusText: "200"
+      headers:
+        - name: Vary
+          value: Origin
+        - name: Access-Control-Allow-Credentials
+          value: "true"
+        - name: Access-Control-Expose-Headers
+          value: X-Total-Count,X-Page-Count
+        - name: Content-Security-Policy
+          value: "default-src 'self';style-src 'self' 'unsafe-inline';script-src 'self';img-src 'self' data: https:;connect-src 'self';font-src 'self';object-src 'none';media-src 'self';frame-src 'none';base-uri 'self';form-action 'self';frame-ancestors 'self';script-src-attr 'none';upgrade-insecure-requests"
+        - name: Cross-Origin-Opener-Policy
+          value: same-origin
+        - name: Cross-Origin-Resource-Policy
+          value: same-origin
+        - name: Origin-Agent-Cluster
+          value: ?1
+        - name: Referrer-Policy
+          value: no-referrer
+        - name: Strict-Transport-Security
+          value: max-age=31536000; includeSubDomains; preload
+        - name: X-Content-Type-Options
+          value: nosniff
+        - name: X-DNS-Prefetch-Control
+          value: off
+        - name: X-Download-Options
+          value: noopen
+        - name: X-Frame-Options
+          value: DENY
+        - name: X-XSS-Protection
+          value: 1; mode=block
+        - name: Content-Type
+          value: application/json; charset=utf-8
+        - name: Content-Length
+          value: "878"
+        - name: ETag
+          value: W/"36e-EnxobnbzoxLf13OMBV86mbR4Ego"
+        - name: Date
+          value: Fri, 27 Feb 2026 12:29:49 GMT
+        - name: Connection
+          value: keep-alive
+        - name: Keep-Alive
+          value: timeout=5
+      body:
+        type: json
+        data: |-
+          {
+              "success": true,
+              "data": [
+                  {
+                      "id": "d51476df-03d6-4c12-94ee-76894a86a55b",
+                      "serviceId": "4dada07b-2e46-453c-9d1d-f7a3db227205",
+                      "name": "Get Order",
+                      "description": "",
+                      "isActive": true,
+                      "method": "GET",
+                      "actualPath": "/users/:id/orders/:orderId",
+                      "exposedPath": "/api/v1/users/:id/orders/:orderId",
+                      "createdAt": "2026-02-27T12:27:14.469Z"
+                  },
+                  {
+                      "id": "5819be6f-e768-4250-bbea-f2e533ce3a2f",
+                      "serviceId": "4dada07b-2e46-453c-9d1d-f7a3db227205",
+                      "name": "Create User",
+                      "description": "Create a new user",
+                      "isActive": true,
+                      "method": "POST",
+                      "actualPath": "/api/users",
+                      "exposedPath": "/users",
+                      "createdAt": "2026-02-27T11:00:00.000Z"
+                  },
+                  {
+                      "id": "f33a274a-5677-4ad1-8eef-68d02bbe6529",
+                      "serviceId": "4dada07b-2e46-453c-9d1d-f7a3db227205",
+                      "name": "Get User by ID",
+                      "description": "Fetch a specific user",
+                      "isActive": true,
+                      "method": "GET",
+                      "actualPath": "/api/users/:id",
+                      "exposedPath": "/users/:id",
+                      "createdAt": "2026-02-27T11:00:00.000Z"
+                  }
+              ]
+          }

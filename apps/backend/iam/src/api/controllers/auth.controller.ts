@@ -118,6 +118,7 @@ export class AuthController {
 
       return sendSuccess(res, {
         user: req.user,
+        session: req.session,
       });
     } catch (error) {
       logger.error({ error }, "Get me failed");

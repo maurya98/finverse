@@ -1,0 +1,120 @@
+info:
+  name: Get All Applications
+  type: http
+  seq: 3
+
+http:
+  method: GET
+  url: "{{sitePlatformBaseUrl}}/api/admin/applications"
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: Get All Applications
+    request:
+      url: "{{sitePlatformBaseUrl}}/api/admin/applications"
+      method: GET
+    response:
+      statusText: "200"
+      headers:
+        - name: Vary
+          value: Origin
+        - name: Access-Control-Allow-Credentials
+          value: "true"
+        - name: Access-Control-Expose-Headers
+          value: X-Total-Count,X-Page-Count
+        - name: Content-Security-Policy
+          value: "default-src 'self';style-src 'self' 'unsafe-inline';script-src 'self';img-src 'self' data: https:;connect-src 'self';font-src 'self';object-src 'none';media-src 'self';frame-src 'none';base-uri 'self';form-action 'self';frame-ancestors 'self';script-src-attr 'none';upgrade-insecure-requests"
+        - name: Cross-Origin-Opener-Policy
+          value: same-origin
+        - name: Cross-Origin-Resource-Policy
+          value: same-origin
+        - name: Origin-Agent-Cluster
+          value: ?1
+        - name: Referrer-Policy
+          value: no-referrer
+        - name: Strict-Transport-Security
+          value: max-age=31536000; includeSubDomains; preload
+        - name: X-Content-Type-Options
+          value: nosniff
+        - name: X-DNS-Prefetch-Control
+          value: off
+        - name: X-Download-Options
+          value: noopen
+        - name: X-Frame-Options
+          value: DENY
+        - name: X-XSS-Protection
+          value: 1; mode=block
+        - name: Content-Type
+          value: application/json; charset=utf-8
+        - name: Content-Length
+          value: "1386"
+        - name: ETag
+          value: W/"56a-9gO9yIsD8g1GoSYpThAYgnAJgS4"
+        - name: Date
+          value: Fri, 27 Feb 2026 10:53:21 GMT
+        - name: Connection
+          value: keep-alive
+        - name: Keep-Alive
+          value: timeout=5
+      body:
+        type: json
+        data: |-
+          {
+              "success": true,
+              "data": [
+                  {
+                      "id": "f83fb7dd-f72e-4ad2-bdec-277bc906f590",
+                      "name": "external_app",
+                      "description": "This is a test application",
+                      "isActive": true,
+                      "secret": "6b94ef994cef4509b46514a71f1fc4280c7a02ca83f95234cbda36a84c4a0b1c",
+                      "createdAt": "2026-02-27T10:49:15.791Z"
+                  },
+                  {
+                      "id": "a2ce376e-4c0a-4dff-a51d-d32c99928164",
+                      "name": "App 1",
+                      "description": "First app",
+                      "isActive": false,
+                      "secret": "f720af52514b3c5dbf16f59573ca53e8daa2c825ee20166f405b38ab911c5418",
+                      "createdAt": "2026-02-27T10:51:10.267Z"
+                  },
+                  {
+                      "id": "91148b58-7569-4104-9ec4-44ad5b91c4b2",
+                      "name": "App 2",
+                      "description": "Second app",
+                      "isActive": false,
+                      "secret": "fcdda8fcfaf9dd7510c575a2f0a18fbf4dd88397940ede68c97ace1b1a5b4ae2",
+                      "createdAt": "2026-02-27T10:51:10.267Z"
+                  },
+                  {
+                      "id": "8e51198e-0166-4182-8283-3c8f719e4fb0",
+                      "name": "new_app",
+                      "description": "This is a New test application",
+                      "isActive": true,
+                      "secret": "b773eb0da5582f19a50e280cb8e0d1c551d4d65e495e474b989367e24a771bae",
+                      "createdAt": "2026-02-27T10:52:37.334Z"
+                  },
+                  {
+                      "id": "034896ea-7e69-440c-8611-dda14e1999a0",
+                      "name": "App 3",
+                      "description": "First app",
+                      "isActive": false,
+                      "secret": "1d79b76185c48a40c1024d6ad4d0fa106fead3fb56a7c1329058d8e40e6a5b6e",
+                      "createdAt": "2026-02-27T10:53:08.205Z"
+                  },
+                  {
+                      "id": "8e018b45-a5d1-4caf-928d-5d994d6340ec",
+                      "name": "App 4",
+                      "description": "Second app",
+                      "isActive": false,
+                      "secret": "d76b20d5b102a64c586b2a8bb9aa862e993aa9e2cefaf41dacaa12eac5ce8308",
+                      "createdAt": "2026-02-27T10:53:08.205Z"
+                  }
+              ]
+          }

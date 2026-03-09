@@ -8,6 +8,12 @@ declare global {
         role: 'ADMIN' | 'MAINTAINER' | 'USER';
         isActive: boolean;
       };
+      session?: {
+        id: string;
+        token: string;
+        userId: string;
+        expiresAt: Date;
+      };
       sessionToken?: string;
     }
   }

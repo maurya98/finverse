@@ -1,0 +1,82 @@
+info:
+  name: Import Applications
+  type: http
+  seq: 6
+
+http:
+  method: POST
+  url: http://localhost:3001/api/admin/export/import
+  headers:
+    - name: Content-Type
+      value: application/json
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: Import Applications Response
+    request:
+      url: http://localhost:3001/api/admin/export/import
+      method: POST
+      headers:
+        - name: Content-Type
+          value: application/json
+    response:
+      statusText: "200"
+      headers:
+        - name: Vary
+          value: Origin
+        - name: Access-Control-Allow-Credentials
+          value: "true"
+        - name: Access-Control-Expose-Headers
+          value: X-Total-Count,X-Page-Count
+        - name: Content-Security-Policy
+          value: "default-src 'self';style-src 'self' 'unsafe-inline';script-src 'self';img-src 'self' data: https:;connect-src 'self';font-src 'self';object-src 'none';media-src 'self';frame-src 'none';base-uri 'self';form-action 'self';frame-ancestors 'self';script-src-attr 'none';upgrade-insecure-requests"
+        - name: Cross-Origin-Opener-Policy
+          value: same-origin
+        - name: Cross-Origin-Resource-Policy
+          value: same-origin
+        - name: Origin-Agent-Cluster
+          value: ?1
+        - name: Referrer-Policy
+          value: no-referrer
+        - name: Strict-Transport-Security
+          value: max-age=31536000; includeSubDomains; preload
+        - name: X-Content-Type-Options
+          value: nosniff
+        - name: X-DNS-Prefetch-Control
+          value: off
+        - name: X-Download-Options
+          value: noopen
+        - name: X-Frame-Options
+          value: DENY
+        - name: X-XSS-Protection
+          value: 1; mode=block
+        - name: Content-Type
+          value: application/json; charset=utf-8
+        - name: Content-Length
+          value: "131"
+        - name: ETag
+          value: W/"83-Dqln336owTdS8qBt2nCw9c+J/BY"
+        - name: Date
+          value: Fri, 27 Feb 2026 09:43:09 GMT
+        - name: Connection
+          value: keep-alive
+        - name: Keep-Alive
+          value: timeout=5
+      body:
+        type: json
+        data: |-
+          {
+              "success": true,
+              "summary": {
+                  "appsCreated": 1,
+                  "permissionsCreated": 0,
+                  "totalEntities": 1
+              },
+              "message": "Client apps imported successfully"
+          }

@@ -1,0 +1,104 @@
+info:
+  name: Assign Client Permission
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{sitePlatformBaseUrl}}/api/admin/permissions"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+          "clientId": "f83fb7dd-f72e-4ad2-bdec-277bc906f590",
+          "routeId": "f33a274a-5677-4ad1-8eef-68d02bbe6529",
+          "scope": "READ",
+          "description": "Read access to user routes",
+          "isActive": true
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: Assign Client Permission
+    request:
+      url: "{{sitePlatformBaseUrl}}/api/admin/permissions"
+      method: POST
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+              "clientId": "f83fb7dd-f72e-4ad2-bdec-277bc906f590",
+              "routeId": "f33a274a-5677-4ad1-8eef-68d02bbe6529",
+              "scope": "READ",
+              "description": "Read access to user routes",
+              "isActive": true
+          }
+    response:
+      statusText: "200"
+      headers:
+        - name: Vary
+          value: Origin
+        - name: Access-Control-Allow-Credentials
+          value: "true"
+        - name: Access-Control-Expose-Headers
+          value: X-Total-Count,X-Page-Count
+        - name: Content-Security-Policy
+          value: "default-src 'self';style-src 'self' 'unsafe-inline';script-src 'self';img-src 'self' data: https:;connect-src 'self';font-src 'self';object-src 'none';media-src 'self';frame-src 'none';base-uri 'self';form-action 'self';frame-ancestors 'self';script-src-attr 'none';upgrade-insecure-requests"
+        - name: Cross-Origin-Opener-Policy
+          value: same-origin
+        - name: Cross-Origin-Resource-Policy
+          value: same-origin
+        - name: Origin-Agent-Cluster
+          value: ?1
+        - name: Referrer-Policy
+          value: no-referrer
+        - name: Strict-Transport-Security
+          value: max-age=31536000; includeSubDomains; preload
+        - name: X-Content-Type-Options
+          value: nosniff
+        - name: X-DNS-Prefetch-Control
+          value: off
+        - name: X-Download-Options
+          value: noopen
+        - name: X-Frame-Options
+          value: DENY
+        - name: X-XSS-Protection
+          value: 1; mode=block
+        - name: Content-Type
+          value: application/json; charset=utf-8
+        - name: Content-Length
+          value: "242"
+        - name: ETag
+          value: W/"f2-a8ElFXKapf7cT5kcGbEgq/hOcgo"
+        - name: Date
+          value: Fri, 27 Feb 2026 12:50:21 GMT
+        - name: Connection
+          value: keep-alive
+        - name: Keep-Alive
+          value: timeout=5
+      body:
+        type: json
+        data: |-
+          {
+              "success": true,
+              "data": {
+                  "id": "9c54c3b0-cd18-4e11-a832-690ba9b880a5",
+                  "clientId": "f83fb7dd-f72e-4ad2-bdec-277bc906f590",
+                  "routeId": "f33a274a-5677-4ad1-8eef-68d02bbe6529",
+                  "description": "Read access to user routes",
+                  "isActive": true,
+                  "scope": "READ"
+              }
+          }

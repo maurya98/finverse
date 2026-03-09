@@ -1,0 +1,107 @@
+info:
+  name: Register Route
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{sitePlatformBaseUrl}}/api/admin/routes"
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      {
+          "name": "Get Order",
+          "serviceId": "4dada07b-2e46-453c-9d1d-f7a3db227205",
+          "method": "GET",
+          "actualPath": "/users/:id/orders/:orderId",
+          "exposedPath": "/api/v1/users/:id/orders/:orderId"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: Register Route
+    request:
+      url: "{{sitePlatformBaseUrl}}/api/admin/routes"
+      method: POST
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          {
+              "name": "Get Order",
+              "serviceId": "4dada07b-2e46-453c-9d1d-f7a3db227205",
+              "method": "GET",
+              "actualPath": "/users/:id/orders/:orderId",
+              "exposedPath": "/api/v1/users/:id/orders/:orderId"
+          }
+    response:
+      statusText: "200"
+      headers:
+        - name: Vary
+          value: Origin
+        - name: Access-Control-Allow-Credentials
+          value: "true"
+        - name: Access-Control-Expose-Headers
+          value: X-Total-Count,X-Page-Count
+        - name: Content-Security-Policy
+          value: "default-src 'self';style-src 'self' 'unsafe-inline';script-src 'self';img-src 'self' data: https:;connect-src 'self';font-src 'self';object-src 'none';media-src 'self';frame-src 'none';base-uri 'self';form-action 'self';frame-ancestors 'self';script-src-attr 'none';upgrade-insecure-requests"
+        - name: Cross-Origin-Opener-Policy
+          value: same-origin
+        - name: Cross-Origin-Resource-Policy
+          value: same-origin
+        - name: Origin-Agent-Cluster
+          value: ?1
+        - name: Referrer-Policy
+          value: no-referrer
+        - name: Strict-Transport-Security
+          value: max-age=31536000; includeSubDomains; preload
+        - name: X-Content-Type-Options
+          value: nosniff
+        - name: X-DNS-Prefetch-Control
+          value: off
+        - name: X-Download-Options
+          value: noopen
+        - name: X-Frame-Options
+          value: DENY
+        - name: X-XSS-Protection
+          value: 1; mode=block
+        - name: Content-Type
+          value: application/json; charset=utf-8
+        - name: Content-Length
+          value: "318"
+        - name: ETag
+          value: W/"13e-0MpGI6Wv4MDk+Lfc3pWcbwYBm4w"
+        - name: Date
+          value: Fri, 27 Feb 2026 12:27:14 GMT
+        - name: Connection
+          value: keep-alive
+        - name: Keep-Alive
+          value: timeout=5
+      body:
+        type: json
+        data: |-
+          {
+              "success": true,
+              "data": {
+                  "id": "d51476df-03d6-4c12-94ee-76894a86a55b",
+                  "serviceId": "4dada07b-2e46-453c-9d1d-f7a3db227205",
+                  "name": "Get Order",
+                  "description": "",
+                  "isActive": true,
+                  "method": "GET",
+                  "actualPath": "/users/:id/orders/:orderId",
+                  "exposedPath": "/api/v1/users/:id/orders/:orderId",
+                  "createdAt": "2026-02-27T12:27:14.469Z"
+              }
+          }

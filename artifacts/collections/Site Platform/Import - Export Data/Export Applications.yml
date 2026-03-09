@@ -1,0 +1,80 @@
+info:
+  name: Export Applications
+  type: http
+  seq: 3
+
+http:
+  method: GET
+  url: http://localhost:3001/api/admin/export/client-apps
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: Export Applications Response
+    request:
+      url: http://localhost:3001/api/admin/export/client-apps
+      method: GET
+    response:
+      statusText: "200"
+      headers:
+        - name: Vary
+          value: Origin
+        - name: Access-Control-Allow-Credentials
+          value: "true"
+        - name: Access-Control-Expose-Headers
+          value: X-Total-Count,X-Page-Count
+        - name: Content-Security-Policy
+          value: "default-src 'self';style-src 'self' 'unsafe-inline';script-src 'self';img-src 'self' data: https:;connect-src 'self';font-src 'self';object-src 'none';media-src 'self';frame-src 'none';base-uri 'self';form-action 'self';frame-ancestors 'self';script-src-attr 'none';upgrade-insecure-requests"
+        - name: Cross-Origin-Opener-Policy
+          value: same-origin
+        - name: Cross-Origin-Resource-Policy
+          value: same-origin
+        - name: Origin-Agent-Cluster
+          value: ?1
+        - name: Referrer-Policy
+          value: no-referrer
+        - name: Strict-Transport-Security
+          value: max-age=31536000; includeSubDomains; preload
+        - name: X-Content-Type-Options
+          value: nosniff
+        - name: X-DNS-Prefetch-Control
+          value: off
+        - name: X-Download-Options
+          value: noopen
+        - name: X-Frame-Options
+          value: DENY
+        - name: X-XSS-Protection
+          value: 1; mode=block
+        - name: Content-Type
+          value: application/octet-stream
+        - name: Content-Disposition
+          value: attachment; filename="export-client-apps-2026-02-27.json"
+        - name: Content-Length
+          value: "287"
+        - name: ETag
+          value: W/"11f-ml2GCwbdnYSwOJun+yY3aYq09tc"
+        - name: Date
+          value: Fri, 27 Feb 2026 09:26:29 GMT
+        - name: Connection
+          value: keep-alive
+        - name: Keep-Alive
+          value: timeout=5
+      body:
+        type: text
+        data: |-
+          [
+            {
+              "id": "78278443-d691-4f2f-938b-28155f3f6957",
+              "name": "mock_application",
+              "description": "",
+              "isActive": true,
+              "secret": "acaf2a51e9943ab8ee6ea6b07942c69a3e05c1d7628e7b33e6794a11f1cb9877",
+              "createdAt": "2026-02-27T06:10:25.453Z",
+              "permissions": []
+            }
+          ]

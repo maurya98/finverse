@@ -42,6 +42,7 @@ export async function authMiddleware(
     // Validate session (checks cache first, then database)
     const { user, session } = await authService.validateSession(token);
     req.user = user;
+    req.session = session;
     req.sessionToken = session.token;
 
     logger.debug({ userId: user.id }, "User authenticated and session validated");
@@ -78,6 +79,7 @@ export function optionalAuth(
     if (token) {
       authService.validateSession(token).then((result: any) => {
         req.user = result.user;
+        req.session = result.session;
         req.sessionToken = result.session.token;
         logger.debug({ userId: result.user.id }, "Optional auth - user authenticated");
         next();

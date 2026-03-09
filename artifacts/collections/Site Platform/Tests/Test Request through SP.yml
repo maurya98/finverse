@@ -1,0 +1,73 @@
+info:
+  name: Test Request through SP
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{sitePlatformBaseUrl}}/api/v1/users/99/orders/555?currency=INR"
+  headers:
+    - name: Content-Type
+      value: application/json
+  params:
+    - name: currency
+      value: INR
+      type: query
+  body:
+    type: json
+    data: '{"amount": 1000}'
+
+runtime:
+  variables:
+    - name: sitePlatformBaseUrl
+      value: http://localhost:3001
+  scripts:
+    - type: before-request
+      code: |-
+        // // Postman uses crypto-js internally
+        // const crypto = require('crypto-js');
+
+        // const secret = bru.getEnvVar("clientSecret");
+        // const clientId = bru.getEnvVar("clientId");
+
+        // if (!secret || !clientId) {
+        //     console.warn("Missing client_secret or client_id in environment");
+        // }
+
+        // // HTTP method
+        // const method = req.getMethod();
+
+        // // Correct way to get path + query string
+        // const path = req.getPath();
+        // const query = req.getQueryString();
+
+        // const urlWithQuery = query ? `${path}?${query}` : path;
+
+        // // Payload format: METHOD:/path?query
+        // const payload = `${method}:${urlWithQuery}`;
+
+        // // Generate HMAC SHA256
+        // const signature = crypto
+        //     .HmacSHA256(payload, secret)
+        //     .toString(crypto.enc.Hex);
+
+        // // Set headers
+        // req.getHeaders().upsert({
+        //     key: "x-signature",
+        //     value: signature
+        // });
+
+        // req.getHeaders().upsert({
+        //     key: "x-client-id",
+        //     value: clientId
+        // });
+
+        // // Optional debug log
+        // console.log("Signing payload:", payload);
+        // console.log("Generated signature:", signature);
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

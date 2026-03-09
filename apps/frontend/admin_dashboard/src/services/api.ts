@@ -19,6 +19,7 @@ async function apiRequest<T>(
 
   const config: RequestInit = {
     ...options,
+    credentials: 'include', // Always include cookies for authentication
     headers: {
       ...defaultHeaders,
       ...(options.headers || {}),
@@ -29,6 +30,12 @@ async function apiRequest<T>(
     const response = await fetch(url, config);
 
     if (!response.ok) {
+      // Handle 401 Unauthorized - redirect to login
+      if (response.status === 401) {
+        window.location.href = '/login';
+        throw new Error('Unauthorized');
+      }
+
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.message || `API error: ${response.status}`);
     }

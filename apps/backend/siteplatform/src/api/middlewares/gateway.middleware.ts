@@ -1,10 +1,25 @@
 import { sendError } from "@finverse/utils";
 import { logger } from "@finverse/logger";
 import { Request, Response } from "express";
-import { ClientAppService } from "../services";
+import { ClientAppService, RouteService } from "../services";
 import { verifySignature } from "../../utils/verifySignature.util";
 import { compilePath, extractParams } from "../../utils/matchPath.util";
 import type { IncomingHttpHeaders } from "http";
+import type { HttpMethod } from "../../databases/generated/prisma";
+
+/**
+ * Gateway Middleware
+ * 
+ * Handles client authentication and request proxying to internal services.
+ * 
+ * Environment Variables:
+ * - DISABLE_GATEWAY_CREDENTIALS: Set to "true" to disable all authentication.
+ *   When enabled, the gateway works as a simple redirection service:
+ *   - No x-client-id or x-signature required
+ *   - Searches all routes in the database for matching path and method
+ *   - Proxies request to the matched route's internal service
+ *   - All headers, body, query strings are preserved
+ */
 
 /**
  * Headers that should not be forwarded to the internal service:
@@ -190,6 +205,90 @@ function findMatchingPermission(
     return null;
 }
 
+// Route Matching (for redirection mode without client permissions)
+type RouteWithService = {
+    id: string;
+    serviceId: string;
+    name: string;
+    description: string | null;
+    exposedPath: string;
+    actualPath: string;
+    method: HttpMethod;
+    isActive: boolean;
+    createdAt: Date;
+    service: {
+        id: string;
+        name: string;
+        description: string | null;
+        baseUrl: string;
+        isActive: boolean;
+        createdAt: Date;
+    };
+};
+
+interface MatchedRoute {
+    route: RouteWithService;
+    params: Record<string, string>;
+}
+
+function matchRouteToRequest(
+    req: Request,
+    route: RouteWithService
+): MatchedRoute | null {
+    // Skip if path is not defined
+    if (!route.exposedPath) return null;
+
+    // Check method mismatch
+    if (route.method && route.method !== req.method) {
+        if (process.env.NODE_ENV === "development") {
+            logger.debug({ 
+                routeMethod: route.method, 
+                reqMethod: req.method,
+                routePath: route.exposedPath 
+            }, "Gateway: Method mismatch");
+        }
+        return null;
+    }
+
+    // Try to match path
+    const pathOnly = getPathOnly(req.originalUrl);
+    const compiledPath = compilePath(route.exposedPath);
+    const params = extractParams(compiledPath, pathOnly);
+
+    if (process.env.NODE_ENV === "development") {
+        logger.debug({ 
+            routeExposedPath: route.exposedPath,
+            requestPath: pathOnly,
+            requestFullUrl: req.originalUrl,
+            params,
+            matched: !!params
+        }, "Gateway: Path matching attempt");
+    }
+
+    return params ? { route, params } : null;
+}
+
+function findMatchingRoute(
+    req: Request,
+    routes: RouteWithService[]
+): MatchedRoute | null {
+    if (process.env.NODE_ENV === "development") {
+        logger.debug({ 
+            requestUrl: req.originalUrl,
+            requestMethod: req.method,
+            availableRoutes: routes.length
+        }, "Gateway: Starting route matching");
+    }
+
+    for (const route of routes) {
+        const matched = matchRouteToRequest(req, route);
+        if (matched) {
+            return matched;
+        }
+    }
+    return null;
+}
+
 // Request Proxying
 async function proxyRequestToInternalService(
     req: Request,
@@ -250,23 +349,159 @@ async function proxyRequestToInternalService(
 // Main Gateway Middleware
 export async function gatewayMiddleware(req: Request, res: Response) {
     try {
-        // Step 1: Extract and validate credentials
+        // Check if credential validation is disabled
+        const disableCredentials = process.env.DISABLE_GATEWAY_CREDENTIALS === "true";
+        
+        if (process.env.NODE_ENV === "development") {
+            logger.debug(
+                { url: req.originalUrl, method: req.method, disableCredentials },
+                "Gateway: Incoming request"
+            );
+        }
+
+        if (disableCredentials) {
+            // ===== REDIRECTION MODE =====
+            // Gateway works as a simple redirection service
+            // No authentication, just match route and proxy
+            
+            try {
+                // Get all routes from database
+                const allRoutes = await RouteService.getInstance().getAllRoutesWithService();
+                
+                if (process.env.NODE_ENV === "development") {
+                    logger.debug({ 
+                        totalRoutes: allRoutes?.length || 0,
+                        rawRoutes: (allRoutes || []).map(r => ({
+                            id: r.id,
+                            exposedPath: r.exposedPath,
+                            actualPath: r.actualPath,
+                            method: r.method,
+                            routeActive: r.isActive,
+                            hasService: !!r.service,
+                            serviceActive: r.service?.isActive,
+                            serviceName: r.service?.name,
+                            serviceBaseUrl: r.service?.baseUrl
+                        }))
+                    }, "Gateway: Raw routes loaded from database");
+                }
+                
+                // Filter for active routes with active services
+                const activeRoutes = (allRoutes || []).filter(
+                    (route): route is RouteWithService => {
+                        const isRouteActive = route.isActive === true;
+                        const hasService = route.service !== null && route.service !== undefined;
+                        const isServiceActive = hasService && route.service.isActive === true;
+                        
+                        if (process.env.NODE_ENV === "development" && (!isRouteActive || !isServiceActive)) {
+                            logger.debug({
+                                routeId: route.id,
+                                routePath: route.exposedPath,
+                                method: route.method,
+                                isRouteActive,
+                                hasService,
+                                isServiceActive,
+                                serviceName: route.service?.name
+                            }, "Gateway: Route filtered out");
+                        }
+                        
+                        return isRouteActive && hasService && isServiceActive;
+                    }
+                );
+
+                if (process.env.NODE_ENV === "development") {
+                    logger.debug({ 
+                        totalRoutes: allRoutes?.length || 0,
+                        activeRoutesWithService: activeRoutes.length,
+                        routes: activeRoutes.map(r => ({
+                            exposedPath: r.exposedPath,
+                            method: r.method,
+                            hasService: !!r.service
+                        }))
+                    }, "Gateway: Loaded all routes (redirection mode)");
+                }
+
+                // Find matching route
+                const matched = findMatchingRoute(req, activeRoutes);
+
+                if (!matched) {
+                    if (process.env.NODE_ENV === "development") {
+                        logger.debug({ 
+                            requestUrl: req.originalUrl,
+                            requestMethod: req.method,
+                            availableRoutesCount: activeRoutes.length
+                        }, "Gateway: No matching route found");
+                    }
+                    return res.status(404).json({ 
+                        message: "Not Found: No route configured for this path and method" 
+                    });
+                }
+
+                const { route, params } = matched;
+
+                // Build internal URL
+                req.params = Object.assign(
+                    {},
+                    req.params,
+                    ...Object.entries(params).map(([k, v]) => ({
+                        [k]: Array.isArray(v) ? v.join(",") : String(v)
+                    }))
+                );
+
+                const internalPath = buildInternalPath(route.actualPath, params);
+                const query = getQueryString(req.url);
+                const forwardUrl = query ? `${internalPath}?${query}` : internalPath;
+
+                const serviceBaseUrl = route.service?.baseUrl;
+                if (!serviceBaseUrl) {
+                    if (process.env.NODE_ENV === "development") {
+                        logger.debug("Gateway: Missing service baseUrl");
+                    }
+                    return sendError(res, "Internal Server Error: Missing service configuration", 500);
+                }
+
+                const targetUrl = `${serviceBaseUrl}${forwardUrl}`;
+
+                if (process.env.NODE_ENV === "development") {
+                    logger.debug({ 
+                        requestPath: req.originalUrl,
+                        exposedPath: route.exposedPath,
+                        actualPath: route.actualPath,
+                        internalPath, 
+                        forwardUrl, 
+                        targetUrl 
+                    }, "Gateway: Proxying to internal service (redirection mode)");
+                }
+
+                // Proxy request to internal service
+                const proxyResponse = await proxyRequestToInternalService(req, targetUrl);
+                return res.status(proxyResponse.status).json(proxyResponse.data);
+
+            } catch (error) {
+                logger.error({ error }, "Gateway: Error in redirection mode");
+                return res.status(500).json({ error: "Internal Server Error" });
+            }
+        }
+
+        // ===== AUTHENTICATION MODE =====
+        // Standard gateway with client authentication
+        
         const clientId = req.header("x-client-id");
         const signature = req.header("x-signature");
 
         if (process.env.NODE_ENV === "development") {
             logger.debug(
-                { clientId, signature, url: req.originalUrl, method: req.method },
-                "Gateway: Incoming request"
+                { clientId, signature },
+                "Gateway: Authenticating request"
             );
         }
 
+        // Validate credentials
         const credentialCheck = validateClientCredentials(clientId, signature);
         if (!credentialCheck.valid) {
             return sendError(res, credentialCheck.error || "Unauthorized", 401);
         }
 
-        // Step 2: Verify signature and load client app
+        // Verify signature and load client app
         const payload = `${req.method}:${req.originalUrl}`;
         const signatureCheck = await verifyClientSignature(clientId!, signature!, payload);
 
@@ -279,19 +514,26 @@ export async function gatewayMiddleware(req: Request, res: Response) {
             return sendError(res, signatureCheck.error || "Unauthorized", 401);
         }
 
-        // Step 3: Find matching permission
-        const matched = findMatchingPermission(req, signatureCheck.app?.permissions || []);
+        const clientApp = signatureCheck.app;
+
+        // Find matching permission
+        const matched = findMatchingPermission(req, clientApp?.permissions || []);
 
         if (!matched) {
             if (process.env.NODE_ENV === "development") {
-                logger.debug("Gateway: No matching permission found");
+                logger.debug({ 
+                    clientId, 
+                    permissionsCount: clientApp?.permissions?.length,
+                    requestUrl: req.originalUrl,
+                    requestMethod: req.method
+                }, "Gateway: No matching permission found");
             }
             return res.status(403).json({ message: "Forbidden" });
         }
 
         const { permission, params } = matched;
 
-        // Step 4: Build internal URL
+        // Build internal URL
         req.params = Object.assign(
             {},
             req.params,
@@ -318,7 +560,7 @@ export async function gatewayMiddleware(req: Request, res: Response) {
             logger.debug({ internalPath, forwardUrl, targetUrl }, "Gateway: Proxying to internal service");
         }
 
-        // Step 5: Proxy request to internal service
+        // Proxy request to internal service
         const proxyResponse = await proxyRequestToInternalService(req, targetUrl);
         return res.status(proxyResponse.status).json(proxyResponse.data);
 

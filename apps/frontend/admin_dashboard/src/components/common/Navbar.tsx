@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { SidebarIcon, Grid3x3, List, FileUp } from "lucide-react";
-import { useLocation } from "react-router";
+import { SidebarIcon, Grid3x3, List, FileUp, LogOut, User } from "lucide-react";
+import { useLocation, useNavigate } from "react-router";
 import { useViewToggle } from "../../hooks/useViewToggle";
 import ImportExportDialog from "./ImportExportDialog";
+import { useAuth } from "../../contexts/AuthContext";
 
 interface NavbarProps {
   title?: string;
@@ -10,7 +11,9 @@ interface NavbarProps {
 
 const Navbar = ({ title }: NavbarProps) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { currentView, setView } = useViewToggle();
+  const { user, logout } = useAuth();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   // Map routes to titles
@@ -21,6 +24,15 @@ const Navbar = ({ title }: NavbarProps) => {
   };
 
   const displayTitle = title || routeTitles[location.pathname] || "Admin Dashboard";
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate("/login");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
 
   return (
     <nav className="navbar w-full bg-base-200">
@@ -68,6 +80,28 @@ const Navbar = ({ title }: NavbarProps) => {
           >
             <FileUp className="h-4 w-4" />
           </button>
+
+          {/* User Menu */}
+          {user && (
+            <div className="dropdown dropdown-end">
+              <div tabIndex={0} role="button" className="btn btn-sm btn-ghost gap-2">
+                <User className="h-4 w-4" />
+                <span className="hidden sm:inline">{user.name}</span>
+                <span className="badge badge-sm badge-primary">{user.role}</span>
+              </div>
+              <ul tabIndex={0} className="dropdown-content z-1 menu p-2 shadow bg-base-100 rounded-box w-52 mt-2">
+                <li className="menu-title">
+                  <span>{user.email}</span>
+                </li>
+                <li>
+                  <button onClick={handleLogout}>
+                    <LogOut className="h-4 w-4" />
+                    Logout
+                  </button>
+                </li>
+              </ul>
+            </div>
+          )}
         </div>
       </div>
       

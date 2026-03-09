@@ -10,6 +10,12 @@ declare global {
         role: string;
         isActive: boolean;
       };
+      session?: {
+        id: string;
+        token: string;
+        userId: string;
+        expiresAt: Date;
+      };
       sessionToken?: string;
       cookies?: Record<string, string>;
     }

@@ -1,0 +1,125 @@
+info:
+  name: Update Single Route in Bulk
+  type: http
+  seq: 6
+
+http:
+  method: PUT
+  url: http://localhost:3001/api/admin/routes/bulk
+  headers:
+    - name: Content-Type
+      value: application/json
+  body:
+    type: json
+    data: |-
+      [
+          {
+              "id": "d51476df-03d6-4c12-94ee-76894a86a55b",
+              "name": "Updated Route 1",
+              "method": "GET",
+              "actualPath": "/api/updated-path-1",
+              "exposedPath": "/updated-path-1",
+              "description": "Updated first route",
+              "isActive": true
+          },
+          {
+              "id": "5819be6f-e768-4250-bbea-f2e533ce3a2f",
+              "name": "Updated Route 2",
+              "method": "POST",
+              "actualPath": "/api/updated-path-2",
+              "exposedPath": "/updated-path-2",
+              "description": "Updated second route",
+              "isActive": false
+          }
+      ]
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: Update Single Route in Bulk
+    request:
+      url: http://localhost:3001/api/admin/routes/bulk
+      method: PUT
+      headers:
+        - name: Content-Type
+          value: application/json
+      body:
+        type: json
+        data: |-
+          [
+              {
+                  "id": "d51476df-03d6-4c12-94ee-76894a86a55b",
+                  "name": "Updated Route 1",
+                  "method": "GET",
+                  "actualPath": "/api/updated-path-1",
+                  "exposedPath": "/updated-path-1",
+                  "description": "Updated first route",
+                  "isActive": true
+              },
+              {
+                  "id": "5819be6f-e768-4250-bbea-f2e533ce3a2f",
+                  "name": "Updated Route 2",
+                  "method": "POST",
+                  "actualPath": "/api/updated-path-2",
+                  "exposedPath": "/updated-path-2",
+                  "description": "Updated second route",
+                  "isActive": false
+              }
+          ]
+    response:
+      statusText: "200"
+      headers:
+        - name: Vary
+          value: Origin
+        - name: Access-Control-Allow-Credentials
+          value: "true"
+        - name: Access-Control-Expose-Headers
+          value: X-Total-Count,X-Page-Count
+        - name: Content-Security-Policy
+          value: "default-src 'self';style-src 'self' 'unsafe-inline';script-src 'self';img-src 'self' data: https:;connect-src 'self';font-src 'self';object-src 'none';media-src 'self';frame-src 'none';base-uri 'self';form-action 'self';frame-ancestors 'self';script-src-attr 'none';upgrade-insecure-requests"
+        - name: Cross-Origin-Opener-Policy
+          value: same-origin
+        - name: Cross-Origin-Resource-Policy
+          value: same-origin
+        - name: Origin-Agent-Cluster
+          value: ?1
+        - name: Referrer-Policy
+          value: no-referrer
+        - name: Strict-Transport-Security
+          value: max-age=31536000; includeSubDomains; preload
+        - name: X-Content-Type-Options
+          value: nosniff
+        - name: X-DNS-Prefetch-Control
+          value: off
+        - name: X-Download-Options
+          value: noopen
+        - name: X-Frame-Options
+          value: DENY
+        - name: X-XSS-Protection
+          value: 1; mode=block
+        - name: Content-Type
+          value: application/json; charset=utf-8
+        - name: Content-Length
+          value: "35"
+        - name: ETag
+          value: W/"23-5fQqYsQcgozxCAW717bVgsb59Wk"
+        - name: Date
+          value: Fri, 27 Feb 2026 12:38:31 GMT
+        - name: Connection
+          value: keep-alive
+        - name: Keep-Alive
+          value: timeout=5
+      body:
+        type: json
+        data: |-
+          {
+              "success": true,
+              "data": {
+                  "count": 2
+              }
+          }

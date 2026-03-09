@@ -1,0 +1,78 @@
+info:
+  name: Get Application By ID
+  type: http
+  seq: 4
+
+http:
+  method: GET
+  url: "{{sitePlatformBaseUrl}}/api/admin/applications/8e51198e-0166-4182-8283-3c8f719e4fb0"
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: Get Application By ID
+    request:
+      url: "{{sitePlatformBaseUrl}}/api/admin/applications/8e51198e-0166-4182-8283-3c8f719e4fb0"
+      method: GET
+    response:
+      statusText: "200"
+      headers:
+        - name: Vary
+          value: Origin
+        - name: Access-Control-Allow-Credentials
+          value: "true"
+        - name: Access-Control-Expose-Headers
+          value: X-Total-Count,X-Page-Count
+        - name: Content-Security-Policy
+          value: "default-src 'self';style-src 'self' 'unsafe-inline';script-src 'self';img-src 'self' data: https:;connect-src 'self';font-src 'self';object-src 'none';media-src 'self';frame-src 'none';base-uri 'self';form-action 'self';frame-ancestors 'self';script-src-attr 'none';upgrade-insecure-requests"
+        - name: Cross-Origin-Opener-Policy
+          value: same-origin
+        - name: Cross-Origin-Resource-Policy
+          value: same-origin
+        - name: Origin-Agent-Cluster
+          value: ?1
+        - name: Referrer-Policy
+          value: no-referrer
+        - name: Strict-Transport-Security
+          value: max-age=31536000; includeSubDomains; preload
+        - name: X-Content-Type-Options
+          value: nosniff
+        - name: X-DNS-Prefetch-Control
+          value: off
+        - name: X-Download-Options
+          value: noopen
+        - name: X-Frame-Options
+          value: DENY
+        - name: X-XSS-Protection
+          value: 1; mode=block
+        - name: Content-Type
+          value: application/json; charset=utf-8
+        - name: Content-Length
+          value: "264"
+        - name: ETag
+          value: W/"108-7uY9hhq9O2sjk/asZ+Ft4RrM/4o"
+        - name: Date
+          value: Fri, 27 Feb 2026 10:52:46 GMT
+        - name: Connection
+          value: keep-alive
+        - name: Keep-Alive
+          value: timeout=5
+      body:
+        type: json
+        data: |-
+          {
+              "success": true,
+              "data": {
+                  "id": "8e51198e-0166-4182-8283-3c8f719e4fb0",
+                  "name": "new_app",
+                  "description": "This is a New test application",
+                  "isActive": true,
+                  "secret": "b773eb0da5582f19a50e280cb8e0d1c551d4d65e495e474b989367e24a771bae",
+                  "createdAt": "2026-02-27T10:52:37.334Z"
+              }
+          }

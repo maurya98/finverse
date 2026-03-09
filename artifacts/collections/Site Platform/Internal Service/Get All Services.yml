@@ -1,0 +1,118 @@
+info:
+  name: Get All Services
+  type: http
+  seq: 3
+
+http:
+  method: GET
+  url: "{{sitePlatformBaseUrl}}/api/admin/services"
+  headers:
+    - name: Content-Type
+      value: application/json
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+examples:
+  - name: Get All Services
+    request:
+      url: http://localhost:3001/api/admin/services
+      method: GET
+      headers:
+        - name: Content-Type
+          value: application/json
+    response:
+      statusText: "200"
+      headers:
+        - name: Vary
+          value: Origin
+        - name: Access-Control-Allow-Credentials
+          value: "true"
+        - name: Access-Control-Expose-Headers
+          value: X-Total-Count,X-Page-Count
+        - name: Content-Security-Policy
+          value: "default-src 'self';style-src 'self' 'unsafe-inline';script-src 'self';img-src 'self' data: https:;connect-src 'self';font-src 'self';object-src 'none';media-src 'self';frame-src 'none';base-uri 'self';form-action 'self';frame-ancestors 'self';script-src-attr 'none';upgrade-insecure-requests"
+        - name: Cross-Origin-Opener-Policy
+          value: same-origin
+        - name: Cross-Origin-Resource-Policy
+          value: same-origin
+        - name: Origin-Agent-Cluster
+          value: ?1
+        - name: Referrer-Policy
+          value: no-referrer
+        - name: Strict-Transport-Security
+          value: max-age=31536000; includeSubDomains; preload
+        - name: X-Content-Type-Options
+          value: nosniff
+        - name: X-DNS-Prefetch-Control
+          value: off
+        - name: X-Download-Options
+          value: noopen
+        - name: X-Frame-Options
+          value: DENY
+        - name: X-XSS-Protection
+          value: 1; mode=block
+        - name: Content-Type
+          value: application/json
+        - name: Content-Length
+          value: "907"
+        - name: ETag
+          value: W/"38b-FCVkw48+j+0Vcnz4rnYJT3JPK3A"
+        - name: Date
+          value: Fri, 27 Feb 2026 11:56:46 GMT
+        - name: Connection
+          value: keep-alive
+        - name: Keep-Alive
+          value: timeout=5
+      body:
+        type: json
+        data: |-
+          {
+              "success": true,
+              "data": [
+                  {
+                      "id": "74d4daaf-4e71-4a93-9858-4713c7df9567",
+                      "name": "Test Service",
+                      "baseUrl": "http://localhost:4000",
+                      "createdAt": "2026-02-27T11:09:30.844Z",
+                      "description": "",
+                      "isActive": true
+                  },
+                  {
+                      "id": "d39f57e1-ef9b-4ddc-bdb9-2fcb109b7bbc",
+                      "name": "Test Service 1",
+                      "baseUrl": "http://localhost:4001",
+                      "createdAt": "2026-02-27T11:50:56.553Z",
+                      "description": "",
+                      "isActive": false
+                  },
+                  {
+                      "id": "4dada07b-2e46-453c-9d1d-f7a3db227205",
+                      "name": "Test Service 2",
+                      "baseUrl": "http://localhost:4002",
+                      "createdAt": "2026-02-27T11:50:56.553Z",
+                      "description": "",
+                      "isActive": false
+                  },
+                  {
+                      "id": "2c43f754-9f48-45f3-bea4-2906e1423d5d",
+                      "name": "Test Service 3",
+                      "baseUrl": "http://localhost:4004",
+                      "createdAt": "2026-02-27T11:56:15.971Z",
+                      "description": "",
+                      "isActive": false
+                  },
+                  {
+                      "id": "aefd984e-c634-463a-98b9-fb2147ed0dae",
+                      "name": "Test Service 4",
+                      "baseUrl": "http://localhost:4005",
+                      "createdAt": "2026-02-27T11:56:15.971Z",
+                      "description": "",
+                      "isActive": false
+                  }
+              ]
+          }
