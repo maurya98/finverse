@@ -1,7 +1,7 @@
 import type { AuthResponse, LoginInput } from '../types/auth';
 
 // Use IAM service URL from environment or default to localhost:3000
-const IAM_BASE_URL = import.meta.env.VITE_IAM_BASE_URL || 'http://localhost:3000';
+const IAM_BASE_URL = (import.meta.env.VITE_IAM_BASE_URL || 'http://localhost:3000').replace(/\/+$/, '');
 
 /**
  * Login user with email and password
