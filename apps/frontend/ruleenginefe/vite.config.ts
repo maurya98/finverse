@@ -7,7 +7,7 @@ export default defineConfig({
   base: "/ruleenginefe/",
   plugins: [react() as PluginOption],
   server: {
-    port: 5004,
+    port: 5500,
   },
   resolve: {
     dedupe: ['react', 'react-dom', 'react/jsx-runtime'],

@@ -6,7 +6,7 @@ export default defineConfig({
   base: "/admin_dashboard/",
   plugins: [tailwindcss(), react()],
   server: {
-    port: 5005,
+    port: 5501,
   },
   resolve: {
     dedupe: ['react', 'react-dom', 'react/jsx-runtime'],
