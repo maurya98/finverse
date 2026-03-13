@@ -12,6 +12,7 @@ import { P, match } from 'ts-pattern';
 import { useNodeType } from '../../../../helpers/node-type';
 import { DiffCodeEditor } from '../../../shared/diff-ce';
 import { useDecisionGraphActions, useDecisionGraphState } from '../../context/dg-store.context';
+import { getHandlePositionsForDirection } from '../../dg-util';
 import type { Diff, DiffMetadata } from '../../dg-types';
 import { compareAndUnifyLists } from '../../diff/comparison';
 import type { SimulationTrace, SimulationTraceDataSwitch } from '../../simulator/simulation.types';
@@ -332,6 +333,8 @@ const SwitchHandle: React.FC<{
   hitPolicy,
   variableType,
 }) => {
+  const layoutDirection = useDecisionGraphState((s) => s.layoutDirection ?? 'LR');
+  const { sourcePosition } = getHandlePositionsForDirection(layoutDirection);
   const [inner, setInner] = useState(value);
   useLayoutEffect(() => {
     if (inner !== value) {
@@ -407,7 +410,7 @@ const SwitchHandle: React.FC<{
         <Handle
           id={id}
           type='source'
-          position={Position.Right}
+          position={sourcePosition}
           className={clsx(isActive && 'switchNode__activeHandle')}
         />
       </div>
@@ -449,6 +452,8 @@ const SwitchHandleCompact: React.FC<{
   index: number;
   variableType?: VariableType;
 }> = ({ id, value, diff, onChange, disabled, configurable = true, onDelete, isActive, variableType }) => {
+  const layoutDirection = useDecisionGraphState((s) => s.layoutDirection ?? 'LR');
+  const { sourcePosition } = getHandlePositionsForDirection(layoutDirection);
   const [inner, setInner] = useState(value);
   useLayoutEffect(() => {
     if (inner !== value) {
@@ -491,7 +496,7 @@ const SwitchHandleCompact: React.FC<{
       <Handle
         id={id}
         type='source'
-        position={Position.Right}
+        position={sourcePosition}
         className={clsx(isActive && 'switchNode__activeHandle')}
       />
     </div>

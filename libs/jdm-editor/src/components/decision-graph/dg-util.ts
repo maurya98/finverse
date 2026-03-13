@@ -1,8 +1,27 @@
 import type { Edge, Node } from 'reactflow';
-import { MarkerType } from 'reactflow';
+import { MarkerType, Position } from 'reactflow';
 
 import type { DecisionEdge, DecisionNode } from './dg-types';
+import type { LayoutDirection } from './dg-types';
 import { privateSymbol } from './dg-types';
+
+/** React Flow handle positions for target (input) and source (output) by layout direction. */
+export function getHandlePositionsForDirection(
+  direction: LayoutDirection = 'LR',
+): { targetPosition: Position; sourcePosition: Position } {
+  switch (direction) {
+    case 'LR':
+      return { targetPosition: Position.Left, sourcePosition: Position.Right };
+    case 'RL':
+      return { targetPosition: Position.Right, sourcePosition: Position.Left };
+    case 'TB':
+      return { targetPosition: Position.Top, sourcePosition: Position.Bottom };
+    case 'BT':
+      return { targetPosition: Position.Bottom, sourcePosition: Position.Top };
+    default:
+      return { targetPosition: Position.Left, sourcePosition: Position.Right };
+  }
+}
 
 export const mapToDecisionEdge = (edge: Edge): DecisionEdge => {
   return {

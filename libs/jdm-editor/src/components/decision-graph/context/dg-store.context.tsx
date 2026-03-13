@@ -11,6 +11,7 @@ import { create } from 'zustand';
 
 import type { CodeEditorProps } from '../../code-editor';
 import type { DecisionEdge, DecisionGraphType, DecisionNode } from '../dg-types';
+import type { LayoutAlign, LayoutDirection } from '../dg-types';
 import { privateSymbol } from '../dg-types';
 import { mapToGraphEdge, mapToGraphEdges, mapToGraphNode, mapToGraphNodes } from '../dg-util';
 import type { useGraphClipboard } from '../hooks/use-graph-clipboard';
@@ -63,6 +64,11 @@ export type DecisionGraphStoreType = {
 
     compactMode?: boolean;
 
+    /** Current layout direction (for handle positions). Default LR. */
+    layoutDirection?: LayoutDirection;
+    /** Current layout alignment (for reference). */
+    layoutAlign?: LayoutAlign;
+
     /** Paths to JSON decision files in the repo (for Decision node key dropdown) */
     decisionKeyOptions?: string[];
 
@@ -105,6 +111,8 @@ export type DecisionGraphStoreType = {
     setActivePanel: (panel?: string) => void;
 
     setCompactMode: (mode: boolean) => void;
+    setLayoutDirection: (direction: LayoutDirection) => void;
+    setLayoutAlign: (align: LayoutAlign) => void;
     toggleCompactMode: () => void;
 
     setNodeType: (id: string, kind: NodeTypeKind, vt: VariableType) => void;
@@ -555,6 +563,12 @@ export const DecisionGraphProvider: React.FC<React.PropsWithChildren<DecisionGra
         };
         localStorage.setItem('jdm-compact-mode', `${mode}`);
         stateStore.setState(updatedState);
+      },
+      setLayoutDirection: (direction: LayoutDirection) => {
+        stateStore.setState({ layoutDirection: direction });
+      },
+      setLayoutAlign: (align: LayoutAlign) => {
+        stateStore.setState({ layoutAlign: align });
       },
       toggleCompactMode: () => {
         const { compactMode } = stateStore.getState();

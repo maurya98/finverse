@@ -12,6 +12,8 @@ export default defineConfig({
   resolve: {
     dedupe: ['react', 'react-dom', 'react/jsx-runtime'],
   },
+  // After changing @finverse/jdm-editor: rebuild the lib, then clear Vite's dep cache
+  // (delete node_modules/.vite or run dev with `pnpm run dev -- --force`) so the new build is used.
   optimizeDeps: {
     include: ['react', 'react-dom', '@finverse/jdm-editor'],
   },

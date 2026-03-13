@@ -11,6 +11,7 @@ import { platform } from '../../../helpers/platform';
 import { usePersistentState } from '../../../helpers/use-persistent-state';
 import { SpacedText } from '../../spaced-text';
 import { useDecisionGraphActions, useDecisionGraphState, useNodeDiff } from '../context/dg-store.context';
+import { getHandlePositionsForDirection } from '../dg-util';
 import type { DecisionNodeProps } from './decision-node';
 import { DecisionNode } from './decision-node';
 import type { MinimalNodeSpecification } from './specifications/specification-types';
@@ -47,8 +48,8 @@ export const GraphNode = React.forwardRef<HTMLDivElement, GraphNodeProps>(
     const [currentDetails, setCurrentDetails] = usePersistentState<Details>(`node:details:${id}`, Details.Settings);
     const [detailsOpen, setDetailsOpen] = usePersistentState<boolean>(`node:detailsOpen:${id}`, false);
     const graphActions = useDecisionGraphActions();
-    const { nodeError, nodeTrace, disabled, compactMode } = useDecisionGraphState(
-      ({ simulate, disabled, compactMode }) => ({
+    const { nodeError, nodeTrace, disabled, compactMode, layoutDirection } = useDecisionGraphState(
+      ({ simulate, disabled, compactMode, layoutDirection }) => ({
         disabled,
         nodeTrace: match(simulate)
           .with({ result: P._ }, ({ result }) => result?.trace?.[id])
@@ -57,8 +58,11 @@ export const GraphNode = React.forwardRef<HTMLDivElement, GraphNodeProps>(
           .with({ error: { data: { nodeId: id } } }, ({ error }) => error)
           .otherwise(() => null),
         compactMode,
+        layoutDirection: layoutDirection ?? 'LR',
       }),
     );
+
+    const { targetPosition, sourcePosition } = getHandlePositionsForDirection(layoutDirection);
 
     const { diff } = useNodeDiff(id);
 
@@ -128,7 +132,7 @@ export const GraphNode = React.forwardRef<HTMLDivElement, GraphNodeProps>(
           <Handle
             className={clsx('grl-graph-node__handle-left', compactMode && 'compact')}
             type='target'
-            position={Position.Left}
+            position={targetPosition}
             {...(typeof handleLeft !== 'boolean' ? handleLeft : {})}
           />
         )}
@@ -188,7 +192,7 @@ export const GraphNode = React.forwardRef<HTMLDivElement, GraphNodeProps>(
           <Handle
             className={clsx('grl-graph-node__handle-right', compactMode && 'compact')}
             type='source'
-            position={Position.Right}
+            position={sourcePosition}
             {...(typeof handleRight !== 'boolean' ? handleRight : {})}
           />
         )}

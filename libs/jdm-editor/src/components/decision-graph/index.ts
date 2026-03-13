@@ -46,6 +46,8 @@ export {
   type DecisionEdge,
   type DecisionNode,
   type DecisionGraphType,
+  type LayoutDirection,
+  type LayoutAlign,
   type DiffMetadata,
   type Diff,
   type Position,

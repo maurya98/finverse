@@ -7,7 +7,6 @@ import apiRouter from "./api/routes/api";
 
 const app: Express = express();
 
-// CORS: allow frontend origin so browser allows cross-origin requests (e.g. login from Vite dev server)
 const corsOrigin = process.env.CORS_ORIGIN;
 app.use(
   cors({
@@ -18,8 +17,8 @@ app.use(
   })
 );
 
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ limit: "10mb", extended: true }));
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb", extended: true }));
 app.use("/api/v1/logs", requestLoggerRoutes());
 app.use(requestLoggerMiddleware({ appName: "ruleenginebe" }));
 app.use(apiRouter);

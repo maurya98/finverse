@@ -8,9 +8,23 @@ import {
   type DecisionGraphRef,
   type Simulation,
 } from "@finverse/jdm-editor";
+import IconButton from "@mui/material/IconButton";
+import Tooltip from "@mui/material/Tooltip";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
+import ListItemText from "@mui/material/ListItemText";
+import ListSubheader from "@mui/material/ListSubheader";
+import Button from "@mui/material/Button";
+import Box from "@mui/material/Box";
+import AccountTreeIcon from "@mui/icons-material/AccountTree";
+import FitScreenIcon from "@mui/icons-material/FitScreen";
 import { useTheme } from "../../../contexts/ThemeContext";
 import { simulate as simulateApi, isApiError } from "../services/api";
+import { getLayoutedNodes, type LayoutDirection } from "../utils/graphLayout";
 import "./JdmEditorView.css";
+
+/** React Flow instance shape we get from onReactFlowInit (fitView for auto-align) */
+type ReactFlowInstanceLike = { fitView?: (opts?: { padding?: number; duration?: number }) => void };
 
 const emptyGraph: DecisionGraphType = { nodes: [], edges: [] };
 
@@ -58,6 +72,7 @@ export function JdmEditorView({
 }: JdmEditorViewProps) {
   const { appliedTheme } = useTheme();
   const graphRef = useRef<DecisionGraphRef>(null);
+  const reactFlowInstanceRef = useRef<ReactFlowInstanceLike | null>(null);
   const [simulate, setSimulate] = useState<Simulation | undefined>();
   const lastEmittedRef = useRef<string | null>(null);
   const latestGraphRef = useRef<DecisionGraphType | null>(null);
@@ -120,7 +135,10 @@ export function JdmEditorView({
                   setSimulate({
                     error: {
                       message: res.message,
-                      data: { nodeId: (res as { nodeId?: string }).nodeId },
+                      data: {
+                        nodeId: (res as { nodeId?: string }).nodeId,
+                        ...(res.errors?.length ? { errors: res.errors } : {}),
+                      },
                     },
                   });
                   return;
@@ -158,7 +176,8 @@ export function JdmEditorView({
     [repositoryId, branch, getDecisionsForSimulation]
   );
 
-  const handleReactFlowInit = useCallback((instance: { fitView?: (opts?: { padding?: number; duration?: number }) => void }) => {
+  const handleReactFlowInit = useCallback((instance: ReactFlowInstanceLike) => {
+    reactFlowInstanceRef.current = instance;
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         instance.fitView?.({ padding: 0.2, duration: 300 });
@@ -166,18 +185,149 @@ export function JdmEditorView({
     });
   }, []);
 
+  const [layoutMenuAnchor, setLayoutMenuAnchor] = useState<null | HTMLElement>(null);
+  const [layoutDirection, setLayoutDirection] = useState<LayoutDirection>("LR");
+  const [layoutAlign, setLayoutAlign] = useState<'UL' | 'UR' | 'DL' | 'DR'>("UL");
+
+  const applyLayout = useCallback(
+    (direction: LayoutDirection, align: 'UL' | 'UR' | 'DL' | 'DR') => {
+      const ref = graphRef.current;
+      if (!ref?.stateStore) return;
+      const { decisionGraph } = ref.stateStore.getState();
+      const nodes = decisionGraph?.nodes ?? [];
+      const edges = decisionGraph?.edges ?? [];
+      if (nodes.length === 0) return;
+      const layoutedNodes = getLayoutedNodes(nodes, edges, direction, align);
+      ref.setNodes(layoutedNodes);
+      if ('setLayoutDirection' in ref && typeof ref.setLayoutDirection === 'function') {
+        ref.setLayoutDirection(direction);
+      }
+      if ('setLayoutAlign' in ref && typeof ref.setLayoutAlign === 'function') {
+        ref.setLayoutAlign(align);
+      }
+      reactFlowInstanceRef.current?.fitView?.({ padding: 0.2, duration: 300 });
+      setLayoutMenuAnchor(null);
+    },
+    []
+  );
+
+  const handleApplyLayout = useCallback(() => {
+    applyLayout(layoutDirection, layoutAlign);
+  }, [applyLayout, layoutDirection, layoutAlign]);
+
+  const handleFitView = useCallback(() => {
+    reactFlowInstanceRef.current?.fitView?.({ padding: 0.2, duration: 300 });
+    setLayoutMenuAnchor(null);
+  }, []);
+
+  const directionOptions: { value: LayoutDirection; label: string }[] = [
+    { value: "LR", label: "Left → Right" },
+    { value: "TB", label: "Top → Bottom" },
+    { value: "RL", label: "Right → Left" },
+    { value: "BT", label: "Bottom → Top" },
+  ];
+
+  const alignOptions: { value: 'UL' | 'UR' | 'DL' | 'DR'; label: string }[] = [
+    { value: "UL", label: "Up-Left" },
+    { value: "UR", label: "Up-Right" },
+    { value: "DL", label: "Down-Left" },
+    { value: "DR", label: "Down-Right" },
+  ];
+
+  const tabBarExtraContent = useMemo(
+    () => (
+      <>
+        <Tooltip title="Layout options (direction &amp; align)" placement="bottom">
+          <IconButton
+            size="small"
+            onClick={(e) => setLayoutMenuAnchor(e.currentTarget)}
+            aria-label="Layout options"
+            aria-haspopup="true"
+            aria-expanded={Boolean(layoutMenuAnchor)}
+            sx={{ color: "inherit", opacity: 0.85, "&:hover": { opacity: 1 } }}
+          >
+            <AccountTreeIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+        <Menu
+          anchorEl={layoutMenuAnchor}
+          open={Boolean(layoutMenuAnchor)}
+          onClose={() => setLayoutMenuAnchor(null)}
+          anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+          transformOrigin={{ vertical: "top", horizontal: "right" }}
+          slotProps={{
+            paper: { sx: { minWidth: 220 } },
+          }}
+          MenuListProps={{
+            onClick: (e) => e.stopPropagation(),
+            onKeyDown: (e) => e.stopPropagation(),
+          }}
+        >
+          <ListSubheader disableSticky>Direction</ListSubheader>
+          {directionOptions.map((opt) => (
+            <MenuItem
+              key={opt.value}
+              selected={layoutDirection === opt.value}
+              onClick={() => setLayoutDirection(opt.value)}
+            >
+              <ListItemText primary={opt.label} />
+            </MenuItem>
+          ))}
+          <ListSubheader disableSticky sx={{ pt: 1 }}>Alignment</ListSubheader>
+          {alignOptions.map((opt) => (
+            <MenuItem
+              key={opt.value}
+              selected={layoutAlign === opt.value}
+              onClick={() => setLayoutAlign(opt.value)}
+            >
+              <ListItemText primary={opt.label} />
+            </MenuItem>
+          ))}
+          <Box sx={{ px: 1.5, py: 1, display: "flex", gap: 1, flexDirection: "column" }}>
+            <Button
+              size="small"
+              variant="contained"
+              onClick={handleApplyLayout}
+              fullWidth
+            >
+              Apply layout
+            </Button>
+            <Button
+              size="small"
+              variant="text"
+              startIcon={<FitScreenIcon fontSize="small" />}
+              onClick={handleFitView}
+              fullWidth
+            >
+              Fit view only
+            </Button>
+          </Box>
+        </Menu>
+      </>
+    ),
+    [
+      layoutMenuAnchor,
+      layoutDirection,
+      layoutAlign,
+      handleApplyLayout,
+      handleFitView,
+    ]
+  );
+
   return (
     <div className="jdm-editor-view">
       <JdmConfigProvider theme={{ mode: appliedTheme as "light" | "dark" }}>
         <DecisionGraph
           key={externalKey}
-          ref={graphRef}
+          ref={graphRef}  
+
           defaultValue={defaultValue}
           onChange={handleChange}
           panels={panels}
           simulate={simulate}
           onReactFlowInit={handleReactFlowInit}
           decisionKeyOptions={decisionKeyOptions}
+          tabBarExtraContent={tabBarExtraContent}
         />
       </JdmConfigProvider>
     </div>

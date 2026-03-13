@@ -59,3 +59,9 @@ export type DecisionGraphType = {
   nodes: DecisionNode[];
   edges: DecisionEdge[];
 };
+
+/** Layout direction for dagre (and handle positions). */
+export type LayoutDirection = 'LR' | 'TB' | 'RL' | 'BT';
+
+/** Layout alignment for dagre. */
+export type LayoutAlign = 'UL' | 'UR' | 'DL' | 'DR';
