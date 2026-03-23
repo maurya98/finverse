@@ -16,16 +16,18 @@ app.use(...securityMiddleware);
 app.use("/v1/api/logs", requestLoggerRoutes());  
 app.use(requestLoggerMiddleware({ appName: "siteplatform" }));
 
+const apiVersion = process.env.API_VERSION || "";
+logger.info(`Using API Version: ${apiVersion}`);
 // Health Check Endpoint
-app.get("/health", (_: Request, res: Response) => {
+app.get(`${apiVersion}/health`, (_: Request, res: Response) => {
   res.json({ status: "ok", message: "Site Platform is running" });
 });
 
 // Admin Routes (protected with authentication)
-app.use("/api/admin", apiRouter);
+app.use(`${apiVersion}/api/admin`, apiRouter);
 
 // Catch-all for all other routes (Gateway)
-app.use("/", gatewayMiddleware);
+app.use(`${apiVersion}/`, gatewayMiddleware);
 
 async function start(): Promise<void> {
   try {
@@ -41,7 +43,7 @@ async function start(): Promise<void> {
     process.exit(1);
   }
 
-  const port = Number(process.env.PORT) || 5001;
+  const port = Number(process.env.PORT) || 5000;
   app.listen(port, () => {
     logger.info(`Site Platform is running on port ${port} with Environment: ${process.env.NODE_ENV}`);
   });
