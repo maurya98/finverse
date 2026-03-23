@@ -430,7 +430,8 @@ export const Graph = forwardRef<GraphRef, GraphProps>(function GraphInner({ reac
         >
           <div className={clsx(['react-flow'])} ref={reactFlowWrapper}>
             <ReactFlow
-              deleteKeyCode={null}
+              deleteKeyCode={['Backspace', 'Delete']}
+              panActivationKeyCode={['Space']}
               elevateEdgesOnSelect={false}
               elevateNodesOnSelect={true}
               zoomOnDoubleClick={false}

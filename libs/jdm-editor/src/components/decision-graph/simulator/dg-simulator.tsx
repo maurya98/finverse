@@ -195,6 +195,17 @@ export const GraphSimulator: React.FC<GraphSimulatorProps> = ({
           <SimulatorEditor
             readOnly
             value={match(simulate)
+              .with({ error: P.nonNullable }, ({ error }) =>
+                JSON.stringify(
+                  {
+                    error: true,
+                    message: error.message ?? 'Simulation failed',
+                    ...(error.data?.nodeId != null ? { nodeId: error.data.nodeId } : {}),
+                  },
+                  null,
+                  2,
+                ),
+              )
               .with({ result: P._ }, ({ result }) =>
                 match(selectedNode)
                   .with('graph', () =>
