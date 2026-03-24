@@ -395,3 +395,25 @@ export async function simulate(params: {
 }): Promise<ApiResponse<SimulateResponse>> {
   return request("/simulate/", { method: "POST", body: JSON.stringify(params) });
 }
+
+// --- Engine logs ---
+export type EngineLog = {
+  id: string;
+  userId: string;
+  repositoryId: string;
+  requestBody: unknown;
+  responseBody: unknown;
+  executionTime: number;
+  createdAt: string;
+};
+
+export async function listEngineLogs(
+  repositoryId: string,
+  opts?: { userId?: string; skip?: number; take?: number }
+): Promise<ApiResponse<EngineLog[]>> {
+  const q = new URLSearchParams();
+  if (opts?.userId) q.set("userId", opts.userId);
+  if (opts?.skip != null) q.set("skip", String(opts.skip));
+  if (opts?.take != null) q.set("take", String(opts.take));
+  return request(`/repositories/${encodeURIComponent(repositoryId)}/engine-logs?${q}`);
+}

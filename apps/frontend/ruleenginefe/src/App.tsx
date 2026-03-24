@@ -7,6 +7,7 @@ import { DashboardPage } from "./features/dashboard/pages/DashboardPage";
 import { RepositoryEditorPage } from "./features/dashboard/pages/RepositoryEditorPage";
 import { RepositorySettingsPage } from "./features/dashboard/pages/RepositorySettingsPage";
 import { BranchManagementPage } from "./features/dashboard/pages/BranchManagementPage";
+import { RepositoryEngineLogsPage } from "./features/dashboard/pages/RepositoryEngineLogsPage";
 import { LogsPage } from "./features/logs/pages/LogsPage";
 import { ProfilePage } from "./features/profile/pages/ProfilePage";
 import { UsersManagementPage } from "./features/users/pages/UsersManagementPage";
@@ -41,6 +42,7 @@ function App() {
           <Route path="repo/:repositoryId" element={<RepoLayout />}>
             <Route index element={<RepositoryEditorPage />} />
             <Route path="branches" element={<BranchManagementPage />} />
+            <Route path="engine-logs" element={<RepositoryEngineLogsPage />} />
             <Route path="settings" element={<RepositorySettingsPage />} />
           </Route>
         </Route>

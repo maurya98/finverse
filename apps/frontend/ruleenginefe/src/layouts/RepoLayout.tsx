@@ -45,9 +45,11 @@ export function RepoLayout() {
 
   const settingsMatch = useMatch("/dashboard/repo/:repositoryId/settings");
   const branchesMatch = useMatch("/dashboard/repo/:repositoryId/branches");
+  const engineLogsMatch = useMatch("/dashboard/repo/:repositoryId/engine-logs");
   const tabValue =
     settingsMatch ? "settings" :
     branchesMatch ? "branches" :
+    engineLogsMatch ? "engineLogs" :
     "code";
 
   const canManageRepo = repo?.currentUserRole != null &&
@@ -178,6 +180,12 @@ export function RepoLayout() {
             value="branches"
             component={Link}
             to={`/dashboard/repo/${repositoryId}/branches?branch=${encodeURIComponent(branch)}`}
+          />
+          <Tab
+            label="Engine Logs"
+            value="engineLogs"
+            component={Link}
+            to={`/dashboard/repo/${repositoryId}/engine-logs?branch=${encodeURIComponent(branch)}`}
           />
           {canManageRepo && (
             <Tab

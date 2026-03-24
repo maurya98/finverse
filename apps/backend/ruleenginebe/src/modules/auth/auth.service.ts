@@ -19,7 +19,7 @@ export class AuthService {
     const user = await prisma.user.findUnique({
       where: { email: email.trim().toLowerCase() },
     });
-
+    console.log("user found", user);
     if (!user) {
       throw new Error("Invalid email or password");
     }

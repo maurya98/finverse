@@ -3,6 +3,7 @@ import { loginSchema } from "../validations/auth.validator";
 import { validateBody } from "@finverse/utils";
 import { sendSuccess, sendError } from "@finverse/utils";
 import { AuthService } from "../../modules/auth/auth.service";
+import { logger } from "@finverse/logger";
 
 export class AuthController {
   public router: Router;
@@ -29,6 +30,7 @@ export class AuthController {
       if (message === "Invalid email or password") {
         return sendError(res, message, 401);
       }
+      logger.error({ err }, "error in login");
       return sendError(res, "Login failed", 500);
     }
   }

@@ -7,6 +7,7 @@ import { MergeRequestsController } from "../controllers/merge-requests.controlle
 import { RepositoriesController } from "../controllers/repositories.controller";
 import { RepositoryMembersController } from "../controllers/repository-members.controller";
 import { ExecuteController } from "../controllers/execute.controller";
+import { EngineLogsController } from "../controllers/engine-logs.controller";
 import { SimulateController } from "../controllers/simulate.controller";
 import { TreesController } from "../controllers/trees.controller";
 import { UsersController } from "../controllers/users.controller";
@@ -22,6 +23,7 @@ router.use("/merge-requests/", new MergeRequestsController().router);
 router.use("/repositories/", new RepositoryMembersController().router);
 router.use("/repositories/", new RepositoriesController().router);
 router.use("/execute/", new ExecuteController().router);
+router.use("/repositories/", new EngineLogsController().router);
 router.use("/simulate/", new SimulateController().router);
 router.use("/trees/", new TreesController().router);
 router.use("/users/", new UsersController().router);

@@ -1,9 +1,10 @@
 import { ZenEngine } from "@gorules/zen-engine";
-import { BlobService } from "../vcs-engine/blob.service.js";
-import { BranchService } from "../vcs-engine/branch.service.js";
-import { CommitService } from "../vcs-engine/commit.service.js";
-import { TreeService } from "../vcs-engine/tree.service.js";
-import type { RepositoryService } from "../repositories/repository.service.js";
+import { BlobService } from "../vcs-engine/blob.service";
+import { BranchService } from "../vcs-engine/branch.service";
+import { CommitService } from "../vcs-engine/commit.service";
+import { TreeService } from "../vcs-engine/tree.service";
+import type { RepositoryService } from "../repositories/repository.service";
+import { prisma } from "../../databases/client";
 
 export type SimulateInput = {
   /** Main JDM graph (nodes + edges) */
@@ -40,7 +41,7 @@ export class SimulateService {
     private commitService: CommitService,
     private treeService: TreeService,
     private repositoryService?: RepositoryService
-  ) {}
+  ) { }
 
   /**
    * Get blob content by path in a branch (e.g. "folder/file.json").
@@ -89,34 +90,34 @@ export class SimulateService {
     const loader =
       repositoryId && branch
         ? async (key: string): Promise<Buffer> => {
-            const fromMap = decisions[key];
-            if (fromMap !== undefined)
-              return Buffer.from(
-                typeof fromMap === "string" ? fromMap : JSON.stringify(fromMap),
-                "utf-8"
-              );
-            const fromRepo = await this.getContentByPath(
-              repositoryId,
-              branch,
-              key
+          const fromMap = decisions[key];
+          if (fromMap !== undefined)
+            return Buffer.from(
+              typeof fromMap === "string" ? fromMap : JSON.stringify(fromMap),
+              "utf-8"
             );
-            if (fromRepo == null)
+          const fromRepo = await this.getContentByPath(
+            repositoryId,
+            branch,
+            key
+          );
+          if (fromRepo == null)
+            throw new Error(`Decision not found: ${key}`);
+          return Buffer.from(
+            typeof fromRepo === "string" ? fromRepo : JSON.stringify(fromRepo),
+            "utf-8"
+          );
+        }
+        : Object.keys(decisions).length > 0
+          ? async (key: string): Promise<Buffer> => {
+            const c = decisions[key];
+            if (c === undefined)
               throw new Error(`Decision not found: ${key}`);
             return Buffer.from(
-              typeof fromRepo === "string" ? fromRepo : JSON.stringify(fromRepo),
+              typeof c === "string" ? c : JSON.stringify(c),
               "utf-8"
             );
           }
-        : Object.keys(decisions).length > 0
-          ? async (key: string): Promise<Buffer> => {
-              const c = decisions[key];
-              if (c === undefined)
-                throw new Error(`Decision not found: ${key}`);
-              return Buffer.from(
-                typeof c === "string" ? c : JSON.stringify(c),
-                "utf-8"
-              );
-            }
           : undefined;
 
     const engine = new ZenEngine(loader ? { loader } : undefined);
@@ -226,6 +227,7 @@ export class SimulateService {
     context: unknown,
     branch: string = "main"
   ): Promise<{ result: unknown; performance: string }> {
+    const start = performance.now();
     const content = await this.getIndexJsonContent(repositoryId, branch);
     if (content == null) {
       throw new Error(
@@ -238,6 +240,21 @@ export class SimulateService {
       repositoryId,
       branch,
     });
+
+    if (branch == "main") {
+      new Promise(async (resolve, reject) => {
+        await prisma.engineLog.create({
+          data: {
+            userId: (context as { userId?: number }).userId ?? (context as { user_id?: number }).user_id ?? 0,
+            repositoryId: repositoryId,
+            requestBody: JSON.parse(JSON.stringify(context)),
+            responseBody: JSON.parse(JSON.stringify(output.result)),
+            executionTime: Math.round(performance.now() - start),
+            createdAt: new Date(),
+          },
+        });
+      });
+    }
     return {
       result: output.result,
       performance: output.performance,

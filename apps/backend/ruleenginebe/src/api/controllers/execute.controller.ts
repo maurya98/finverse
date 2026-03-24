@@ -25,7 +25,7 @@ export class ExecuteController {
   }
 
   private initRoutes(): void {
-    this.router.post("/", requireAuth, requireRepoAccess("VIEWER"), validateBody(executeBodySchema), this.execute.bind(this));
+    this.router.post("/", validateBody(executeBodySchema), this.execute.bind(this));
   }
 
   private async execute(req: Request, res: Response): Promise<Response> {
