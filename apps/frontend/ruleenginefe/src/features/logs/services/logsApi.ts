@@ -4,6 +4,7 @@
  */
 
 import { getToken } from "../../auth/services/auth";
+import { trackRequest } from "../../../services/requestTracker";
 
 const getBaseUrl = (): string => {
   const url = import.meta.env.VITE_API_URL;
@@ -53,31 +54,33 @@ export function getLogsBaseUrl(): string {
 
 /** Fetch filtered logs. Uses auth header. */
 export async function searchLogs(filters: LogSearchFilters): Promise<LogSearchResponse | LogsApiError> {
-  const params = new URLSearchParams();
-  if (filters.from != null) params.set("from", filters.from);
-  if (filters.to != null) params.set("to", filters.to);
-  if (filters.application != null) params.set("application", filters.application);
-  if (filters.method != null) params.set("method", filters.method);
-  if (filters.url != null) params.set("url", filters.url);
-  if (filters.statusCode != null) params.set("statusCode", String(filters.statusCode));
-  if (filters.q != null) params.set("q", filters.q);
-  if (filters.limit != null) params.set("limit", String(filters.limit));
-  if (filters.offset != null) params.set("offset", String(filters.offset));
-  if (filters.count === true) params.set("count", "true");
+  return trackRequest(async () => {
+    const params = new URLSearchParams();
+    if (filters.from != null) params.set("from", filters.from);
+    if (filters.to != null) params.set("to", filters.to);
+    if (filters.application != null) params.set("application", filters.application);
+    if (filters.method != null) params.set("method", filters.method);
+    if (filters.url != null) params.set("url", filters.url);
+    if (filters.statusCode != null) params.set("statusCode", String(filters.statusCode));
+    if (filters.q != null) params.set("q", filters.q);
+    if (filters.limit != null) params.set("limit", String(filters.limit));
+    if (filters.offset != null) params.set("offset", String(filters.offset));
+    if (filters.count === true) params.set("count", "true");
 
-  const token = getToken();
-  const res = await fetch(`${getLogsBaseUrl()}?${params.toString()}`, {
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
+    const token = getToken();
+    const res = await fetch(`${getLogsBaseUrl()}?${params.toString()}`, {
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+
+    const json = (await res.json()) as LogSearchResponse | LogsApiError;
+    if (!res.ok) {
+      return (json as LogsApiError) || { error: "Request failed" };
+    }
+    return json as LogSearchResponse;
   });
-
-  const json = (await res.json()) as LogSearchResponse | LogsApiError;
-  if (!res.ok) {
-    return (json as LogsApiError) || { error: "Request failed" };
-  }
-  return json as LogSearchResponse;
 }
 
 /**

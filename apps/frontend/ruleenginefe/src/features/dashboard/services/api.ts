@@ -4,6 +4,7 @@
  */
 
 import { getToken } from "../../auth/services/auth";
+import { trackRequest } from "../../../services/requestTracker";
 
 const getBaseUrl = (): string => {
   const url = import.meta.env.VITE_API_URL;
@@ -38,16 +39,18 @@ export function isApiError(r: ApiResponse<unknown>): r is ApiError {
 }
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<ApiResponse<T>> {
-  const base = getBaseUrl();
-  const res = await fetch(`${base}${path}`, {
-    ...options,
-    headers: { ...authHeaders(), ...options.headers },
+  return trackRequest(async () => {
+    const base = getBaseUrl();
+    const res = await fetch(`${base}${path}`, {
+      ...options,
+      headers: { ...authHeaders(), ...options.headers },
+    });
+    const json = (await res.json()) as ApiResponse<T>;
+    if (!res.ok && !isApiError(json)) {
+      return { success: false, message: (json as ApiSuccess<unknown>)?.message ?? "Request failed" };
+    }
+    return json;
   });
-  const json = (await res.json()) as ApiResponse<T>;
-  if (!res.ok && !isApiError(json)) {
-    return { success: false, message: (json as ApiSuccess<unknown>)?.message ?? "Request failed" };
-  }
-  return json;
 }
 
 

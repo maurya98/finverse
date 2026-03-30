@@ -3,6 +3,7 @@
  */
 
 import { setAuth, clearAuth, type StoredUser } from "./auth";
+import { trackRequest } from "../../../services/requestTracker";
 
 function getBaseUrl(): string {
   const url = import.meta.env.VITE_API_URL;
@@ -17,20 +18,22 @@ export type LoginResponse =
   | { success: false; message: string; errors?: Array<{ path?: string; message: string }> };
 
 export async function login(body: LoginBody): Promise<LoginResponse> {
-  const base = getBaseUrl();
-  const res = await fetch(`${base}/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+  return trackRequest(async () => {
+    const base = getBaseUrl();
+    const res = await fetch(`${base}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const json = (await res.json()) as LoginResponse;
+    if (json.success && json.data?.token && json.data?.user) {
+      setAuth(json.data.token, json.data.user);
+    }
+    if (!res.ok && json.success !== false) {
+      return { success: false, message: "Login failed" };
+    }
+    return json;
   });
-  const json = (await res.json()) as LoginResponse;
-  if (json.success && json.data?.token && json.data?.user) {
-    setAuth(json.data.token, json.data.user);
-  }
-  if (!res.ok && json.success !== false) {
-    return { success: false, message: "Login failed" };
-  }
-  return json;
 }
 
 export function logout(): void {
