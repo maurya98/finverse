@@ -14,6 +14,9 @@
       "path": "apps/frontend/ruleenginefe"
     },
     {
+      "path": "apps/frontend/product-console"
+    },
+    {
       "path": "libs/cache"
     },
     {
@@ -27,6 +30,9 @@
     },
     {
       "path": "libs/jdm-editor"
+    },
+    {
+      "path": "apps/backend/chat"
     },
     {
       "path": "apps/backend/customer"

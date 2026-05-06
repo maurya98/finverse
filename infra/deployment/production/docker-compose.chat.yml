@@ -1,0 +1,16 @@
+# IAM Backend - Production
+# Build from monorepo root. Load .env from infra/deployment/production/chat.env
+
+services:
+  chat:
+    build:
+      context: ../../..
+      dockerfile: infra/docker/chat/Dockerfile
+    image: finverse/chat:production
+    container_name: chat-production
+    restart: unless-stopped
+    network_mode: host
+    env_file:
+      - chat.env
+    environment:
+      - NODE_ENV=production

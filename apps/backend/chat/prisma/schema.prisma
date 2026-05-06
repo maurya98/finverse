@@ -1,0 +1,49 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model WhatsAppChatSupportRawData {
+  id              Int      @id @default(autoincrement())
+  rawData         Json?    @map("raw_data")
+  createdDatetime DateTime? @map("created_datetime")
+  created         DateTime? @db.Date
+
+  @@map("whatsapp_chat_support_raw_data")
+  @@index([created], map: "idx_created")
+  @@index([createdDatetime], map: "idx_created_datetime")
+}
+
+model WhatsAppChatSupportDashboard {
+  id                  Int         @id @default(autoincrement())
+  botNumber           BigInt?     @map("bot_number")
+  botName             String?     @map("bot_name") @db.VarChar(255)
+  userName            String?     @map("user_name") @db.VarChar(255)
+  userNumber          BigInt?     @map("user_number")
+  userMessage         String?     @map("user_message") @db.Text
+  customerReply       String?     @map("customer_reply") @db.Text
+  intentCategory      String?     @map("intent_category") @db.VarChar(255)
+  source              String?     @db.VarChar(255)
+  createdDatetime     DateTime?   @map("created_datetime")
+  created             DateTime?   @db.Date
+  status              Boolean     @default(true) @db.TinyInt
+  accountType         String?     @map("account_type") @db.VarChar(100)
+  userEmail           String?     @map("user_email") @db.VarChar(255)
+  campaignId          String?     @map("campaign_id") @db.VarChar(100)
+  callCenterAssign    Boolean     @default(false) @map("call_center_assign")
+  dontSendNotCampign  Boolean     @default(false) @map("dont_send_not_campign")
+  rating              Int?
+  feedback            String?     @db.Text
+  dlrStatus           String?     @map("dlr_status") @db.VarChar(100)
+
+  @@map("whatsapp_chat_support_dashboard")
+  @@index([botNumber], map: "idx_bot_number")
+  @@index([botName], map: "idx_bot_name")
+  @@index([status], map: "idx_status")
+  @@index([created], map: "idx_created")
+  @@index([createdDatetime], map: "idx_created_datetime")
+}
